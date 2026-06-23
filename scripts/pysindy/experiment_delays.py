@@ -7,11 +7,13 @@ from pathlib import Path
 
 import numpy as np
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-  sys.path.insert(0, str(ROOT))
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPTS = ROOT / "scripts"
+for path in (ROOT, SCRIPTS):
+  if str(path) not in sys.path:
+    sys.path.insert(0, str(path))
 
-from convert import MAT_FILE, TrialData
+from load_data.convert import MAT_FILE, TrialData
 from lfp_sindy import channel_lfp_traces, delay_embed_trials, fit_pysindy, parse_trials
 
 
@@ -37,7 +39,7 @@ def main() -> None:
   parser.add_argument("--threshold", type=float, default=0.05)
   parser.add_argument("--degree", type=int, default=2)
   parser.add_argument("--smooth-window", type=int, default=9)
-  parser.add_argument("--out-csv", type=Path, default=Path("outputs/delay_experiment_results.csv"))
+  parser.add_argument("--out-csv", type=Path, default=Path("outputs/pysindy/delay_experiment_results.csv"))
   args = parser.parse_args()
 
   data = TrialData.load(args.mat_file)

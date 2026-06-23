@@ -6,7 +6,7 @@ from pathlib import Path
 import hdf5storage
 import numpy as np
 
-MAT_FILE = Path(__file__).resolve().parent / (
+MAT_FILE = Path(__file__).resolve().parents[1] / (
     "raw_data/trialdata_v03_buzz_20231106_pre-0.100_post0.100.mat"
 )
 

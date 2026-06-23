@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
   sys.path.insert(0, str(ROOT))
 
-from convert import MAT_FILE, TrialData
+from load_data.convert import MAT_FILE, TrialData
 
 
 def channel_stats(data: TrialData, trial: int) -> list[dict[str, float]]:
@@ -107,14 +107,23 @@ def main() -> None:
   parser.add_argument("--trial", type=int, default=0)
   parser.add_argument("--max-trials", type=int, default=20)
   parser.add_argument("--plot", action="store_true")
-  parser.add_argument("--shared-y", action="store_true", help="Use the same y-axis for all channels.")
-  parser.add_argument("--out-dir", type=Path, default=Path("outputs"))
+  parser.add_argument(
+    "--independent-y",
+    action="store_true",
+    help="Use separate y-axis scaling for each channel plot.",
+  )
+  parser.add_argument("--out-dir", type=Path, default=Path("outputs/channel_analysis"))
   args = parser.parse_args()
 
   data = TrialData.load(args.mat_file)
   print_summary(data, trial=args.trial, max_trials=args.max_trials)
   if args.plot:
-    save_plots(data, trial=args.trial, out_dir=args.out_dir, shared_y=args.shared_y)
+    save_plots(
+      data,
+      trial=args.trial,
+      out_dir=args.out_dir,
+      shared_y=not args.independent_y,
+    )
 
 
 if __name__ == "__main__":

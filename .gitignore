@@ -6,10 +6,7 @@
 *.npz
 
 # folders
-data/
 raw_data/
-outputs/
-results/
 
 # python/cache
 __pycache__/
