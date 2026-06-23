@@ -1,11 +1,18 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 import numpy as np
 
-from convert import MAT_FILE, TrialData
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPTS = ROOT / "scripts"
+for path in (ROOT, SCRIPTS):
+  if str(path) not in sys.path:
+    sys.path.insert(0, str(path))
+
+from load_data.convert import MAT_FILE, TrialData
 
 
 def channel_lfp_table(
