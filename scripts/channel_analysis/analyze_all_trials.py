@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
   sys.path.insert(0, str(ROOT))
 
-from convert import MAT_FILE, TrialData
+from load_data.convert import MAT_FILE, TrialData
 
 
 def summarize_trials(data: TrialData, corr_downsample: int, min_samples: int):
@@ -36,12 +36,12 @@ def summarize_trials(data: TrialData, corr_downsample: int, min_samples: int):
       rms[trial, channel] = np.sqrt(np.mean(trace**2))
       ptp[trial, channel] = np.ptp(trace)
 
-    if length >= min_samples:
       trimmed = np.vstack([trace[:length:corr_downsample] for trace in traces])
       corr = np.corrcoef(trimmed)
       if np.all(np.isfinite(corr)):
         corr_sum += corr
         corr_count += 1
+
 
   avg_corr = corr_sum / corr_count if corr_count else np.full((n_channels, n_channels), np.nan)
   return {
@@ -147,10 +147,9 @@ def save_plots(summary: dict, data: TrialData, out_dir: Path) -> list[Path]:
 def main() -> None:
   parser = argparse.ArgumentParser(description="Analyze LFP channel structure across all trials.")
   parser.add_argument("--mat-file", type=Path, default=MAT_FILE)
-  parser.add_argument("--out-dir", type=Path, default=Path("outputs"))
+  parser.add_argument("--out-dir", type=Path, default=Path("outputs/channel_analysis"))
   parser.add_argument("--corr-downsample", type=int, default=10)
   parser.add_argument("--min-samples", type=int, default=100)
-  parser.add_argument("--no-plots", action="store_true")
   args = parser.parse_args()
 
   data = TrialData.load(args.mat_file)
@@ -181,9 +180,6 @@ def main() -> None:
   for channel in top:
     print(f"  channel {channel}: mean RMS {mean_rms[channel]:.3f}", flush=True)
 
-  if not args.no_plots:
-    for path in save_plots(summary, data=data, out_dir=args.out_dir):
-      print(f"saved: {path}")
 
 
 if __name__ == "__main__":

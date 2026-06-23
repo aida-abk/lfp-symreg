@@ -1,0 +1,9 @@
+dataset,channel,n_delays,delay_samples_after_downsample,downsample,lowpass_hz,normalize,threshold,degree,smooth_window,train_trials,test_trials,dt,train_score_r2,test_score_r2,nonzero_terms,min_train_embedded_samples,min_test_embedded_samples,status,error
+fixation_only,0,2,2,10,20.0,zscore,0.05,1,0,9,3,0.02,0.09140356670560917,0.09848417501412132,5,703,703,ok,
+fixation_only,0,2,2,10,20.0,zscore,0.2,1,0,9,3,0.02,0.09140110354579312,0.09848194627611595,4,703,703,ok,
+fixation_only,0,2,2,10,none,zscore,0.05,1,0,9,3,0.02,0.04138554477718309,0.04873192357894762,4,703,703,ok,
+fixation_only,0,2,2,10,none,zscore,0.2,1,0,9,3,0.02,0.04138554477718309,0.04873192357894762,4,703,703,ok,
+fixation_only,0,2,5,10,20.0,zscore,0.05,1,0,9,3,0.02,0.022206481283469748,0.01609478728565583,5,700,700,ok,
+fixation_only,0,2,5,10,20.0,zscore,0.2,1,0,9,3,0.02,0.022203903451842033,0.016087966987059832,4,700,700,ok,
+fixation_only,0,2,5,10,none,zscore,0.05,1,0,9,3,0.02,0.016467554193958067,0.01561975445184871,5,700,700,ok,
+fixation_only,0,2,5,10,none,zscore,0.2,1,0,9,3,0.02,0.0164635437950596,0.01561569111814376,4,700,700,ok,

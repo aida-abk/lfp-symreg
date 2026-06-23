@@ -1,0 +1,7 @@
+n_delays,train_r2,test_r2,nonzero_terms,min_test_embedded_samples,interpretation
+2,-0.1117,-0.0378,6,60,best_in_sweep
+4,-0.1366,-0.0754,16,50,worse_test_fit_or_more_complex
+6,-0.1509,-0.0911,36,40,worse_test_fit_or_more_complex
+8,-0.1559,-0.0957,60,30,worse_test_fit_or_more_complex
+10,-0.156,-0.0963,87,20,worse_test_fit_or_more_complex
+12,-0.1542,-0.1114,124,10,worse_test_fit_or_more_complex
