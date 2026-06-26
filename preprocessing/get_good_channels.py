@@ -5,65 +5,21 @@ import csv
 import sys
 from pathlib import Path
 
-import h5py
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
   sys.path.insert(0, str(ROOT))
 
-from load_data.convert import MAT_FILE
+from load_data.convert import MAT_FILE, load_bhv_trial_table, load_lfp_shape
 
 
 DEFAULT_OUT_CSV = Path("outputs/channel_analysis/good_fixation_trials_by_channel.csv")
 
 
-def _decode_matlab_string(dataset: h5py.Dataset) -> str:
-  """Decode a MATLAB uint16 char dataset as a Python string."""
-  values = np.asarray(dataset[()]).squeeze().ravel()
-  return "".join(chr(int(value)) for value in values if int(value) != 0)
-
-
-def _read_cell_refs(file: h5py.File, ref_path: str) -> list[h5py.Dataset]:
-  """Return the referenced objects from a MATLAB cell array dataset."""
-  refs = np.asarray(file[ref_path][()]).ravel()
-  return [file[ref] for ref in refs]
-
-
-def _read_matlab_table(file: h5py.File) -> dict[str, np.ndarray]:
-  """Read the decoded columns from trialdata.bhvTrialTbl.
-
-  The MATLAB table is stored as an HDF5 object with separate hidden cell arrays
-  for data columns and variable names. For this dataset:
-
-    #refs#/eun stores bhvTrialTbl data column references.
-    #refs#/kvn stores bhvTrialTbl variable-name references.
-
-  This helper reconstructs a Python dict like:
-
-    {"goodFix": array(...), "is_fixation_trial": array(...), ...}
-  """
-  data_columns = _read_cell_refs(file, "#refs#/eun")
-  variable_names = [
-    _decode_matlab_string(dataset)
-    for dataset in _read_cell_refs(file, "#refs#/kvn")
-  ]
-  if len(data_columns) != len(variable_names):
-    raise ValueError(
-      "bhvTrialTbl data columns and variable names have different lengths: "
-      f"{len(data_columns)} vs {len(variable_names)}"
-    )
-
-  table = {}
-  for name, dataset in zip(variable_names, data_columns):
-    table[name] = np.asarray(dataset[()]).squeeze()
-  return table
-
-
 def good_fixation_trial_indices(mat_file: Path = MAT_FILE) -> tuple[np.ndarray, np.ndarray]:
   """Return fixation trial indices and goodFix fixation trial indices."""
-  with h5py.File(mat_file, "r") as file:
-    table = _read_matlab_table(file)
+  table = load_bhv_trial_table(mat_file)
 
   if "goodFix" not in table:
     raise KeyError("bhvTrialTbl does not contain a goodFix column.")
@@ -85,8 +41,7 @@ def summarize_good_fixation_by_channel(mat_file: Path = MAT_FILE) -> list[dict[s
   """
   fixation_trials, good_fixation_trials = good_fixation_trial_indices(mat_file)
 
-  with h5py.File(mat_file, "r") as file:
-    n_channels = file["trialdata/lfp"].shape[0]
+  n_channels, _ = load_lfp_shape(mat_file)
 
   total = int(fixation_trials.size)
   good = int(good_fixation_trials.size)
