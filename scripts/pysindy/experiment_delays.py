@@ -5,8 +5,6 @@ import csv
 import sys
 from pathlib import Path
 
-import numpy as np
-
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "scripts"
 for path in (ROOT, SCRIPTS):
@@ -15,15 +13,7 @@ for path in (ROOT, SCRIPTS):
 
 from load_data.convert import MAT_FILE, TrialData
 from lfp_sindy import channel_lfp_traces, delay_embed_trials, fit_pysindy, parse_trials
-
-
-def parse_int_list(value: str) -> list[int]:
-  return [int(part.strip()) for part in value.split(",") if part.strip()]
-
-
-def count_terms(model) -> int:
-  coef = model.coefficients()
-  return int(np.count_nonzero(np.abs(coef) > 1e-12))
+from pipeline_utils import count_terms, parse_int_list
 
 
 def main() -> None:

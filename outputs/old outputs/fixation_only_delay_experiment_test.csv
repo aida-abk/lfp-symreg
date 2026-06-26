@@ -1,3 +1,0 @@
-channel,included_fixation_trials,n_delays,delay_samples_after_downsample,downsample,dt,train_trials,test_trials,min_train_embedded_samples,min_test_embedded_samples,threshold,degree,smooth_window,train_score_r2,test_score_r2,nonzero_terms
-0,8,2,5,10,0.02,6,2,700,705,0.05,2,9,-0.12701701984033553,-0.2619740346899734,6
-0,8,4,5,10,0.02,6,2,690,695,0.05,2,9,-0.17600103321180588,-0.3961133769663888,19

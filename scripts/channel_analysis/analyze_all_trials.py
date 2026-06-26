@@ -14,7 +14,13 @@ if str(ROOT) not in sys.path:
 from load_data.convert import MAT_FILE, TrialData
 
 
-def summarize_trials(data: TrialData, corr_downsample: int, min_samples: int):
+def summarize_trials(data: TrialData, corr_downsample: int, min_samples: int) -> dict[str, np.ndarray | int]:
+  """Calculate channel statistics and average within-trial correlations."""
+  if corr_downsample < 1:
+    raise ValueError("corr_downsample must be >= 1")
+  if min_samples < 2:
+    raise ValueError("min_samples must be >= 2")
+
   n_trials = data.n_trials
   n_channels = data.n_channels
   lengths = np.zeros(n_trials, dtype=int)
@@ -36,12 +42,12 @@ def summarize_trials(data: TrialData, corr_downsample: int, min_samples: int):
       rms[trial, channel] = np.sqrt(np.mean(trace**2))
       ptp[trial, channel] = np.ptp(trace)
 
+    if length >= min_samples:
       trimmed = np.vstack([trace[:length:corr_downsample] for trace in traces])
       corr = np.corrcoef(trimmed)
       if np.all(np.isfinite(corr)):
         corr_sum += corr
         corr_count += 1
-
 
   avg_corr = corr_sum / corr_count if corr_count else np.full((n_channels, n_channels), np.nan)
   return {
@@ -56,6 +62,7 @@ def summarize_trials(data: TrialData, corr_downsample: int, min_samples: int):
 
 
 def save_channel_summary(summary: dict, data: TrialData, out_dir: Path) -> Path:
+  """Save per-channel summary statistics as CSV."""
   path = out_dir / "all_trials_channel_summary.csv"
   with path.open("w", newline="") as f:
     writer = csv.writer(f)
@@ -86,6 +93,7 @@ def save_channel_summary(summary: dict, data: TrialData, out_dir: Path) -> Path:
 
 
 def save_plots(summary: dict, data: TrialData, out_dir: Path) -> list[Path]:
+  """Save duration, amplitude, and correlation plots."""
   import matplotlib
 
   matplotlib.use("Agg")
@@ -150,6 +158,11 @@ def main() -> None:
   parser.add_argument("--out-dir", type=Path, default=Path("outputs/channel_analysis"))
   parser.add_argument("--corr-downsample", type=int, default=10)
   parser.add_argument("--min-samples", type=int, default=100)
+  parser.add_argument(
+    "--save-npz",
+    action="store_true",
+    help="Also cache the full numerical arrays in compressed NumPy format.",
+  )
   args = parser.parse_args()
 
   data = TrialData.load(args.mat_file)
@@ -160,9 +173,8 @@ def main() -> None:
     min_samples=args.min_samples,
   )
 
-  npz_path = args.out_dir / "all_trials_channel_analysis.npz"
-  np.savez_compressed(npz_path, **summary, fs=data.fs)
   csv_path = save_channel_summary(summary, data=data, out_dir=args.out_dir)
+  plot_paths = save_plots(summary, data=data, out_dir=args.out_dir)
 
   print(f"trials: {data.n_trials}, channels: {data.n_channels}, fs: {data.fs} Hz", flush=True)
   print(
@@ -171,16 +183,20 @@ def main() -> None:
     flush=True,
   )
   print(f"correlation trials used: {summary['corr_count']}", flush=True)
-  print(f"saved: {npz_path}", flush=True)
   print(f"saved: {csv_path}", flush=True)
+  for path in plot_paths:
+    print(f"saved: {path}", flush=True)
+
+  if args.save_npz:
+    npz_path = args.out_dir / "all_trials_channel_analysis.npz"
+    np.savez_compressed(npz_path, **summary, fs=data.fs)
+    print(f"saved: {npz_path}", flush=True)
 
   mean_rms = np.mean(summary["rms"], axis=0)
   top = np.argsort(mean_rms)[-5:][::-1]
   print("top 5 channels by mean RMS:", flush=True)
   for channel in top:
     print(f"  channel {channel}: mean RMS {mean_rms[channel]:.3f}", flush=True)
-
-
 
 if __name__ == "__main__":
   main()
