@@ -13,17 +13,10 @@ for path in (ROOT, SCRIPTS):
   if str(path) not in sys.path:
     sys.path.insert(0, str(path))
 
-from filter.get_fixed_trials import fixation_trials, limit_trials, non_fixation_trials
+from filter.fixation_filter import fixation_trials, limit_trials, non_fixation_trials
 from load_data.convert import MAT_FILE, TrialData
 from lfp_sindy import channel_lfp_traces, delay_embed_trials, fit_pysindy
-
-
-def parse_int_list(value: str) -> list[int]:
-  return [int(part.strip()) for part in value.split(",") if part.strip()]
-
-
-def count_terms(model) -> int:
-  return int(np.count_nonzero(np.abs(model.coefficients()) > 1e-12))
+from pipeline_utils import count_terms, parse_int_list
 
 
 def save_trial_filter_csv(data: TrialData, path: Path) -> None:

@@ -16,13 +16,14 @@ def fixation_trials(data: TrialData) -> list[int]:
 
 
 def non_fixation_trials(data: TrialData) -> list[int]:
+  """Return all trials not classified as fixation-like."""
   fixation = set(fixation_trials(data))
   return [trial for trial in range(data.n_trials) if trial not in fixation]
 
 
 def limit_trials(trials: list[int], max_trials: int | None) -> list[int]:
+  """Optionally keep only the first trials, preserving recording order."""
   if max_trials is None:
     return trials
   return trials[:max_trials]
-
 

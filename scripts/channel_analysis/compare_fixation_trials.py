@@ -13,7 +13,7 @@ for path in (ROOT, SCRIPTS):
   if str(path) not in sys.path:
     sys.path.insert(0, str(path))
 
-from filter.get_fixed_trials import fixation_trials
+from filter.fixation_filter import fixation_trials
 from load_data.convert import MAT_FILE, TrialData
 
 
@@ -23,6 +23,7 @@ def fixation_trace_matrix(
   trials: list[int],
   downsample: int,
 ) -> tuple[np.ndarray, int]:
+  """Return equal-length fixation traces for one channel."""
   traces = [data.lfp_trace(trial, channel)[::downsample] for trial in trials]
   min_len = min(trace.size for trace in traces)
   cropped = [trace[:min_len] for trace in traces]
@@ -37,6 +38,7 @@ def save_trial_summary(
   cropped_samples: int,
   downsample: int,
 ) -> None:
+  """Save the trial indices and lengths represented in a matrix."""
   path.parent.mkdir(parents=True, exist_ok=True)
   with path.open("w", newline="") as f:
     writer = csv.writer(f)
@@ -71,6 +73,7 @@ def save_plots(
   label: str,
   filename: str,
 ) -> list[Path]:
+  """Save a fixation-trial correlation heatmap."""
   import matplotlib
 
   matplotlib.use("Agg")
@@ -95,10 +98,12 @@ def save_plots(
 
 
 def off_diagonal_values(corr: np.ndarray) -> np.ndarray:
+  """Return matrix entries excluding the self-correlation diagonal."""
   return corr[~np.eye(corr.shape[0], dtype=bool)]
 
 
 def save_channel_summary(path: Path, rows: list[dict[str, float | int]]) -> None:
+  """Save per-channel fixation similarity summaries."""
   path.parent.mkdir(parents=True, exist_ok=True)
   with path.open("w", newline="") as f:
     writer = csv.DictWriter(
@@ -115,6 +120,7 @@ def save_channel_summary(path: Path, rows: list[dict[str, float | int]]) -> None
 
 
 def run_one_channel(args, data: TrialData, trials: list[int]) -> None:
+  """Run fixation-trial similarity analysis for one channel."""
   original_lengths = [data.lfp_trace(trial, args.channel).size for trial in trials]
   matrix, cropped_samples = fixation_trace_matrix(
     data,
@@ -126,16 +132,17 @@ def run_one_channel(args, data: TrialData, trials: list[int]) -> None:
 
   npz_path = args.out_dir / f"fixation_trial_similarity_ch{args.channel}.npz"
   csv_path = args.out_dir / f"fixation_trial_similarity_ch{args.channel}.csv"
-  np.savez_compressed(
-    npz_path,
-    trials=np.asarray(trials),
-    matrix=matrix,
-    corr=corr,
-    channel=args.channel,
-    fs=data.fs,
-    downsample=args.downsample,
-    cropped_samples=cropped_samples,
-  )
+  if args.save_npz:
+    np.savez_compressed(
+      npz_path,
+      trials=np.asarray(trials),
+      matrix=matrix,
+      corr=corr,
+      channel=args.channel,
+      fs=data.fs,
+      downsample=args.downsample,
+      cropped_samples=cropped_samples,
+    )
   save_trial_summary(
     csv_path,
     data=data,
@@ -152,8 +159,9 @@ def run_one_channel(args, data: TrialData, trials: list[int]) -> None:
   print(f"cropped/downsampled samples used: {cropped_samples}")
   print(f"mean off-diagonal correlation: {np.mean(off_diag):.4f}")
   print(f"median off-diagonal correlation: {np.median(off_diag):.4f}")
-  print(f"saved: {npz_path}")
   print(f"saved: {csv_path}")
+  if args.save_npz:
+    print(f"saved: {npz_path}")
 
   if not args.no_plots:
     for path in save_plots(
@@ -166,6 +174,7 @@ def run_one_channel(args, data: TrialData, trials: list[int]) -> None:
 
 
 def run_all_channels(args, data: TrialData, trials: list[int]) -> None:
+  """Run fixation-trial similarity analysis for every channel."""
   corrs = []
   rows = []
   cropped_samples_by_channel = []
@@ -195,23 +204,25 @@ def run_all_channels(args, data: TrialData, trials: list[int]) -> None:
   summary_path = args.out_dir / "fixation_trial_similarity_all_channels_summary.csv"
   npz_path = args.out_dir / "fixation_trial_similarity_all_channels.npz"
   save_channel_summary(summary_path, rows)
-  np.savez_compressed(
-    npz_path,
-    trials=np.asarray(trials),
-    corr_by_channel=corr_stack,
-    avg_corr=avg_corr,
-    fs=data.fs,
-    downsample=args.downsample,
-    cropped_samples_by_channel=np.asarray(cropped_samples_by_channel),
-  )
+  if args.save_npz:
+    np.savez_compressed(
+      npz_path,
+      trials=np.asarray(trials),
+      corr_by_channel=corr_stack,
+      avg_corr=avg_corr,
+      fs=data.fs,
+      downsample=args.downsample,
+      cropped_samples_by_channel=np.asarray(cropped_samples_by_channel),
+    )
 
   avg_off_diag = off_diagonal_values(avg_corr)
   print(f"fixation trials used: {len(trials)}")
   print(f"channels used: {data.n_channels}")
   print(f"mean off-diagonal correlation in channel-averaged matrix: {np.mean(avg_off_diag):.4f}")
   print(f"median off-diagonal correlation in channel-averaged matrix: {np.median(avg_off_diag):.4f}")
-  print(f"saved: {npz_path}")
   print(f"saved: {summary_path}")
+  if args.save_npz:
+    print(f"saved: {npz_path}")
 
   if not args.no_plots:
     for path in save_plots(
@@ -234,6 +245,11 @@ def main() -> None:
   parser.add_argument("--downsample", type=int, default=1)
   parser.add_argument("--out-dir", type=Path, default=Path("outputs/channel_analysis"))
   parser.add_argument("--no-plots", action="store_true")
+  parser.add_argument(
+    "--save-npz",
+    action="store_true",
+    help="Also cache full trace/correlation arrays in compressed NumPy format.",
+  )
   args = parser.parse_args()
 
   data = TrialData.load(args.mat_file)
