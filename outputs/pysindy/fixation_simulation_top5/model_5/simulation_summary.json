@@ -1,0 +1,27 @@
+{
+  "source_model_csv": "/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/fixation_80hz_linear_stable_top.csv",
+  "source_row_index": 4,
+  "simulation_horizon_s": 1.0,
+  "configuration": {
+    "channel": "0",
+    "n_delays": "2",
+    "delay_samples_after_downsample": "1",
+    "threshold": "0.2",
+    "degree": "1",
+    "random_seed": "0",
+    "train_trials": "38",
+    "test_trials": "12",
+    "train_score_r2": "0.8266285778398023",
+    "test_score_r2": "0.8228243115001024",
+    "train_rmse": "30.427337530845318",
+    "test_rmse": "27.624502208866687",
+    "nonzero_terms": "4",
+    "eigenvalues": "-0.0333498354018+66.4597900334j; -0.0333498354018-66.4597900334j",
+    "max_real_eigenvalue": "-0.03334983540175929",
+    "linear_stability_status": "stable",
+    "error": ""
+  },
+  "mean_trajectory_rmse_all_coordinates": 1.3645027841158257,
+  "mean_x0_rmse": 1.366697219087942,
+  "mean_x0_correlation": 0.01199523467900056
+}

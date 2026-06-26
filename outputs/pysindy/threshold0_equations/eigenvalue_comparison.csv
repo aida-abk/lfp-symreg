@@ -1,0 +1,13 @@
+dataset,eigenvalue_index,real_part,imaginary_part,magnitude,stable_real_part_negative,oscillation_frequency_hz,matrix_path
+fixation,0,0.020751517518345315,159.74559397504734,159.74559532289507,False,25.42430091827968,/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/threshold0_equations/fixation_linear_system.npz
+fixation,1,0.020751517518345315,-159.74559397504734,159.74559532289507,False,25.42430091827968,/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/threshold0_equations/fixation_linear_system.npz
+fixation,2,-0.013425665034506378,41.20553502396747,41.205537211155146,True,6.558064581810643,/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/threshold0_equations/fixation_linear_system.npz
+fixation,3,-0.013425665034506378,-41.20553502396747,41.205537211155146,True,6.558064581810643,/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/threshold0_equations/fixation_linear_system.npz
+fixation,4,-0.024416035730260587,235.52549297079818,235.52549423635716,True,37.485046430457984,/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/threshold0_equations/fixation_linear_system.npz
+fixation,5,-0.024416035730260587,-235.52549297079818,235.52549423635716,True,37.485046430457984,/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/threshold0_equations/fixation_linear_system.npz
+all_trials,0,0.15151142685983698,160.66952607437105,160.669597512023,False,25.57134927896832,/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/threshold0_equations/all_trials_linear_system.npz
+all_trials,1,0.15151142685983698,-160.66952607437105,160.669597512023,False,25.57134927896832,/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/threshold0_equations/all_trials_linear_system.npz
+all_trials,2,0.04259876654700699,43.17245403726044,43.17247505360651,False,6.871109465437652,/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/threshold0_equations/all_trials_linear_system.npz
+all_trials,3,0.04259876654700699,-43.17245403726044,43.17247505360651,False,6.871109465437652,/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/threshold0_equations/all_trials_linear_system.npz
+all_trials,4,0.042400556037512326,236.2284764281127,236.22848023334222,False,37.596929722601416,/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/threshold0_equations/all_trials_linear_system.npz
+all_trials,5,0.042400556037512326,-236.2284764281127,236.22848023334222,False,37.596929722601416,/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/threshold0_equations/all_trials_linear_system.npz

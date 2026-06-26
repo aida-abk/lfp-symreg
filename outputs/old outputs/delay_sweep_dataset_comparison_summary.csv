@@ -1,4 +1,0 @@
-dataset,best_n_delays_by_test_r2,best_test_r2,terms_at_best,largest_model_n_delays,largest_model_terms,conclusion
-mixed_first30,2,-0.0378,6,12,124,all_test_r2_negative
-fixation_only_50,2,-0.1178,6,12,124,all_test_r2_negative
-non_fixation_first30,2,-0.0558,6,12,531,all_test_r2_negative
