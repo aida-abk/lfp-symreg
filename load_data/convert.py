@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+import h5py
 import hdf5storage
 import numpy as np
 
@@ -29,6 +30,74 @@ def _string_array(value) -> list[str]:
   if arr.ndim == 0:
     return [str(arr)]
   return [str(x.squeeze()) for x in arr.ravel()]
+
+
+def _decode_matlab_char(dataset: h5py.Dataset) -> str:
+  """Decode a MATLAB uint16 char dataset."""
+  values = np.asarray(dataset[()]).squeeze().ravel()
+  return "".join(chr(int(value)) for value in values if int(value) != 0)
+
+
+def _read_cell_refs(file: h5py.File, ref_path: str) -> list[h5py.Dataset]:
+  """Return the referenced objects from a MATLAB HDF5 cell array."""
+  refs = np.asarray(file[ref_path][()]).ravel()
+  return [file[ref] for ref in refs]
+
+
+def _load_matlab_table_from_refs(
+  file: h5py.File,
+  data_ref_path: str,
+  variable_name_ref_path: str,
+) -> dict[str, np.ndarray]:
+  """Decode a MATLAB table stored as separate data and name reference cells."""
+  data_columns = _read_cell_refs(file, data_ref_path)
+  variable_names = [
+    _decode_matlab_char(dataset)
+    for dataset in _read_cell_refs(file, variable_name_ref_path)
+  ]
+  if len(data_columns) != len(variable_names):
+    raise ValueError(
+      "MATLAB table data columns and variable names have different lengths: "
+      f"{len(data_columns)} vs {len(variable_names)}"
+    )
+
+  table = {}
+  for name, dataset in zip(variable_names, data_columns):
+    table[name] = np.asarray(dataset[()]).squeeze()
+  return table
+
+
+def load_bhv_trial_table(path: str | Path = MAT_FILE) -> dict[str, np.ndarray]:
+  """Load the MATLAB ``trialdata.bhvTrialTbl`` table as NumPy arrays.
+
+  This function is intentionally separate from ``TrialData.load`` because the
+  behavioral table uses MATLAB's HDF5 table/MCOS encoding and is slower/more
+  specialized to decode. Call this only when a script needs trial metadata such
+  as ``goodFix``, ``is_fixation_trial``, ``duration``, or sequence columns.
+
+  Args:
+    path: Path to the MATLAB ``trialdata`` file.
+
+  Returns:
+    A dictionary mapping each ``bhvTrialTbl`` variable name to a NumPy array.
+    Each array is indexed by the 0-based LFP trial index.
+  """
+  with h5py.File(path, "r") as file:
+    # hdf5storage can load the LFP cell array nicely, but it leaves MATLAB table
+    # objects as opaque references. For this dataset, these hidden refs are the
+    # bhvTrialTbl data-cell and variable-name-cell entries.
+    return _load_matlab_table_from_refs(
+      file,
+      data_ref_path="#refs#/eun",
+      variable_name_ref_path="#refs#/kvn",
+    )
+
+
+def load_lfp_shape(path: str | Path = MAT_FILE) -> tuple[int, int]:
+  """Return ``(n_channels, n_trials)`` without loading all LFP traces."""
+  with h5py.File(path, "r") as file:
+    n_channels, n_trials = file["trialdata/lfp"].shape
+  return int(n_channels), int(n_trials)
 
 
 @dataclass
