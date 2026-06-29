@@ -35,7 +35,6 @@ lfp-symreg/
 └── README.md
 ```
 
-`raw_data/` and `outputs/` are local working directories and are ignored by
-Git.
+`raw_data/` are local working directory and is ignored by Git.
 
 

@@ -18,9 +18,10 @@ for path in (ROOT, SCRIPTS, PYSINDY_SCRIPTS):
   if str(path) not in sys.path:
     sys.path.insert(0, str(path))
 
-from lfp_sindy import delay_embed_trials, fit_pysindy
+from models.sindy import SINDyConfig, delay_embed_trajectories, fit_sindy_model
 from load_data.convert import MAT_FILE, TrialData
-from pipeline_utils import channel_traces, select_trials, split_trials_random
+from load_data.preprocessing import channel_traces
+from pipeline_utils import select_trials, split_trials_random
 
 
 DEFAULT_MODEL_CSV = (
@@ -111,6 +112,7 @@ def simulate_linear_trajectory_scipy(
 
   The output is sampled at the same ``dt`` as the measured embedded trajectory
   so the two arrays can be compared point-by-point.
+  
   """
   # Previous PySINDy simulation version,kept as reference.
   #
@@ -352,12 +354,12 @@ def main() -> None:
   # Convert each one-dimensional LFP trace into a delay-embedded trajectory.
   # For n_delays=6, each row has six state variables:
   # [x(t), x(t-tau), x(t-2tau), x(t-3tau), x(t-4tau), x(t-5tau)].
-  train_embedded = delay_embed_trials(
+  train_embedded = delay_embed_trajectories(
     train_traces,
     n_delays=n_delays,
     delay=delay,
   )
-  test_embedded = delay_embed_trials(
+  test_embedded = delay_embed_trajectories(
     test_traces,
     n_delays=n_delays,
     delay=delay,
@@ -370,12 +372,14 @@ def main() -> None:
   # Refit the selected PySINDy model on the training trajectories. We use
   # PySINDy only for fitting the equations; the simulation below is done
   # explicitly with scipy.integrate.solve_ivp.
-  model = fit_pysindy(
+  model = fit_sindy_model(
     train_embedded,
     dt=dt,
-    threshold=threshold,
-    degree=degree,
-    smooth_window=smooth_window,
+    config=SINDyConfig(
+      threshold=threshold,
+      degree=degree,
+      smooth_window=smooth_window,
+    ),
   )
 
   # For degree=1, PySINDy learns an affine linear system:

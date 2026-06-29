@@ -13,8 +13,8 @@ for path in (ROOT, SCRIPTS):
   if str(path) not in sys.path:
     sys.path.insert(0, str(path))
 
-from filter.fixation_filter import fixation_trials
-from load_data.convert import MAT_FILE, TrialData
+from load_data.convert import MAT_FILE, TrialData, load_bhv_trial_table
+from load_data.trial_selection import select_valid_trials
 
 
 def fixation_trace_matrix(
@@ -23,7 +23,7 @@ def fixation_trace_matrix(
   trials: list[int],
   downsample: int,
 ) -> tuple[np.ndarray, int]:
-  """Return equal-length fixation traces for one channel."""
+  """Return equal-length selected-trial traces for one channel."""
   traces = [data.lfp_trace(trial, channel)[::downsample] for trial in trials]
   min_len = min(trace.size for trace in traces)
   cropped = [trace[:min_len] for trace in traces]
@@ -73,7 +73,7 @@ def save_plots(
   label: str,
   filename: str,
 ) -> list[Path]:
-  """Save a fixation-trial correlation heatmap."""
+  """Save a selected-trial correlation heatmap."""
   import matplotlib
 
   matplotlib.use("Agg")
@@ -85,8 +85,8 @@ def save_plots(
   fig, ax = plt.subplots(figsize=(8, 7))
   im = ax.imshow(corr, vmin=-1, vmax=1, cmap="coolwarm")
   ax.set_title(label)
-  ax.set_xlabel("Fixation trial index")
-  ax.set_ylabel("Fixation trial index")
+  ax.set_xlabel("Selected trial index")
+  ax.set_ylabel("Selected trial index")
   fig.colorbar(im, ax=ax, label="Correlation")
   fig.tight_layout()
   path = out_dir / filename
@@ -103,7 +103,7 @@ def off_diagonal_values(corr: np.ndarray) -> np.ndarray:
 
 
 def save_channel_summary(path: Path, rows: list[dict[str, float | int]]) -> None:
-  """Save per-channel fixation similarity summaries."""
+  """Save per-channel selected-trial similarity summaries."""
   path.parent.mkdir(parents=True, exist_ok=True)
   with path.open("w", newline="") as f:
     writer = csv.DictWriter(
@@ -120,7 +120,7 @@ def save_channel_summary(path: Path, rows: list[dict[str, float | int]]) -> None
 
 
 def run_one_channel(args, data: TrialData, trials: list[int]) -> None:
-  """Run fixation-trial similarity analysis for one channel."""
+  """Run selected-trial similarity analysis for one channel."""
   original_lengths = [data.lfp_trace(trial, args.channel).size for trial in trials]
   matrix, cropped_samples = fixation_trace_matrix(
     data,
@@ -130,8 +130,9 @@ def run_one_channel(args, data: TrialData, trials: list[int]) -> None:
   )
   corr = np.corrcoef(matrix)
 
-  npz_path = args.out_dir / f"fixation_trial_similarity_ch{args.channel}.npz"
-  csv_path = args.out_dir / f"fixation_trial_similarity_ch{args.channel}.csv"
+  prefix = f"{args.trial_type}_trial_similarity"
+  npz_path = args.out_dir / f"{prefix}_ch{args.channel}.npz"
+  csv_path = args.out_dir / f"{prefix}_ch{args.channel}.csv"
   if args.save_npz:
     np.savez_compressed(
       npz_path,
@@ -153,7 +154,7 @@ def run_one_channel(args, data: TrialData, trials: list[int]) -> None:
   )
 
   off_diag = off_diagonal_values(corr)
-  print(f"fixation trials used: {len(trials)}")
+  print(f"{args.trial_type} valid trials used: {len(trials)}")
   print(f"channel: {args.channel}")
   print(f"original sample range: {min(original_lengths)} to {max(original_lengths)}")
   print(f"cropped/downsampled samples used: {cropped_samples}")
@@ -167,14 +168,14 @@ def run_one_channel(args, data: TrialData, trials: list[int]) -> None:
     for path in save_plots(
       corr,
       out_dir=args.out_dir,
-      label=f"Fixation Trial Similarity, Ch {args.channel}",
-      filename=f"fixation_trial_correlation_ch{args.channel}.png",
+      label=f"{args.trial_type} Trial Similarity, Ch {args.channel}",
+      filename=f"{prefix}_correlation_ch{args.channel}.png",
     ):
       print(f"saved: {path}")
 
 
 def run_all_channels(args, data: TrialData, trials: list[int]) -> None:
-  """Run fixation-trial similarity analysis for every channel."""
+  """Run selected-trial similarity analysis for every channel."""
   corrs = []
   rows = []
   cropped_samples_by_channel = []
@@ -201,8 +202,9 @@ def run_all_channels(args, data: TrialData, trials: list[int]) -> None:
 
   corr_stack = np.stack(corrs, axis=0)
   avg_corr = np.mean(corr_stack, axis=0)
-  summary_path = args.out_dir / "fixation_trial_similarity_all_channels_summary.csv"
-  npz_path = args.out_dir / "fixation_trial_similarity_all_channels.npz"
+  prefix = f"{args.trial_type}_trial_similarity"
+  summary_path = args.out_dir / f"{prefix}_all_channels_summary.csv"
+  npz_path = args.out_dir / f"{prefix}_all_channels.npz"
   save_channel_summary(summary_path, rows)
   if args.save_npz:
     np.savez_compressed(
@@ -216,7 +218,7 @@ def run_all_channels(args, data: TrialData, trials: list[int]) -> None:
     )
 
   avg_off_diag = off_diagonal_values(avg_corr)
-  print(f"fixation trials used: {len(trials)}")
+  print(f"{args.trial_type} valid trials used: {len(trials)}")
   print(f"channels used: {data.n_channels}")
   print(f"mean off-diagonal correlation in channel-averaged matrix: {np.mean(avg_off_diag):.4f}")
   print(f"median off-diagonal correlation in channel-averaged matrix: {np.median(avg_off_diag):.4f}")
@@ -228,17 +230,23 @@ def run_all_channels(args, data: TrialData, trials: list[int]) -> None:
     for path in save_plots(
       avg_corr,
       out_dir=args.out_dir,
-      label="Fixation Trial Similarity, Averaged Across Channels",
-      filename="fixation_trial_correlation_all_channels_average.png",
+      label=f"{args.trial_type} Trial Similarity, Averaged Across Channels",
+      filename=f"{prefix}_correlation_all_channels_average.png",
     ):
       print(f"saved: {path}")
 
 
 def main() -> None:
   parser = argparse.ArgumentParser(
-    description="Compare LFP similarity across fixation trials."
+    description="Compare LFP similarity across valid selected trials."
   )
   parser.add_argument("--mat-file", type=Path, default=MAT_FILE)
+  parser.add_argument(
+    "--trial-type",
+    choices=("fixation", "non_fixation"),
+    default="fixation",
+    help="Use configured behavioral validity columns for this trial type.",
+  )
   parser.add_argument("--channel", type=int, default=0)
   parser.add_argument("--all-channels", action="store_true")
   parser.add_argument("--max-trials", type=int, default=None)
@@ -253,7 +261,8 @@ def main() -> None:
   args = parser.parse_args()
 
   data = TrialData.load(args.mat_file)
-  trials = fixation_trials(data)
+  behavior = load_bhv_trial_table(args.mat_file)
+  trials = select_valid_trials(behavior, args.trial_type)
   if args.max_trials is not None:
     trials = trials[: args.max_trials]
 

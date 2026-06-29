@@ -10,7 +10,7 @@ import numpy as np
 from scipy import signal
 from sklearn.metrics import mean_squared_error, r2_score
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ROOT / "scripts"
 PYSINDY_SCRIPTS = SCRIPTS / "pysindy"
 for path in (ROOT, SCRIPTS, PYSINDY_SCRIPTS):
@@ -19,7 +19,9 @@ for path in (ROOT, SCRIPTS, PYSINDY_SCRIPTS):
 
 from filter.fixation_filter import fixation_trials, non_fixation_trials
 from load_data.convert import MAT_FILE, TrialData
-from lfp_sindy import delay_embed_trials, parse_trials
+from load_data.preprocessing import preprocess_trace
+from models.sindy import delay_embed_trajectories
+from lfp_sindy import parse_trials
 from pipeline_utils import split_trials_sequential
 
 
@@ -29,51 +31,6 @@ def optional_float(value: str) -> float | None:
 
 def optional_int(value: str) -> int | None:
   return None if value.lower() in {"none", "off", "0"} else int(value)
-
-
-def preprocess_trace(
-  trace: np.ndarray,
-  fs: float,
-  downsample: int,
-  highpass_hz: float | None,
-  lowpass_hz: float | None,
-  normalize: str,
-) -> np.ndarray:
-  """Detrend, filter, downsample, and normalize one LFP trajectory."""
-  if downsample < 1:
-    raise ValueError("downsample must be >= 1")
-
-  x = signal.detrend(np.asarray(trace, dtype=float).squeeze(), type="constant")
-  if x.ndim != 1:
-    raise ValueError(f"Expected a 1D trace, got shape {x.shape}")
-
-  nyquist = fs / 2
-  if highpass_hz is not None and not 0 < highpass_hz < nyquist:
-    raise ValueError(f"highpass_hz must be between 0 and {nyquist}")
-  if lowpass_hz is not None and not 0 < lowpass_hz < nyquist:
-    raise ValueError(f"lowpass_hz must be between 0 and {nyquist}")
-  if highpass_hz is not None and lowpass_hz is not None and highpass_hz >= lowpass_hz:
-    raise ValueError("highpass_hz must be lower than lowpass_hz")
-
-  if highpass_hz is not None or lowpass_hz is not None:
-    if highpass_hz is None:
-      cutoff, btype = lowpass_hz, "lowpass"
-    elif lowpass_hz is None:
-      cutoff, btype = highpass_hz, "highpass"
-    else:
-      cutoff, btype = [highpass_hz, lowpass_hz], "bandpass"
-    sos = signal.butter(4, cutoff, btype=btype, fs=fs, output="sos")
-    x = signal.sosfiltfilt(sos, x)
-
-  x = x[::downsample]
-  if normalize == "zscore":
-    std = np.std(x)
-    x = (x - np.mean(x)) / std if std > 0 else x - np.mean(x)
-  elif normalize == "center":
-    x = x - np.mean(x)
-  elif normalize != "none":
-    raise ValueError(f"Unknown normalization mode: {normalize}")
-  return x
 
 
 def estimate_derivative(
@@ -239,7 +196,7 @@ def main() -> None:
       )
       for trial in selected_trials
     ]
-    embedded = delay_embed_trials(traces, n_delays=args.n_delays, delay=args.delay)
+    embedded = delay_embed_trajectories(traces, n_delays=args.n_delays, delay=args.delay)
     return build_regression_arrays(embedded, dt=dt, smooth_window=args.smooth_window)
 
   x_train_full, y_train_full = prepare(train_trials)
