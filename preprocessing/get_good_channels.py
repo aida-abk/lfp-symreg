@@ -12,6 +12,7 @@ if str(ROOT) not in sys.path:
   sys.path.insert(0, str(ROOT))
 
 from load_data.convert import MAT_FILE, load_bhv_trial_table, load_lfp_shape
+from load_data.trial_selection import select_valid_trials
 
 
 DEFAULT_OUT_CSV = Path("outputs/channel_analysis/good_fixation_trials_by_channel.csv")
@@ -27,8 +28,8 @@ def good_fixation_trial_indices(mat_file: Path = MAT_FILE) -> tuple[np.ndarray, 
     raise KeyError("bhvTrialTbl does not contain an is_fixation_trial column.")
 
   is_fixation = table["is_fixation_trial"].astype(bool)
-  good_fix = table["goodFix"].astype(float) == 1
-  return np.where(is_fixation)[0], np.where(is_fixation & good_fix)[0]
+  good_trials = np.asarray(select_valid_trials(table, "fixation"), dtype=int)
+  return np.where(is_fixation)[0], good_trials
 
 
 def summarize_good_fixation_by_channel(mat_file: Path = MAT_FILE) -> list[dict[str, float | int]]:
@@ -84,7 +85,7 @@ def main() -> None:
 
   print(f"fixation trials: {fixation_trials.size}")
   print(f"goodFix fixation trials: {good_fixation_trials.size}")
-  print(f"bad/not-goodFix fixation trials: {fixation_trials.size - good_fixation_trials.size}")
+  print(f"not-goodFix fixation trials: {fixation_trials.size - good_fixation_trials.size}")
   print(f"goodFix fixation trial indices: {good_fixation_trials.tolist()}")
   print(f"saved: {args.out_csv}")
 

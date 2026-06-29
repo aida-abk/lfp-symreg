@@ -26,7 +26,6 @@ This project is evolving implementation of PySINDy and PySR to see if they can d
 
 ## Scientific Assumptions
 - Sampling frequency = 500 Hz.
-- Delayed embeddings should use sklearn TimeDelayEmbedding.
 - No filtering inside plotting functions
 
 When making significant changes:

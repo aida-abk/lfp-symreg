@@ -14,9 +14,9 @@ for path in (ROOT, SCRIPTS, PYSINDY_SCRIPTS):
   if str(path) not in sys.path:
     sys.path.insert(0, str(path))
 
-from filter.fixation_filter import fixation_trials
-from load_data.convert import MAT_FILE, TrialData
-from scripts.pysindy.pipeline_utils import preprocess_trace
+from load_data.convert import MAT_FILE, TrialData, load_bhv_trial_table
+from load_data.preprocessing import preprocess_trace
+from load_data.trial_selection import select_valid_trials
 
 
 def visualize_fixation_trials_80hz(
@@ -53,7 +53,8 @@ def visualize_fixation_trials_80hz(
   if not 0 <= channel < data.n_channels:
     raise ValueError(f"channel must be between 0 and {data.n_channels - 1}")
 
-  trials = fixation_trials(data)
+  behavior = load_bhv_trial_table(mat_file)
+  trials = select_valid_trials(behavior, "fixation")
   if max_trials is not None:
     trials = trials[:max_trials]
   if not trials:
