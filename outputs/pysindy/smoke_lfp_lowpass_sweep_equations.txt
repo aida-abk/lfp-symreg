@@ -1,5 +1,0 @@
-Rank 1: source=lfp, trial_type=fixation, degree=1, n_delays=2, delay=1, threshold=0.05, status=viable, psd=0.7448, rmse=1.6247
-(x0)' =  223.466 x0 + -230.014 x1 | (x1)' =  230.050 x0 + -223.505 x1
-
-Rank 2: source=lfp, trial_type=fixation, degree=1, n_delays=2, delay=1, threshold=0.05, status=viable, psd=0.7139, rmse=1.6589
-(x0)' =  196.753 x0 + -204.759 x1 | (x1)' =  205.050 x0 + -197.058 x1
