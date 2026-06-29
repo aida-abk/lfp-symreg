@@ -8,10 +8,6 @@
 # folders
 raw_data/
 archive/
-!archive/
-archive/*
-!archive/parameter_sweepv01/
-!archive/parameter_sweepv01/*.py
 docs/
 
 # python/cache
