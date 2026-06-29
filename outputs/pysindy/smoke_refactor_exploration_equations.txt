@@ -1,2 +1,0 @@
-Rank 1: source=lfp, trial_type=fixation, degree=1, n_delays=2, delay=1, threshold=0.05, status=viable, psd=0.9334, rmse=1.8521
-(x0)' =  196.753 x0 + -204.759 x1 | (x1)' =  205.050 x0 + -197.058 x1

@@ -1,2 +1,0 @@
-Rank 1: source=lorenz, trial_type=fixation, degree=2, n_delays=1, delay=1, threshold=0.05, status=viable, psd=1.0000, rmse=0.1162
-(x0)' = -9.988 x0 +  9.988 x1 | (x1)' =  27.850 x0 + -0.980 x1 + -0.995 x0 x2 | (x2)' = -2.660 x2 +  0.998 x0 x1
