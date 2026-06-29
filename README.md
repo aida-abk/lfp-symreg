@@ -8,33 +8,47 @@ dynamical models with delay embeddings, PySINDy, and PySR.
 
 ```text
 lfp-symreg/
+├── AGENTS.md
+├── README.md
+├── archive/
+│   /unused scripts
+├── docs/
+│   ├── project_context.md
+│   └── repo_walkthrough.md
 ├── load_data/
-│   └── convert.py
+│   ├── convert.py
+│   ├── preprocessing.py
+│   ├── synthetic.py
+│   └── trial_selection.py
+├── models/
+│   ├── pysr.py
+│   ├── sindy.py
+│   └── validation.py
+├── outputs/
+│   ├── channel_analysis/
+│   ├── filter/
+│   ├── pysindy/
+│   └── pysr/
+├── preprocessing/
+│   └── get_good_channels.py
 ├── raw_data/
 │   └── trialdata_v03_buzz_20231106_pre-0.100_post0.100.mat
 ├── scripts/
 │   ├── channel_analysis/
-│   │   ├── analyze_single_trial.py
 │   │   ├── analyze_all_trials.py
+│   │   ├── analyze_single_trial.py
 │   │   └── compare_fixation_trials.py
 │   ├── filter/
-│   │   └── get_fixed_trials.py
+│   │   ├── fixation_filter.py
+│   │   └── visualize_80hz.py
 │   ├── pysindy/
+│   │   ├── exploration_sweep.py
 │   │   ├── lfp_sindy.py
-│   │   ├── experiment_delays.py
-│   │   ├── lfp_sindy_fixation_only.py
-│   │   ├── lfp_sindy_exclude_fixation.py
-│   │   └── tune_fixation_sindy.py
-│   ├── pysr/
-│   │   └── lfp_sr.py
-│   └── graph_lfp.m
-├── outputs/
-│   ├── channel_analysis/
-│   ├── pysindy/
-│   └── old outputs/
+│   │   ├── pipeline_utils.py
+│   │   └── simulate_fixation_sweep_model.py
+│   └── pysr/
 └── README.md
 ```
 
-`raw_data/` are local working directory and is ignored by Git.
-
+`raw_data/` contains local data files and is ignored by Git.
 
