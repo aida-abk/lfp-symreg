@@ -11,7 +11,7 @@ import numpy as np
 from scipy.linalg import eigvals
 from sklearn.metrics import mean_squared_error
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "scripts"
 PYSINDY_SCRIPTS = SCRIPTS / "pysindy"
 for path in (ROOT, SCRIPTS, PYSINDY_SCRIPTS):
@@ -19,9 +19,9 @@ for path in (ROOT, SCRIPTS, PYSINDY_SCRIPTS):
     sys.path.insert(0, str(path))
 
 from load_data.convert import MAT_FILE, TrialData
-from lfp_sindy import delay_embed_trials, fit_pysindy
+from load_data.preprocessing import channel_traces
+from models.sindy import SINDyConfig, delay_embed_trajectories, fit_sindy_model
 from pipeline_utils import (
-  channel_traces,
   count_terms,
   parse_float_list,
   parse_int_list,
@@ -162,14 +162,16 @@ def main() -> None:
         lowpass_hz=lowpass_hz,
         normalize=normalize,
       )
-      train_embedded = delay_embed_trials(train_traces, n_delays=n_delays, delay=delay)
-      test_embedded = delay_embed_trials(test_traces, n_delays=n_delays, delay=delay)
-      model = fit_pysindy(
+      train_embedded = delay_embed_trajectories(train_traces, n_delays=n_delays, delay=delay)
+      test_embedded = delay_embed_trajectories(test_traces, n_delays=n_delays, delay=delay)
+      model = fit_sindy_model(
         train_embedded,
         dt=downsample / data.fs,
-        threshold=threshold,
-        degree=degree,
-        smooth_window=smooth_window,
+        config=SINDyConfig(
+          threshold=threshold,
+          degree=degree,
+          smooth_window=smooth_window,
+        ),
       )
       dt = downsample / data.fs
       row["train_score_r2"] = float(model.score(train_embedded, t=dt))
@@ -247,17 +249,19 @@ def main() -> None:
         lowpass_hz=80.0,
         normalize="zscore",
       )
-      best_embedded = delay_embed_trials(
+      best_embedded = delay_embed_trajectories(
         best_traces,
         n_delays=int(best["n_delays"]),
         delay=int(best["delay_samples_after_downsample"]),
       )
-      best_model = fit_pysindy(
+      best_model = fit_sindy_model(
         best_embedded,
         dt=2 / data.fs,
-        threshold=float(best["threshold"]),
-        degree=int(best["degree"]),
-        smooth_window=0,
+        config=SINDyConfig(
+          threshold=float(best["threshold"]),
+          degree=int(best["degree"]),
+          smooth_window=0,
+        ),
       )
 
       if args.print_best_model:

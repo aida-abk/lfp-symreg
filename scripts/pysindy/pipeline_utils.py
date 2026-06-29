@@ -3,9 +3,9 @@ from __future__ import annotations
 import math
 
 import numpy as np
-from scipy import signal
 
 from filter.fixation_filter import fixation_trials, non_fixation_trials
+from load_data.preprocessing import channel_traces, preprocess_trace
 from load_data.convert import TrialData
 
 
@@ -27,80 +27,6 @@ def parse_lowpass_list(value: str) -> list[float | None]:
     if part:
       values.append(None if part in {"none", "0"} else float(part))
   return values
-
-
-def preprocess_trace(
-  trace: np.ndarray,
-  fs: float,
-  downsample: int,
-  lowpass_hz: float | None,
-  normalize: str,
-  window_start: float | None = None,
-  window_end: float | None = None,
-) -> np.ndarray:
-  """Detrend, filter, optionally crop, downsample, and normalize one trace."""
-  x = np.asarray(trace, dtype=float).squeeze()
-  if x.ndim != 1:
-    raise ValueError(f"Expected a 1D trace, got shape {x.shape}")
-  if downsample < 1:
-    raise ValueError("downsample must be >= 1")
-  if (window_start is None) != (window_end is None):
-    raise ValueError("window_start and window_end must be provided together.")
-
-  x = signal.detrend(x, type="constant")
-  if lowpass_hz is not None:
-    nyquist = fs / 2
-    if not 0 < lowpass_hz < nyquist:
-      raise ValueError(f"lowpass_hz must be between 0 and {nyquist}, got {lowpass_hz}")
-    sos = signal.butter(4, lowpass_hz, btype="lowpass", fs=fs, output="sos")
-    x = signal.sosfiltfilt(sos, x)
-
-  if window_start is not None and window_end is not None:
-    if not 0 <= window_start < window_end:
-      raise ValueError("Require 0 <= window_start < window_end.")
-    start_sample = int(round(window_start * fs))
-    end_sample = int(round(window_end * fs))
-    if end_sample > x.size:
-      raise ValueError(
-        f"Window ending at {window_end}s needs {end_sample} samples, "
-        f"but the trace contains {x.size}."
-      )
-    x = x[start_sample:end_sample]
-
-  x = x[::downsample]
-  if normalize == "zscore":
-    std = np.std(x)
-    x = (x - np.mean(x)) / std if std > 0 else x - np.mean(x)
-  elif normalize == "center":
-    x = x - np.mean(x)
-  elif normalize != "none":
-    raise ValueError(f"Unknown normalize mode: {normalize}")
-  return x
-
-
-def channel_traces(
-  data: TrialData,
-  channel: int,
-  trials: list[int],
-  downsample: int,
-  lowpass_hz: float | None,
-  normalize: str,
-  window_start: float | None = None,
-  window_end: float | None = None,
-) -> list[np.ndarray]:
-  """Preprocess one channel independently for each selected trial."""
-  return [
-    preprocess_trace(
-      data.lfp_trace(trial, channel),
-      fs=data.fs,
-      downsample=downsample,
-      lowpass_hz=lowpass_hz,
-      normalize=normalize,
-      window_start=window_start,
-      window_end=window_end,
-    )
-    for trial in trials
-  ]
 
 
 def select_trials(
@@ -149,6 +75,40 @@ def split_trials_random(
   np.random.default_rng(seed).shuffle(shuffled)
   n_test = min(len(shuffled) - 1, max(1, int(round(len(shuffled) * test_fraction))))
   return shuffled[n_test:].tolist(), shuffled[:n_test].tolist()
+
+
+def is_contiguous_holdout(
+  all_trials: list[int],
+  held_out_trials: list[int],
+) -> bool:
+  """Return whether held-out trials form one contiguous block in time."""
+  positions = sorted(all_trials.index(trial) for trial in held_out_trials)
+  return positions == list(range(positions[0], positions[-1] + 1))
+
+
+def split_trials_random_checked(
+  trials: list[int],
+  test_fraction: float,
+  seed: int,
+  max_attempts: int = 100,
+) -> tuple[list[int], list[int]]:
+  """Randomly split trials and reject an accidentally contiguous holdout."""
+  if len(trials) < 4:
+    raise ValueError("At least four trials are required for a checked random split.")
+
+  for attempt in range(max_attempts):
+    train_trials, test_trials = split_trials_random(
+      trials,
+      test_fraction=test_fraction,
+      seed=seed + attempt,
+    )
+    if not is_contiguous_holdout(trials, test_trials):
+      return train_trials, test_trials
+
+  raise RuntimeError(
+    "Could not create a random split whose test set is non-contiguous in "
+    f"{max_attempts} attempts."
+  )
 
 
 def count_terms(model) -> int:

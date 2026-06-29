@@ -15,7 +15,8 @@ for path in (ROOT, SCRIPTS):
 
 from filter.fixation_filter import fixation_trials, limit_trials, non_fixation_trials
 from load_data.convert import MAT_FILE, TrialData
-from lfp_sindy import channel_lfp_traces, delay_embed_trials, fit_pysindy
+from lfp_sindy import channel_lfp_traces
+from models.sindy import SINDyConfig, delay_embed_trajectories, fit_sindy_model
 from pipeline_utils import count_terms, parse_int_list
 
 
@@ -38,7 +39,7 @@ def save_trial_filter_csv(data: TrialData, path: Path) -> None:
 
 def run_single_fit(args, data: TrialData, trials: list[int]) -> None:
   traces = channel_lfp_traces(data, channel=args.channel, trials=trials, downsample=args.downsample)
-  embedded_trials = delay_embed_trials(traces, n_delays=args.n_delays, delay=args.delay)
+  embedded_trials = delay_embed_trajectories(traces, n_delays=args.n_delays, delay=args.delay)
   dt = args.downsample / data.fs
   trace_lengths = [trace.size for trace in traces]
   embedded_lengths = [embedded.shape[0] for embedded in embedded_trials]
@@ -68,12 +69,14 @@ def run_single_fit(args, data: TrialData, trials: list[int]) -> None:
     print(f"saved: {args.save_npz}")
 
   if args.fit:
-    model = fit_pysindy(
+    model = fit_sindy_model(
       embedded_trials,
       dt=dt,
-      threshold=args.threshold,
-      degree=args.degree,
-      smooth_window=args.smooth_window,
+      config=SINDyConfig(
+        threshold=args.threshold,
+        degree=args.degree,
+        smooth_window=args.smooth_window,
+      ),
     )
     model.print()
 
@@ -90,14 +93,16 @@ def run_delay_sweep(args, data: TrialData, trials: list[int]) -> None:
   test_traces = traces[n_train:]
   rows = []
   for n_delays in parse_int_list(args.n_delays_list):
-    train_embedded = delay_embed_trials(train_traces, n_delays=n_delays, delay=args.delay)
-    test_embedded = delay_embed_trials(test_traces, n_delays=n_delays, delay=args.delay)
-    model = fit_pysindy(
+    train_embedded = delay_embed_trajectories(train_traces, n_delays=n_delays, delay=args.delay)
+    test_embedded = delay_embed_trajectories(test_traces, n_delays=n_delays, delay=args.delay)
+    model = fit_sindy_model(
       train_embedded,
       dt=dt,
-      threshold=args.threshold,
-      degree=args.degree,
-      smooth_window=args.smooth_window,
+      config=SINDyConfig(
+        threshold=args.threshold,
+        degree=args.degree,
+        smooth_window=args.smooth_window,
+      ),
     )
     train_score = float(model.score(train_embedded, t=dt))
     test_score = float(model.score(test_embedded, t=dt))

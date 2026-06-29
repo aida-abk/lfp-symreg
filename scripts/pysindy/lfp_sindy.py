@@ -13,6 +13,12 @@ for path in (ROOT, SCRIPTS):
     sys.path.insert(0, str(path))
 
 from load_data.convert import MAT_FILE, TrialData
+from models.sindy import (
+  SINDyConfig,
+  delay_embed_trace as model_delay_embed_trace,
+  delay_embed_trajectories,
+  fit_sindy_model,
+)
 
 
 def channel_lfp_table(
@@ -50,30 +56,12 @@ def channel_lfp_traces(
 
 def delay_embed_trace(trace: np.ndarray, n_delays: int, delay: int) -> np.ndarray:
   """Build delay coordinates [x(t), x(t-tau), ..., x(t-(m-1)tau)]."""
-  if n_delays < 2:
-    raise ValueError("n_delays must be >= 2")
-  if delay < 1:
-    raise ValueError("delay must be >= 1 sample")
-
-  trace = np.asarray(trace, dtype=float).squeeze()
-  if trace.ndim != 1:
-    raise ValueError(f"Expected a 1D trace, got shape {trace.shape}")
-
-  n_rows = trace.size - (n_delays - 1) * delay
-  if n_rows <= 0:
-    raise ValueError(
-      "Trace is too short for this embedding. "
-      f"trace length={trace.size}, n_delays={n_delays}, delay={delay}"
-    )
-
-  return np.column_stack(
-    [trace[offset : offset + n_rows] for offset in range((n_delays - 1) * delay, -1, -delay)]
-  )
+  return model_delay_embed_trace(trace, n_delays=n_delays, delay=delay)
 
 
 def delay_embed_trials(traces: list[np.ndarray], n_delays: int, delay: int) -> list[np.ndarray]:
   """Apply delay embedding to every per-trial trace."""
-  return [delay_embed_trace(trace, n_delays=n_delays, delay=delay) for trace in traces]
+  return delay_embed_trajectories(traces, n_delays=n_delays, delay=delay)
 
 
 def fit_pysindy(
@@ -84,31 +72,15 @@ def fit_pysindy(
   smooth_window: int = 9,
 ):
   """Fit a SINDy model to a list of embedded trajectories."""
-  try:
-    import pysindy as ps
-  except ImportError as exc:
-    raise ImportError(
-      "PySINDy is not installed"
-    ) from exc
-
-  kwargs = {}
-  if smooth_window and smooth_window > 2:
-    if smooth_window % 2 == 0:
-      smooth_window += 1
-    kwargs["differentiation_method"] = ps.SmoothedFiniteDifference(
-      smoother_kws={"window_length": smooth_window, "polyorder": 3}
-    )
-
-  model = ps.SINDy(
-    optimizer=ps.STLSQ(threshold=threshold),
-    feature_library=ps.PolynomialLibrary(degree=degree),
-    **kwargs,
+  return fit_sindy_model(
+    embedded_trials,
+    dt=dt,
+    config=SINDyConfig(
+      threshold=threshold,
+      degree=degree,
+      smooth_window=smooth_window,
+    ),
   )
-  try:
-    model.fit(embedded_trials, t=dt)
-  except TypeError:
-    model.fit(embedded_trials, t=dt, multiple_trajectories=True)
-  return model
 
 
 def parse_trials(value: str | None, n_trials: int, max_trials: int | None) -> list[int]:
