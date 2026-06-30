@@ -15,7 +15,7 @@ MAT_FILE = Path(__file__).resolve().parents[1] / (
 def _scalar(value) -> float | int | str:
   """Extract a Python scalar from nested MATLAB arrays."""
   arr = np.asarray(value).squeeze()
-  if arr.dtype.kind in {"U", "S", "O"}:
+  if arr.dtype.kind in {"U", "S", "O"}: 
     return str(arr)
   if arr.ndim != 0:
     raise ValueError(f"Expected scalar value, got shape {arr.shape}")
@@ -83,7 +83,7 @@ def load_bhv_trial_table(path: str | Path = MAT_FILE) -> dict[str, np.ndarray]:
     Each array is indexed by the 0-based LFP trial index.
   """
   with h5py.File(path, "r") as file:
-    # hdf5storage can load the LFP cell array nicely, but it leaves MATLAB table
+    # hdf5storage can load the LFP cell array, but it leaves MATLAB table
     # objects as opaque references. For this dataset, these hidden refs are the
     # bhvTrialTbl data-cell and variable-name-cell entries.
     return _load_matlab_table_from_refs(
