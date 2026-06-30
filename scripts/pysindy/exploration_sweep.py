@@ -5,11 +5,13 @@ import csv
 import itertools
 import math
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
 from sklearn.metrics import mean_squared_error
 
+# Project imports
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "scripts"
 PYSINDY_SCRIPTS = SCRIPTS / "pysindy"
@@ -20,11 +22,7 @@ for path in (ROOT, SCRIPTS, PYSINDY_SCRIPTS):
 from load_data.convert import MAT_FILE, TrialData, load_bhv_trial_table
 from load_data.preprocessing import channel_traces
 from load_data.synthetic import make_lorenz_dataset
-from load_data.trial_selection import (
-  DEFAULT_TRIAL_VALIDITY,
-  TrialValidityConfig,
-  select_valid_trials,
-)
+from load_data.trial_selection import select_valid_trials
 from models.sindy import (
   SINDyConfig,
   count_terms,
@@ -33,37 +31,75 @@ from models.sindy import (
   fit_sindy_model,
 )
 from models.validation import (
-  ValidationConfig,
+  SimulationConfig,
   evaluate_simulation,
-  finite_difference_jacobian,
-  simulate_model,
+  simulate_model_detailed,
 )
-from pipeline_utils import (
-  parse_float_list,
-  parse_int_list,
-  split_trials_random_checked,
-)
+from pipeline_utils import parse_float_list, parse_int_list, split_trials_random
 
+# Default output locations
+DEFAULT_OUTPUT_DIR = ROOT / "outputs" / "pysindy"
+DEFAULT_OUT = DEFAULT_OUTPUT_DIR / "exploration_sweep.csv"
+DEFAULT_CHECKPOINTS = DEFAULT_OUTPUT_DIR / "exploration_sweep_checkpoints.csv"
+DEFAULT_TRIAL_METRICS = DEFAULT_OUTPUT_DIR / "exploration_sweep_trial_metrics.csv"
+DEFAULT_EQUATIONS = DEFAULT_OUTPUT_DIR / "exploration_sweep_equations.txt"
 
-DEFAULT_OUT = ROOT / "outputs" / "pysindy" / "exploration_sweep.csv"
-DEFAULT_TOP = ROOT / "outputs" / "pysindy" / "exploration_sweep_top.csv"
-DEFAULT_EQUATIONS = ROOT / "outputs" / "pysindy" / "exploration_sweep_equations.txt"
+# Metrics reported without acceptance thresholds
+METRIC_FIELDS = [
+  "trajectory_rmse",
+  "x0_rmse",
+  "x0_correlation",
+  "max_amplitude_ratio",
+  "collapse_std_ratio",
+  "psd_similarity",
+  "distribution_ks",
+  "divergence_time_s",
+]
 
 
 def optional_float(value: str) -> float | None:
-  """Parse optional floats from CLI input."""
+  """Parse a floating-point value or the text ``none``."""
   if value.lower() in {"none", "null"}:
     return None
   return float(value)
 
 
 def parse_optional_float_list(value: str) -> list[float | None]:
-  """Parse comma-separated optional floats, allowing none/null entries."""
+  """Parse comma-separated filter cutoffs in hertz, allowing ``none``."""
   return [optional_float(part.strip()) for part in value.split(",") if part.strip()]
 
 
+def evaluation_horizons(args: argparse.Namespace) -> list[float]:
+  """Return sorted evaluation times in seconds, including the maximum horizon."""
+  requested = (
+    parse_float_list(args.evaluation_horizons)
+    if args.evaluation_horizons
+    else [args.simulation_horizon]
+  )
+  horizons = sorted(set([*requested, args.simulation_horizon]))
+  if any(horizon <= 0 for horizon in horizons):
+    raise ValueError("Evaluation horizons must be positive seconds.")
+  if any(horizon > args.simulation_horizon for horizon in horizons):
+    raise ValueError("Evaluation horizons cannot exceed --simulation-horizon.")
+  return horizons
+
+
+def validate_diagnostic_options(args: argparse.Namespace) -> None:
+  """Validate paired optional diagnostics without choosing scientific values."""
+  threshold = args.divergence_threshold_std
+  persistence = args.divergence_persistence_s
+  if (threshold is None) != (persistence is None):
+    raise ValueError(
+      "Provide both divergence options or neither; no default definition is imposed."
+    )
+  if threshold is not None and threshold <= 0:
+    raise ValueError("--divergence-threshold-std must be positive.")
+  if persistence is not None and persistence <= 0:
+    raise ValueError("--divergence-persistence-s must be positive seconds.")
+
+
 def write_rows(path: Path, rows: list[dict[str, object]], fieldnames: list[str]) -> None:
-  """Write rows to CSV and create parent directories as needed."""
+  """Write CSV rows and create the parent directory when necessary."""
   path.parent.mkdir(parents=True, exist_ok=True)
   with path.open("w", newline="") as file:
     writer = csv.DictWriter(file, fieldnames=fieldnames)
@@ -71,332 +107,541 @@ def write_rows(path: Path, rows: list[dict[str, object]], fieldnames: list[str])
     writer.writerows(rows)
 
 
+def append_row(path: Path, row: dict[str, object], fieldnames: list[str]) -> None:
+  """Append one row to an initialized CSV file."""
+  with path.open("a", newline="") as file:
+    csv.DictWriter(file, fieldnames=fieldnames).writerow(row)
+
+
 def write_equations(path: Path, rows: list[dict[str, object]]) -> None:
-  """Save readable equations for ranked sweep results."""
+  """Write every successfully fitted equation without ranking models."""
   path.parent.mkdir(parents=True, exist_ok=True)
   sections = []
-  for rank, row in enumerate(rows, start=1):
+  for row in rows:
+    if row["fit_status"] != "success":
+      continue
     header = (
-      f"Rank {rank}: source={row['source']}, trial_type={row['trial_type']}, "
+      f"Configuration {row['configuration_index']}: lowpass={row['lowpass_hz']}, "
       f"degree={row['degree']}, n_delays={row['n_delays']}, "
-      f"delay={row['delay_samples']}, threshold={row['threshold']}, "
-      f"status={row['dynamic_status']}, psd={float(row['psd_similarity']):.4f}, "
-      f"rmse={float(row['trajectory_rmse']):.4f}"
+      f"delay_samples={row['delay_samples']}"
     )
-    sections.append(header + "\n" + str(row["equations"]))
+    sections.append(f"{header}\n{row['equations']}")
   path.write_text("\n\n".join(sections) + ("\n" if sections else ""))
 
 
-def ranked_rows(rows: list[dict[str, object]], limit: int) -> list[dict[str, object]]:
-  """Rank viable rows by PSD similarity, trajectory error, and sparsity."""
-  viable = [row for row in rows if row["dynamic_status"] == "viable"]
-  return sorted(
-    viable,
-    key=lambda row: (
-      float(row["psd_similarity"]),
-      -float(row["trajectory_rmse"]),
-      -int(row["nonzero_terms"]),
+def finite_summary(values: list[float]) -> tuple[float, float]:
+  """Return the mean and median of finite values, or NaN when none exist."""
+  array = np.asarray(values, dtype=float)
+  finite = array[np.isfinite(array)]
+  if not finite.size:
+    return float("nan"), float("nan")
+  return float(np.mean(finite)), float(np.median(finite))
+
+
+def summarize_trial_metrics(rows: list[dict[str, object]]) -> dict[str, object]:
+  """Summarize one horizon while retaining all trial rows in a separate CSV."""
+  successful = [row for row in rows if row["simulation_status"] == "success"]
+  failures = [row for row in rows if row["simulation_status"] != "success"]
+  summary: dict[str, object] = {
+    "simulation_status": (
+      "all_success"
+      if not failures
+      else "all_failed"
+      if not successful
+      else "partial_failure"
     ),
-    reverse=True,
-  )[:limit]
+    "simulation_success_fraction": len(successful) / len(rows) if rows else float("nan"),
+    "successful_test_trials": len(successful),
+    "failed_test_trials": len(failures),
+    "simulation_failure_reasons": "; ".join(
+      sorted({str(row["simulation_failure_reason"]) for row in failures})
+    ),
+  }
+  for field in METRIC_FIELDS:
+    mean, median = finite_summary([float(row[field]) for row in successful])
+    summary[f"{field}_mean"] = mean
+    summary[f"{field}_median"] = median
+
+  known_divergence = [row["diverged"] for row in successful if row["diverged"] != ""]
+  summary["diverged_fraction"] = (
+    sum(bool(value) for value in known_divergence) / len(known_divergence)
+    if known_divergence
+    else float("nan")
+  )
+  rhs_mean, rhs_median = finite_summary(
+    [float(row["rhs_evaluations"]) for row in rows]
+  )
+  summary["rhs_evaluations_mean"] = rhs_mean
+  summary["rhs_evaluations_median"] = rhs_median
+  return summary
 
 
-def aggregate_metric_rows(metric_rows: list[dict[str, float | str]]) -> dict[str, object]:
-  """Aggregate per-trial simulation metrics into one sweep row fragment."""
-  numeric_fields = [
-    "trajectory_rmse",
-    "x0_rmse",
-    "x0_correlation",
-    "max_amplitude_ratio",
-    "collapse_std_ratio",
-    "psd_similarity",
-    "autocorrelation_similarity",
-    "distribution_ks",
-  ]
-  aggregated: dict[str, object] = {}
-  for field in numeric_fields:
-    values = [float(row[field]) for row in metric_rows]
-    aggregated[field] = float(np.nanmean(values))
-
-  reasons = [str(row["rejection_reason"]) for row in metric_rows if row["rejection_reason"]]
-  aggregated["dynamic_status"] = "rejected" if reasons else "viable"
-  aggregated["rejection_reason"] = "; ".join(sorted(set(reasons)))
-  return aggregated
+def failed_trial_metrics(
+  trial_index: int,
+  trial_id: int,
+  horizon_s: float,
+  reached_horizon_s: float,
+  rhs_evaluations: int,
+  reason: str,
+) -> dict[str, object]:
+  """Create one explicit trial-level simulation failure row."""
+  return {
+    "test_trial_index": trial_index,
+    "test_trial_id": trial_id,
+    "evaluation_horizon_s": horizon_s,
+    "reached_horizon_s": reached_horizon_s,
+    "rhs_evaluations": rhs_evaluations,
+    "simulation_status": "failed",
+    "simulation_failure_reason": reason,
+    **{field: float("nan") for field in METRIC_FIELDS},
+    "diverged": "",
+  }
 
 
 def evaluate_model_on_trials(
   model,
   measured_trials: list[np.ndarray],
+  trial_ids: list[int],
   dt: float,
-  validation: ValidationConfig,
-) -> dict[str, object]:
-  """Simulate held-out trajectories and aggregate dynamic suitability checks."""
-  metric_rows = []
-  for index, measured in enumerate(measured_trials):
-    measured_scale = max(1.0, float(np.max(np.abs(measured))))
-    simulated, reason = simulate_model(
+  config: SimulationConfig,
+  horizons: list[float],
+) -> tuple[dict[str, object], list[dict[str, object]], list[dict[str, object]]]:
+  """Simulate each held-out trial once and report every requested checkpoint.
+
+  Args:
+    model: Fitted PySINDy model.
+    measured_trials: Held-out state trajectories with shape ``(time, state)``.
+    trial_ids: Original dataset identifiers corresponding to measured trials.
+    dt: Processed sample interval in seconds.
+    config: Numerical simulation and optional diagnostic settings.
+    horizons: Evaluation checkpoints in seconds.
+
+  Returns:
+    Maximum-horizon summary, all checkpoint summaries, and raw per-trial rows.
+  """
+  trial_rows: list[dict[str, object]] = []
+  maximum_samples = int(round(config.simulation_horizon_s / dt)) + 1
+
+  for trial_index, (trial_id, measured) in enumerate(zip(trial_ids, measured_trials)):
+    reference_samples = min(measured.shape[0], maximum_samples)
+    divergence_reference_std = float(np.std(measured[:reference_samples, 0]))
+    result = simulate_model_detailed(
       model,
       initial_state=measured[0],
       dt=dt,
-      horizon_s=validation.simulation_horizon,
-      amplitude_limit=validation.amplitude_factor * measured_scale,
-      max_rhs_evaluations=validation.max_rhs_evaluations,
+      horizon_s=config.simulation_horizon_s,
     )
-    if simulated is None:
-      return {
-        "dynamic_status": "rejected",
-        "rejection_reason": f"held-out trajectory {index}: {reason}",
-        "simulated_test_trials": index,
-        "trajectory_rmse": float("nan"),
-        "x0_rmse": float("nan"),
-        "x0_correlation": float("nan"),
-        "max_amplitude_ratio": float("nan"),
-        "collapse_std_ratio": float("nan"),
-        "psd_similarity": float("nan"),
-        "autocorrelation_similarity": float("nan"),
-        "distribution_ks": float("nan"),
-      }
-    metric_rows.append(
-      evaluate_simulation(
-        measured=measured,
-        simulated=simulated,
+    for horizon in horizons:
+      required_samples = int(round(horizon / dt)) + 1
+      if measured.shape[0] < required_samples:
+        trial_rows.append(
+          failed_trial_metrics(
+            trial_index,
+            trial_id,
+            horizon,
+            result.reached_horizon_s,
+            result.rhs_evaluations,
+            (
+              f"measured trajectory has {measured.shape[0]} samples; "
+              f"{required_samples} required"
+            ),
+          )
+        )
+        continue
+      if result.trajectory is None or result.trajectory.shape[0] < required_samples:
+        trial_rows.append(
+          failed_trial_metrics(
+            trial_index,
+            trial_id,
+            horizon,
+            result.reached_horizon_s,
+            result.rhs_evaluations,
+            result.failure_reason,
+          )
+        )
+        continue
+
+      metrics = evaluate_simulation(
+        measured=measured[:required_samples],
+        simulated=result.trajectory[:required_samples],
         fs=1.0 / dt,
-        config=validation,
+        config=config,
+        divergence_reference_std=divergence_reference_std,
       )
+      trial_rows.append(
+        {
+          "test_trial_index": trial_index,
+          "test_trial_id": trial_id,
+          "evaluation_horizon_s": horizon,
+          "reached_horizon_s": result.reached_horizon_s,
+          "rhs_evaluations": result.rhs_evaluations,
+          "simulation_status": "success",
+          "simulation_failure_reason": "",
+          **metrics,
+          "diverged": "" if metrics["diverged"] is None else metrics["diverged"],
+        }
+      )
+
+  checkpoint_rows = []
+  for horizon in horizons:
+    rows_at_horizon = [
+      row for row in trial_rows if row["evaluation_horizon_s"] == horizon
+    ]
+    checkpoint_rows.append(
+      {
+        "evaluation_horizon_s": horizon,
+        **summarize_trial_metrics(rows_at_horizon),
+      }
     )
-
-  aggregated = aggregate_metric_rows(metric_rows)
-  aggregated["simulated_test_trials"] = len(metric_rows)
-  return aggregated
-
-
-def jacobian_diagnostics(model, trajectory: np.ndarray) -> dict[str, object]:
-  """Report Jacobian eigenvalue diagnostics at the first measured state."""
-  try:
-    jacobian = finite_difference_jacobian(model, trajectory[0])
-    eigenvalues = np.linalg.eigvals(jacobian)
-  except Exception:
-    return {
-      "jacobian_max_real": float("nan"),
-      "jacobian_eigenvalues": "",
-    }
-  return {
-    "jacobian_max_real": float(np.max(eigenvalues.real)),
-    "jacobian_eigenvalues": ";".join(
-      f"{value.real:.6g}{value.imag:+.6g}j" for value in eigenvalues
-    ),
-  }
+  maximum_summary = dict(checkpoint_rows[-1])
+  maximum_summary.pop("evaluation_horizon_s")
+  return maximum_summary, checkpoint_rows, trial_rows
 
 
-def trial_validity_config(args: argparse.Namespace) -> TrialValidityConfig:
-  """Build trial-validity rules from defaults plus CLI overrides."""
-  type_columns = dict(DEFAULT_TRIAL_VALIDITY.trial_type_columns)
-  validity_columns = dict(DEFAULT_TRIAL_VALIDITY.validity_columns)
-  if args.trial_type_column:
-    type_columns[args.trial_type] = args.trial_type_column
-  if args.validity_columns:
-    validity_columns[args.trial_type] = tuple(
-      column.strip() for column in args.validity_columns.split(",") if column.strip()
-    )
-  return TrialValidityConfig(
-    trial_type_columns=type_columns,
-    validity_columns=validity_columns,
-  )
-
-
-def load_lfp_source(
+def prepare_lfp_trials(
   args: argparse.Namespace,
-  lowpass_hz: float | None,
-) -> tuple[list[np.ndarray], list[np.ndarray], float, list[int], list[int]]:
-  """Load, filter, split, and preprocess LFP trajectories for one channel."""
+) -> tuple[TrialData, list[int], list[int]]:
+  """Load valid trial identifiers and make one reproducible whole-trial split."""
   data = TrialData.load(args.mat_file)
   table = load_bhv_trial_table(args.mat_file)
-  trials = select_valid_trials(table, args.trial_type, config=trial_validity_config(args))
+  trials = select_valid_trials(table, args.trial_type)
   if args.max_trials is not None:
     trials = trials[: args.max_trials]
-  train_trials, test_trials = split_trials_random_checked(
+  train_ids, test_ids = split_trials_random(
     trials,
     test_fraction=args.test_fraction,
     seed=args.seed,
   )
+  return data, train_ids, test_ids
+
+
+def preprocess_lfp_trials(
+  data: TrialData,
+  args: argparse.Namespace,
+  train_ids: list[int],
+  test_ids: list[int],
+  lowpass_hz: float | None,
+) -> tuple[list[np.ndarray], list[np.ndarray], float]:
+  """Preprocess selected LFP trials while retaining the stored amplitude scale."""
   train = channel_traces(
     data,
     channel=args.channel,
-    trials=train_trials,
+    trials=train_ids,
     downsample=args.downsample,
     lowpass_hz=lowpass_hz,
     normalize=args.normalize,
-    window_start=args.window_start,
-    window_end=args.window_end,
   )
   test = channel_traces(
     data,
     channel=args.channel,
-    trials=test_trials,
+    trials=test_ids,
     downsample=args.downsample,
     lowpass_hz=lowpass_hz,
     normalize=args.normalize,
-    window_start=args.window_start,
-    window_end=args.window_end,
   )
-  return train, test, args.downsample / data.fs, train_trials, test_trials
+  return train, test, args.downsample / data.fs
 
 
-def load_synthetic_source(args: argparse.Namespace) -> tuple[list[np.ndarray], list[np.ndarray], float, list[int], list[int]]:
-  """Load a synthetic dataset and make the same random non-contiguous split."""
+def prepare_lorenz_trials(
+  args: argparse.Namespace,
+) -> tuple[list[np.ndarray], list[np.ndarray], float, list[int], list[int]]:
+  """Create known Lorenz trajectories and make a reproducible random split."""
   dataset = make_lorenz_dataset(
     n_trajectories=args.synthetic_trajectories,
     duration=args.synthetic_duration,
     dt=args.synthetic_dt,
     seed=args.seed,
   )
-  trials = list(range(len(dataset.trajectories)))
-  train_indices, test_indices = split_trials_random_checked(
-    trials,
+  trial_ids = list(range(len(dataset.trajectories)))
+  train_ids, test_ids = split_trials_random(
+    trial_ids,
     test_fraction=args.test_fraction,
     seed=args.seed,
   )
-  train = [dataset.trajectories[index] for index in train_indices]
-  test = [dataset.trajectories[index] for index in test_indices]
-  return train, test, dataset.dt, train_indices, test_indices
+  train = [dataset.trajectories[index] for index in train_ids]
+  test = [dataset.trajectories[index] for index in test_ids]
+  return train, test, dataset.dt, train_ids, test_ids
 
 
-def base_row(
-  args: argparse.Namespace,
-  train_trials: list[int],
-  test_trials: list[int],
-  lowpass_hz: float | None,
-) -> dict[str, object]:
-  """Create row fields that are shared by all sweep configurations."""
+def signal_units(source: str, normalization: str) -> str:
+  """Describe the amplitude units retained after preprocessing."""
+  if source == "lorenz":
+    return "Lorenz state units"
+  if normalization == "zscore":
+    return "per-trial standard deviations"
+  return "MAT-file LFP amplitude units"
+
+
+def model_row_defaults() -> dict[str, object]:
+  """Return empty fit and simulation fields for one model configuration."""
+  summary_fields = {
+    f"{metric}_{statistic}": float("nan")
+    for metric in METRIC_FIELDS
+    for statistic in ("mean", "median")
+  }
   return {
-    "source": args.source,
-    "trial_type": args.trial_type,
-    "channel": args.channel,
-    "random_seed": args.seed,
-    "train_trials": len(train_trials),
-    "test_trials": len(test_trials),
-    "train_trial_ids": " ".join(map(str, train_trials)),
-    "test_trial_ids": " ".join(map(str, test_trials)),
-    "downsample": args.downsample if args.source == "lfp" else 1,
-    "lowpass_hz": lowpass_hz if args.source == "lfp" else "",
-    "normalize": args.normalize if args.source == "lfp" else "",
-    "window_start": args.window_start if args.source == "lfp" else "",
-    "window_end": args.window_end if args.source == "lfp" else "",
+    "fit_status": "failed",
+    "fit_failure_reason": "model fitting did not complete",
+    "train_derivative_r2": float("nan"),
+    "test_derivative_r2": float("nan"),
+    "test_derivative_rmse": float("nan"),
+    "nonzero_terms": 0,
+    "simulation_status": "not_run",
+    "simulation_success_fraction": float("nan"),
+    "successful_test_trials": 0,
+    "failed_test_trials": 0,
+    "simulation_failure_reasons": "",
+    "diverged_fraction": float("nan"),
+    "rhs_evaluations_mean": float("nan"),
+    "rhs_evaluations_median": float("nan"),
+    "fit_runtime_s": float("nan"),
+    "simulation_runtime_s": float("nan"),
+    "configuration_runtime_s": float("nan"),
+    "equations": "",
+    **summary_fields,
   }
 
 
-def run_sweep(args: argparse.Namespace) -> list[dict[str, object]]:
-  """Run the configured SINDy exploration sweep."""
-  rows = []
-  validation = ValidationConfig(
-    simulation_horizon=args.simulation_horizon,
-    amplitude_factor=args.amplitude_factor,
-    collapse_std_fraction=args.collapse_std_fraction,
-    min_psd_similarity=args.min_psd_similarity,
-    min_autocorrelation_similarity=args.min_autocorrelation_similarity,
-    max_distribution_ks=args.max_distribution_ks,
-    max_rhs_evaluations=args.max_rhs_evaluations,
+def _build_row_metadata(
+  configuration_index: int,
+  args: argparse.Namespace,
+  train_ids: list[int],
+  test_ids: list[int],
+  dt: float,
+  lowpass_hz: float | None,
+  degree: int,
+  n_delays: int,
+  delay: int,
+  sindy_config: SINDyConfig,
+  horizons: list[float],
+) -> dict[str, object]:
+  """Assemble the static configuration fields for one sweep row."""
+  return {
+    "configuration_index": configuration_index,
+    "source": args.source,
+    "trial_type": args.trial_type if args.source == "lfp" else "synthetic",
+    "channel": args.channel if args.source == "lfp" else "",
+    "random_seed": args.seed,
+    "train_trials": len(train_ids),
+    "test_trials": len(test_ids),
+    "train_trial_ids": " ".join(map(str, train_ids)),
+    "test_trial_ids": " ".join(map(str, test_ids)),
+    "downsample_factor": args.downsample if args.source == "lfp" else 1,
+    "processed_sampling_hz": 1.0 / dt,
+    "sample_interval_s": dt,
+    "signal_units": signal_units(args.source, args.normalize),
+    "lowpass_hz": lowpass_hz if lowpass_hz is not None else "none",
+    "normalization": args.normalize if args.source == "lfp" else "none",
+    "degree": degree,
+    "n_delays": n_delays,
+    "delay_samples": delay,
+    "delay_s": delay * dt,
+    "embedding_span_s": (n_delays - 1) * delay * dt,
+    "stlsq_threshold": sindy_config.threshold,
+    "stlsq_alpha": sindy_config.alpha,
+    "derivative_method": "PySINDy default finite difference",
+    "simulation_solver": "LSODA",
+    "simulation_horizon_s": args.simulation_horizon,
+    "evaluation_horizons_s": " ".join(f"{value:g}" for value in horizons),
+    "divergence_threshold_std": (
+      args.divergence_threshold_std
+      if args.divergence_threshold_std is not None
+      else "disabled"
+    ),
+    "divergence_persistence_s": (
+      args.divergence_persistence_s
+      if args.divergence_persistence_s is not None
+      else "disabled"
+    ),
+    **model_row_defaults(),
+  }
+
+
+def _fit_and_evaluate(
+  train_raw: list[np.ndarray],
+  test_raw: list[np.ndarray],
+  dt: float,
+  n_delays: int,
+  delay: int,
+  sindy_config: SINDyConfig,
+  simulation: SimulationConfig,
+  horizons: list[float],
+  test_ids: list[int],
+  train_ids: list[int],
+) -> tuple[dict[str, object], list[dict[str, object]], list[dict[str, object]]]:
+  """Fit one SINDy model and evaluate it on held-out trials.
+
+  Returns (row_updates, checkpoint_rows, trial_rows).
+  """
+  train = delay_embed_trajectories(train_raw, n_delays=n_delays, delay=delay)
+  test = delay_embed_trajectories(test_raw, n_delays=n_delays, delay=delay)
+
+  fit_started = time.perf_counter()
+  model = fit_sindy_model(train, dt=dt, config=sindy_config)
+  fit_runtime = time.perf_counter() - fit_started
+
+  updates: dict[str, object] = {
+    "fit_runtime_s": fit_runtime,
+    "fit_status": "success",
+    "fit_failure_reason": "",
+    "train_derivative_r2": float(model.score(train, t=dt)),
+    "test_derivative_r2": float(model.score(test, t=dt)),
+    "test_derivative_rmse": math.sqrt(
+      float(model.score(test, t=dt, metric=mean_squared_error))
+    ),
+    "nonzero_terms": count_terms(model),
+    "equations": equation_text(model),
+  }
+
+  simulation_started = time.perf_counter()
+  summary, checkpoint_rows, trial_rows = evaluate_model_on_trials(
+    model,
+    test,
+    trial_ids=test_ids,
+    dt=dt,
+    config=simulation,
+    horizons=horizons,
   )
-  lowpass_values = (
-    parse_optional_float_list(args.lowpass_list)
-    if args.lowpass_list
-    else [args.lowpass_hz]
+  updates["simulation_runtime_s"] = time.perf_counter() - simulation_started
+  updates.update(summary)
+  return updates, checkpoint_rows, trial_rows
+
+
+def run_sweep(args: argparse.Namespace) -> list[dict[str, object]]:
+  """Fit the requested grid and save model, checkpoint, and per-trial results."""
+  validate_diagnostic_options(args)
+  horizons = evaluation_horizons(args)
+  simulation = SimulationConfig(
+    simulation_horizon_s=args.simulation_horizon,
+    divergence_threshold_std=args.divergence_threshold_std,
+    divergence_persistence_s=args.divergence_persistence_s,
+  )
+  lowpass_values = parse_optional_float_list(args.lowpass_list)
+  if args.source == "lorenz":
+    lowpass_values = [None]
+  degree_values = parse_int_list(args.degree_list)
+  n_delay_values = parse_int_list(args.n_delays_list)
+  delay_values = parse_int_list(args.delay_list)
+  total = math.prod(
+    [len(lowpass_values), len(degree_values), len(n_delay_values), len(delay_values)]
   )
 
+  write_rows(args.out_csv, [], MODEL_FIELDNAMES)
+  write_rows(args.checkpoint_csv, [], CHECKPOINT_FIELDNAMES)
+  write_rows(args.trial_metrics_csv, [], TRIAL_FIELDNAMES)
+
+  lfp_data = None
+  if args.source == "lfp":
+    lfp_data, train_ids, test_ids = prepare_lfp_trials(args)
+  else:
+    synthetic = prepare_lorenz_trials(args)
+    synthetic_train, synthetic_test, synthetic_dt, train_ids, test_ids = synthetic
+
+  rows = []
+  configuration_index = 0
   for lowpass_hz in lowpass_values:
     if args.source == "lfp":
-      train_raw, test_raw, dt, train_trials, test_trials = load_lfp_source(
+      train_raw, test_raw, dt = preprocess_lfp_trials(
+        lfp_data,
         args,
-        lowpass_hz=lowpass_hz,
+        train_ids,
+        test_ids,
+        lowpass_hz,
       )
-    elif args.source == "lorenz":
-      train_raw, test_raw, dt, train_trials, test_trials = load_synthetic_source(args)
     else:
-      raise ValueError(f"Unknown source: {args.source}")
+      train_raw, test_raw, dt = synthetic_train, synthetic_test, synthetic_dt
 
-    common = base_row(args, train_trials, test_trials, lowpass_hz=lowpass_hz)
-    grid = itertools.product(
-      parse_int_list(args.degree_list),
-      parse_int_list(args.n_delays_list),
-      parse_int_list(args.delay_list),
-      parse_float_list(args.threshold_list),
-      parse_int_list(args.smooth_window_list),
-    )
-
-    for degree, n_delays, delay, threshold, smooth_window in grid:
-      row = {
-        **common,
-        "degree": degree,
-        "n_delays": n_delays,
-        "delay_samples": delay,
-        "delay_ms": 1000 * delay * dt,
-        "embedding_span_ms": 1000 * (n_delays - 1) * delay * dt,
-        "threshold": threshold,
-        "smooth_window": smooth_window,
-        "dt": dt,
-        "train_score_r2": float("nan"),
-        "test_score_r2": float("nan"),
-        "test_derivative_rmse": float("nan"),
-        "nonzero_terms": 0,
-        "jacobian_max_real": float("nan"),
-        "jacobian_eigenvalues": "",
-        "dynamic_status": "rejected",
-        "rejection_reason": "model fitting did not complete",
-        "simulated_test_trials": 0,
-        "trajectory_rmse": float("nan"),
-        "x0_rmse": float("nan"),
-        "x0_correlation": float("nan"),
-        "max_amplitude_ratio": float("nan"),
-        "collapse_std_ratio": float("nan"),
-        "psd_similarity": float("nan"),
-        "autocorrelation_similarity": float("nan"),
-        "distribution_ks": float("nan"),
-        "equations": "",
-        "error": "",
-      }
+    for degree, n_delays, delay in itertools.product(
+      degree_values,
+      n_delay_values,
+      delay_values,
+    ):
+      configuration_index += 1
+      sindy_config = SINDyConfig(degree=degree)
+      started = time.perf_counter()
+      row = _build_row_metadata(
+        configuration_index=configuration_index,
+        args=args,
+        train_ids=train_ids,
+        test_ids=test_ids,
+        dt=dt,
+        lowpass_hz=lowpass_hz,
+        degree=degree,
+        n_delays=n_delays,
+        delay=delay,
+        sindy_config=sindy_config,
+        horizons=horizons,
+      )
+      checkpoint_rows: list[dict[str, object]] = []
+      trial_rows: list[dict[str, object]] = []
       try:
-        train = delay_embed_trajectories(train_raw, n_delays=n_delays, delay=delay)
-        test = delay_embed_trajectories(test_raw, n_delays=n_delays, delay=delay)
-        model = fit_sindy_model(
-          train,
+        updates, checkpoint_rows, trial_rows = _fit_and_evaluate(
+          train_raw=train_raw,
+          test_raw=test_raw,
           dt=dt,
-          config=SINDyConfig(
-            threshold=threshold,
-            degree=degree,
-            smooth_window=smooth_window,
-          ),
+          n_delays=n_delays,
+          delay=delay,
+          sindy_config=sindy_config,
+          simulation=simulation,
+          horizons=horizons,
+          test_ids=test_ids,
+          train_ids=train_ids,
         )
-        row["train_score_r2"] = float(model.score(train, t=dt))
-        row["test_score_r2"] = float(model.score(test, t=dt))
-        row["test_derivative_rmse"] = math.sqrt(
-          float(model.score(test, t=dt, metric=mean_squared_error))
-        )
-        row["nonzero_terms"] = count_terms(model)
-        row["equations"] = equation_text(model)
-        row.update(jacobian_diagnostics(model, test[0]))
-        row.update(evaluate_model_on_trials(model, test, dt=dt, validation=validation))
-        print(
-          f"{row['dynamic_status']:8} lowpass={row['lowpass_hz']} "
-          f"degree={degree} delays={n_delays} delay={delay} "
-          f"threshold={threshold:g} psd={float(row['psd_similarity']):.3f} "
-          f"rmse={float(row['trajectory_rmse']):.3f} terms={row['nonzero_terms']}",
-          flush=True,
-        )
+        row.update(updates)
       except Exception as exc:
-        row["error"] = str(exc)
-        row["rejection_reason"] = f"model error: {exc}"
-        print(
-          f"failed   lowpass={lowpass_hz} degree={degree} delays={n_delays} "
-          f"delay={delay} threshold={threshold:g}: {exc}",
-          flush=True,
-        )
+        row["fit_failure_reason"] = str(exc)
+
+      row["configuration_runtime_s"] = time.perf_counter() - started
       rows.append(row)
-      write_rows(args.out_csv, rows, FIELDNAMES)
+      append_row(args.out_csv, row, MODEL_FIELDNAMES)
+
+      config_fields = {field: row[field] for field in CONFIG_ID_FIELDS}
+      for checkpoint in checkpoint_rows:
+        append_row(
+          args.checkpoint_csv,
+          {**config_fields, **checkpoint},
+          CHECKPOINT_FIELDNAMES,
+        )
+      for trial_row in trial_rows:
+        append_row(
+          args.trial_metrics_csv,
+          {**config_fields, **trial_row},
+          TRIAL_FIELDNAMES,
+        )
+
+      print(
+        f"[{configuration_index}/{total}] fit={row['fit_status']} "
+        f"simulation={row['simulation_status']} lowpass={row['lowpass_hz']} "
+        f"degree={degree} delays={n_delays} delay={delay} "
+        f"success_fraction={float(row['simulation_success_fraction']):.3f} "
+        f"runtime={float(row['configuration_runtime_s']):.1f}s",
+        flush=True,
+      )
 
   return rows
 
 
-FIELDNAMES = [
+# Output schemas
+CONFIG_ID_FIELDS = [
+  "configuration_index",
+  "source",
+  "trial_type",
+  "channel",
+  "random_seed",
+  "lowpass_hz",
+  "degree",
+  "n_delays",
+  "delay_samples",
+]
+
+SUMMARY_FIELDS = [
+  item
+  for metric in METRIC_FIELDS
+  for item in (f"{metric}_mean", f"{metric}_median")
+]
+
+MODEL_FIELDNAMES = [
+  "configuration_index",
   "source",
   "trial_type",
   "channel",
@@ -405,91 +650,144 @@ FIELDNAMES = [
   "test_trials",
   "train_trial_ids",
   "test_trial_ids",
-  "downsample",
+  "downsample_factor",
+  "processed_sampling_hz",
+  "sample_interval_s",
+  "signal_units",
   "lowpass_hz",
-  "normalize",
-  "window_start",
-  "window_end",
+  "normalization",
   "degree",
   "n_delays",
   "delay_samples",
-  "delay_ms",
-  "embedding_span_ms",
-  "threshold",
-  "smooth_window",
-  "dt",
-  "train_score_r2",
-  "test_score_r2",
+  "delay_s",
+  "embedding_span_s",
+  "stlsq_threshold",
+  "stlsq_alpha",
+  "derivative_method",
+  "simulation_solver",
+  "simulation_horizon_s",
+  "evaluation_horizons_s",
+  "divergence_threshold_std",
+  "divergence_persistence_s",
+  "fit_status",
+  "fit_failure_reason",
+  "train_derivative_r2",
+  "test_derivative_r2",
   "test_derivative_rmse",
   "nonzero_terms",
-  "jacobian_max_real",
-  "jacobian_eigenvalues",
-  "dynamic_status",
-  "rejection_reason",
-  "simulated_test_trials",
-  "trajectory_rmse",
-  "x0_rmse",
-  "x0_correlation",
-  "max_amplitude_ratio",
-  "collapse_std_ratio",
-  "psd_similarity",
-  "autocorrelation_similarity",
-  "distribution_ks",
+  "simulation_status",
+  "simulation_success_fraction",
+  "successful_test_trials",
+  "failed_test_trials",
+  "simulation_failure_reasons",
+  *SUMMARY_FIELDS,
+  "diverged_fraction",
+  "rhs_evaluations_mean",
+  "rhs_evaluations_median",
+  "fit_runtime_s",
+  "simulation_runtime_s",
+  "configuration_runtime_s",
   "equations",
-  "error",
+]
+
+CHECKPOINT_FIELDNAMES = [
+  *CONFIG_ID_FIELDS,
+  "evaluation_horizon_s",
+  "simulation_status",
+  "simulation_success_fraction",
+  "successful_test_trials",
+  "failed_test_trials",
+  "simulation_failure_reasons",
+  *SUMMARY_FIELDS,
+  "diverged_fraction",
+  "rhs_evaluations_mean",
+  "rhs_evaluations_median",
+]
+
+TRIAL_FIELDNAMES = [
+  *CONFIG_ID_FIELDS,
+  "test_trial_index",
+  "test_trial_id",
+  "evaluation_horizon_s",
+  "reached_horizon_s",
+  "rhs_evaluations",
+  "simulation_status",
+  "simulation_failure_reason",
+  *METRIC_FIELDS,
+  "diverged",
 ]
 
 
 def main() -> None:
-  """CLI entry point for modular PySINDy exploration sweeps."""
+  """Run the documented PySINDy exploration CLI."""
   parser = argparse.ArgumentParser(
-    description="Run modular PySINDy sweeps with dynamic simulation checks."
+    description="Fit PySINDy models and record raw held-out simulation diagnostics."
   )
   parser.add_argument("--source", choices=("lfp", "lorenz"), default="lfp")
   parser.add_argument("--mat-file", type=Path, default=MAT_FILE)
   parser.add_argument("--trial-type", choices=("fixation", "non_fixation"), default="fixation")
-  parser.add_argument("--trial-type-column", default=None)
-  parser.add_argument("--validity-columns", default=None)
   parser.add_argument("--channel", type=int, default=0)
   parser.add_argument("--max-trials", type=int, default=None)
   parser.add_argument("--test-fraction", type=float, default=0.25)
   parser.add_argument("--seed", type=int, default=0)
   parser.add_argument("--downsample", type=int, default=2)
-  parser.add_argument("--lowpass-hz", type=optional_float, default=80.0)
-  parser.add_argument("--lowpass-list", default=None)
-  parser.add_argument("--normalize", choices=("zscore", "center", "none"), default="zscore")
-  parser.add_argument("--window-start", type=optional_float, default=None)
-  parser.add_argument("--window-end", type=optional_float, default=None)
-  parser.add_argument("--degree-list", default="1,2")
-  parser.add_argument("--n-delays-list", default="2,4,6")
-  parser.add_argument("--delay-list", default="1,2,5")
-  parser.add_argument("--threshold-list", default="0.01,0.05,0.1,0.2")
-  parser.add_argument("--smooth-window-list", default="0")
-  parser.add_argument("--simulation-horizon", type=float, default=2.0)
-  parser.add_argument("--amplitude-factor", type=float, default=10.0)
-  parser.add_argument("--collapse-std-fraction", type=float, default=0.05)
-  parser.add_argument("--min-psd-similarity", type=float, default=0.25)
-  parser.add_argument("--min-autocorrelation-similarity", type=float, default=0.25)
-  parser.add_argument("--max-distribution-ks", type=float, default=0.75)
-  parser.add_argument("--max-rhs-evaluations", type=int, default=20_000)
+  parser.add_argument(
+    "--lowpass-list",
+    default="80",
+    help="Comma-separated low-pass cutoffs in Hz; use 'none' for no low-pass.",
+  )
+  parser.add_argument(
+    "--normalize",
+    choices=("none", "center", "zscore"),
+    default="none",
+    help="Amplitude normalization; default 'none' preserves stored LFP scale.",
+  )
+  parser.add_argument("--degree-list", default="1,2,3", help="Polynomial degrees.")
+  parser.add_argument("--n-delays-list", default="2,4,6,8", help="Delay-coordinate counts.")
+  parser.add_argument(
+    "--delay-list",
+    default="1,2,5",
+    help="Coordinate spacings in processed samples.",
+  )
+  parser.add_argument(
+    "--simulation-horizon",
+    type=float,
+    required=True,
+    help="Maximum autonomous simulation duration in seconds.",
+  )
+  parser.add_argument(
+    "--evaluation-horizons",
+    default=None,
+    help="Optional comma-separated checkpoints in seconds; defaults to the maximum only.",
+  )
+  parser.add_argument(
+    "--divergence-threshold-std",
+    type=optional_float,
+    default=None,
+    help="Error threshold in measured-signal SD; requires persistence option.",
+  )
+  parser.add_argument(
+    "--divergence-persistence-s",
+    type=optional_float,
+    default=None,
+    help="Continuous threshold-exceedance duration in seconds.",
+  )
   parser.add_argument("--synthetic-trajectories", type=int, default=8)
   parser.add_argument("--synthetic-duration", type=float, default=8.0)
   parser.add_argument("--synthetic-dt", type=float, default=0.01)
-  parser.add_argument("--top-n", type=int, default=10)
   parser.add_argument("--out-csv", type=Path, default=DEFAULT_OUT)
-  parser.add_argument("--top-csv", type=Path, default=DEFAULT_TOP)
+  parser.add_argument("--checkpoint-csv", type=Path, default=DEFAULT_CHECKPOINTS)
+  parser.add_argument("--trial-metrics-csv", type=Path, default=DEFAULT_TRIAL_METRICS)
   parser.add_argument("--equations-out", type=Path, default=DEFAULT_EQUATIONS)
   args = parser.parse_args()
 
   rows = run_sweep(args)
-  top = ranked_rows(rows, limit=args.top_n)
-  write_rows(args.out_csv, rows, FIELDNAMES)
-  write_rows(args.top_csv, top, FIELDNAMES)
-  write_equations(args.equations_out, top)
+  write_rows(args.out_csv, rows, MODEL_FIELDNAMES)
+  write_equations(args.equations_out, rows)
   print(f"saved: {args.out_csv}")
-  print(f"saved: {args.top_csv}")
+  print(f"saved: {args.checkpoint_csv}")
+  print(f"saved: {args.trial_metrics_csv}")
   print(f"saved: {args.equations_out}")
-  print(f"viable models: {len(top)} shown, {sum(row['dynamic_status'] == 'viable' for row in rows)}/{len(rows)} total")
 
 
 if __name__ == "__main__":
