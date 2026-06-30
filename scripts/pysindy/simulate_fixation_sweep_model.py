@@ -19,7 +19,7 @@ for path in (ROOT, SCRIPTS, PYSINDY_SCRIPTS):
     sys.path.insert(0, str(path))
 
 from models.sindy import SINDyConfig, delay_embed_trajectories, fit_sindy_model
-from load_data.convert import MAT_FILE, TrialData
+from load_data.convert import MAT_FILE, TrialData, load_bhv_trial_table
 from load_data.preprocessing import channel_traces
 from pipeline_utils import select_trials, split_trials_random
 
@@ -322,18 +322,15 @@ def main() -> None:
   # require a saved .npz cache because it can reconstruct the exact train/test
   # data from the .mat file plus the sweep CSV configuration.
   data = TrialData.load(args.mat_file)
+  table = load_bhv_trial_table(args.mat_file)
 
-  # Use only fixation trials, then recreate the same random whole-trial split
-  # used during the stability sweep. The seed makes the split reproducible.
-  fixation = select_trials(data, dataset="fixation")
+  fixation = select_trials(table, dataset="fixation")
   train_trials, test_trials = split_trials_random(
     fixation,
     test_fraction=test_fraction,
     seed=int(configuration["random_seed"]),
   )
 
-  # Extract one channel from each selected trial and apply the fixed
-  # preprocessing. We keep trials as a list because the trial lengths can differ.
   train_traces = channel_traces(
     data,
     channel=channel,
@@ -351,9 +348,6 @@ def main() -> None:
     normalize=normalize,
   )
 
-  # Convert each one-dimensional LFP trace into a delay-embedded trajectory.
-  # For n_delays=6, each row has six state variables:
-  # [x(t), x(t-tau), x(t-2tau), x(t-3tau), x(t-4tau), x(t-5tau)].
   train_embedded = delay_embed_trajectories(
     train_traces,
     n_delays=n_delays,
@@ -365,13 +359,8 @@ def main() -> None:
     delay=delay,
   )
 
-  # After downsampling by 2 from the original 500 Hz sampling rate, dt is
-  # 2 / 500 = 0.004 seconds. The delay interval is measured in these samples.
   dt = downsample / data.fs
 
-  # Refit the selected PySINDy model on the training trajectories. We use
-  # PySINDy only for fitting the equations; the simulation below is done
-  # explicitly with scipy.integrate.solve_ivp.
   model = fit_sindy_model(
     train_embedded,
     dt=dt,
@@ -382,15 +371,8 @@ def main() -> None:
     ),
   )
 
-  # For degree=1, PySINDy learns an affine linear system:
-  #   dx/dt = c + A x
-  # ``constant`` is c, and ``matrix`` is A. Eigenvalues should be computed from
-  # A only, but trajectory simulation should include both c and A.
   constant, matrix, feature_names = extract_linear_system(model)
 
-  # Simulate each held-out fixation trial from its first delay vector. This is
-  # the important delayed-embedding detail: the initial condition is not one
-  # scalar LFP value, it is a vector with n_delays values.
   simulated_trials = [
     simulate_linear_trajectory_scipy(
       constant,
@@ -402,8 +384,6 @@ def main() -> None:
     for measured in test_embedded
   ]
 
-  # Compare simulated trajectories to the measured held-out embedded
-  # trajectories over the requested horizon.
   metrics = [
     trial_metrics(trial, measured, simulated)
     for trial, measured, simulated in zip(
@@ -415,16 +395,12 @@ def main() -> None:
 
   args.out_dir.mkdir(parents=True, exist_ok=True)
 
-  # Save per-trial metrics so the trajectory comparison can be inspected
-  # outside Python.
   metrics_path = args.out_dir / "simulation_metrics.csv"
   with metrics_path.open("w", newline="") as file:
     writer = csv.DictWriter(file, fieldnames=list(metrics[0].keys()))
     writer.writeheader()
     writer.writerows(metrics)
 
-  # Save the x0 coordinate plot. x0 is the first/current LFP value in the delay
-  # vector, so this is the easiest view to compare with the original LFP trace.
   x0_plot_path = args.out_dir / "held_out_trials_x0_comparison.png"
   save_x0_grid(
     x0_plot_path,
@@ -434,8 +410,6 @@ def main() -> None:
     dt=dt,
   )
 
-  # Save one detailed plot with every delay coordinate. This is useful for
-  # checking whether the simulated delay coordinates remain mutually coherent.
   coordinate_plot_path = args.out_dir / (
     f"trial_{test_trials[0]}_all_coordinates.png"
   )
@@ -447,7 +421,6 @@ def main() -> None:
     dt=dt,
   )
 
-  # Save the human-readable equations printed by PySINDy.
   equations_path = args.out_dir / "fitted_equations.txt"
   equations_path.write_text(
     "\n".join(
@@ -457,11 +430,6 @@ def main() -> None:
     + "\n"
   )
 
-  # Save the explicit SciPy system components. These are the exact numerical
-  # objects used for simulation:
-  #   constant_vector_c.npy stores c
-  #   coefficient_matrix_A.npy stores A
-  #   first_initial_condition.npy stores the first held-out delay vector
   constant_path = args.out_dir / "constant_vector_c.npy"
   matrix_path = args.out_dir / "coefficient_matrix_A.npy"
   initial_condition_path = args.out_dir / "first_initial_condition.npy"
@@ -469,8 +437,6 @@ def main() -> None:
   np.save(matrix_path, matrix)
   np.save(initial_condition_path, test_embedded[0][0])
 
-  # Save a text version as well, so it can be opened quickly without loading
-  # NumPy arrays.
   linear_system_path = args.out_dir / "linear_system_for_scipy.txt"
   linear_system_path.write_text(
     "feature_names:\n"

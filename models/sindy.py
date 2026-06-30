@@ -7,15 +7,37 @@ import numpy as np
 
 @dataclass(frozen=True)
 class SINDyConfig:
-  """PySINDy hyperparameters for one fitted model."""
+  """PySINDy hyperparameters for one fitted model.
 
-  threshold: float
+  Attributes:
+    degree: Maximum polynomial degree in the feature library. Unitless.
+    threshold: STLSQ coefficient-removal threshold. Coefficient-scale units;
+      fixed at PySINDy's default of 0.1 in the active exploration pipeline.
+    alpha: STLSQ ridge regularization strength. Its numerical interpretation
+      depends on feature scaling; this records PySINDy's current default of 0.05.
+    smooth_window: Optional Savitzky-Golay smoothing window in samples. A value
+      of zero uses PySINDy's default finite-difference derivative. Smoothing is
+      retained for backwards compatibility but is inactive in the main sweep.
+  """
+
   degree: int
+  threshold: float = 0.1
+  alpha: float = 0.05
   smooth_window: int = 0
 
 
 def delay_embed_trace(trace: np.ndarray, n_delays: int, delay: int) -> np.ndarray:
-  """Build delay coordinates from one scalar time series."""
+  """Build delay coordinates from one scalar time series.
+
+  Args:
+    trace: Scalar samples with shape ``(n_samples,)``. Units are preserved.
+    n_delays: Number of delay coordinates. Unitless count.
+    delay: Separation between coordinates in processed samples.
+
+  Returns:
+    Array with shape ``(n_embedded_samples, n_delays)``. Column zero is the
+    current sample; subsequent columns move backward through the signal.
+  """
   if n_delays < 1:
     raise ValueError("n_delays must be >= 1")
   if delay < 1:
@@ -44,7 +66,16 @@ def delay_embed_trajectories(
   n_delays: int,
   delay: int,
 ) -> list[np.ndarray]:
-  """Delay-embed scalar trajectories, leaving multivariate data unchanged."""
+  """Delay-embed scalar trajectories, leaving multivariate data unchanged.
+
+  Args:
+    trajectories: Trial trajectories in their original signal units.
+    n_delays: Number of delay coordinates. Unitless count.
+    delay: Coordinate spacing in processed samples.
+
+  Returns:
+    One two-dimensional state trajectory per input trial.
+  """
   embedded = []
   for trajectory in trajectories:
     values = np.asarray(trajectory, dtype=float)
@@ -58,7 +89,17 @@ def delay_embed_trajectories(
 
 
 def fit_sindy_model(trajectories: list[np.ndarray], dt: float, config: SINDyConfig):
-  """Fit a PySINDy model to one or more trajectories."""
+  """Fit one autonomous PySINDy model to multiple whole-trial trajectories.
+
+  Args:
+    trajectories: State trajectories with shape ``(time, state)``. Signal
+      units depend on preprocessing.
+    dt: Processed sample interval in seconds.
+    config: Polynomial-library and optimizer settings.
+
+  Returns:
+    A fitted ``pysindy.SINDy`` model.
+  """
   try:
     import pysindy as ps
   except ImportError as exc:
@@ -74,7 +115,7 @@ def fit_sindy_model(trajectories: list[np.ndarray], dt: float, config: SINDyConf
     )
 
   model = ps.SINDy(
-    optimizer=ps.STLSQ(threshold=config.threshold),
+    optimizer=ps.STLSQ(threshold=config.threshold, alpha=config.alpha),
     feature_library=ps.PolynomialLibrary(degree=config.degree),
     **kwargs,
   )

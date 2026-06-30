@@ -14,22 +14,22 @@ def preprocess_trace(
   normalize: str,
   window_start: float | None = None,
   window_end: float | None = None,
-  highpass_hz: float | None = None,
 ) -> np.ndarray:
   """Detrend, filter, optionally crop, downsample, and normalize one trace.
 
   Args:
-    trace: One raw LFP trace.
-    fs: Sampling frequency in Hz.
+    trace: One raw LFP trace with shape ``(n_samples,)`` in stored amplitude
+      units.
+    fs: Sampling frequency in hertz.
     downsample: Keep every Nth sample after filtering.
-    lowpass_hz: Optional low-pass cutoff frequency.
+    lowpass_hz: Optional low-pass cutoff frequency in hertz.
     normalize: One of ``zscore``, ``center``, or ``none``.
     window_start: Optional crop start in seconds.
     window_end: Optional crop end in seconds.
-    highpass_hz: Optional high-pass cutoff frequency.
 
   Returns:
-    A one-dimensional preprocessed LFP trace.
+    A one-dimensional preprocessed LFP trace. ``none`` and ``center`` retain
+    the input amplitude scale; ``zscore`` returns per-trial SD units.
   """
   x = np.asarray(trace, dtype=float).squeeze()
   if x.ndim != 1:
@@ -41,21 +41,11 @@ def preprocess_trace(
 
   x = signal.detrend(x, type="constant")
   nyquist = fs / 2
-  if highpass_hz is not None and not 0 < highpass_hz < nyquist:
-    raise ValueError(f"highpass_hz must be between 0 and {nyquist}, got {highpass_hz}")
   if lowpass_hz is not None and not 0 < lowpass_hz < nyquist:
     raise ValueError(f"lowpass_hz must be between 0 and {nyquist}, got {lowpass_hz}")
-  if highpass_hz is not None and lowpass_hz is not None and highpass_hz >= lowpass_hz:
-    raise ValueError("highpass_hz must be lower than lowpass_hz")
 
-  if highpass_hz is not None or lowpass_hz is not None:
-    if highpass_hz is None:
-      cutoff, btype = lowpass_hz, "lowpass"
-    elif lowpass_hz is None:
-      cutoff, btype = highpass_hz, "highpass"
-    else:
-      cutoff, btype = [highpass_hz, lowpass_hz], "bandpass"
-    sos = signal.butter(4, cutoff, btype=btype, fs=fs, output="sos")
+  if lowpass_hz is not None:
+    sos = signal.butter(4, lowpass_hz, btype="lowpass", fs=fs, output="sos")
     x = signal.sosfiltfilt(sos, x)
 
   if window_start is not None and window_end is not None:
@@ -90,9 +80,23 @@ def channel_traces(
   normalize: str,
   window_start: float | None = None,
   window_end: float | None = None,
-  highpass_hz: float | None = None,
 ) -> list[np.ndarray]:
-  """Preprocess one channel independently for each selected trial."""
+  """Preprocess one channel independently for each selected whole trial.
+
+  Args:
+    data: Loaded trial data, including raw sampling frequency in hertz.
+    channel: Zero-based channel index.
+    trials: Original zero-based trial identifiers.
+    downsample: Integer factor applied after filtering.
+    lowpass_hz: Optional low-pass cutoff in hertz.
+    normalize: ``none``, ``center``, or ``zscore``.
+    window_start: Optional crop start in seconds.
+    window_end: Optional crop end in seconds.
+
+  Returns:
+    One array with shape ``(processed_samples,)`` per selected trial. Unequal
+    trial lengths remain unequal.
+  """
   return [
     preprocess_trace(
       data.lfp_trace(trial, channel),
@@ -102,7 +106,6 @@ def channel_traces(
       normalize=normalize,
       window_start=window_start,
       window_end=window_end,
-      highpass_hz=highpass_hz,
     )
     for trial in trials
   ]
