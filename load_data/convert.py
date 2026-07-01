@@ -10,6 +10,7 @@ import numpy as np
 MAT_FILE = Path(__file__).resolve().parents[1] / (
     "raw_data/trialdata_v03_buzz_20231106_pre-0.100_post0.100.mat"
 )
+LFP_AMPLITUDE_UNIT = "microvolts (uV)"
 
 
 def _scalar(value) -> float | int | str:
@@ -150,11 +151,14 @@ class TrialData:
     return self.trial_rows[trial]
 
   def lfp_trace(self, trial: int, channel: int) -> np.ndarray:
-    """Return one LFP trace as a 1D float array.
+    """Return one LFP trace as a 1D float array in microvolts.
 
     Args:
       trial: 0-based trial index.
       channel: 0-based channel index.
+
+    Returns:
+      LFP samples with shape ``(n_samples,)`` in microvolts (uV).
     """
     if not (0 <= trial < self.n_trials):
       raise IndexError(f"trial {trial} out of range (0..{self.n_trials - 1})")
