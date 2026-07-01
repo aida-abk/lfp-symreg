@@ -9,3 +9,12 @@
 ###############################################################################
 [1/1] configuration=78 degree=3 lowpass=35.0
 config=78 trial=4 status=success reached=14.08/14.08s runtime=27.8s
+config=78 trial=1088 status=success reached=14.19/14.19s runtime=39.7s
+config=78 trial=622 status=success reached=14.19/14.19s runtime=38.7s
+config=78 trial=620 status=success reached=14.19/14.19s runtime=26.9s
+config=78 trial=2 status=success reached=14.19/14.19s runtime=41.1s
+config=78 trial=3 status=success reached=14.19/14.19s runtime=36.9s
+config=78 trial=1244 status=success reached=14.08/14.08s runtime=35.5s
+config=78 trial=778 status=success reached=14.19/14.19s runtime=35.1s
+config=78 trial=312 status=success reached=14.19/14.19s runtime=34.3s
+saved: /oscar/data/tdesroch/dbuyukya/AidaCarneyProject/outputs/pysindy/raw_grid/simulations/config_0078_summary.json
