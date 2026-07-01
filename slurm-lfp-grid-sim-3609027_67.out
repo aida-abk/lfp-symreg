@@ -8,3 +8,9 @@
 ##   Job Started : Wed Jul  1 03:23:25 PM EDT 2026
 ###############################################################################
 [1/1] configuration=67 degree=2 lowpass=35.0
+config=67 trial=4 status=success reached=14.03/14.03s runtime=422.5s
+config=67 trial=1088 status=success reached=14.14/14.14s runtime=220.9s
+config=67 trial=622 status=success reached=14.14/14.14s runtime=343.1s
+config=67 trial=620 status=success reached=14.14/14.14s runtime=324.4s
+config=67 trial=2 status=success reached=14.14/14.14s runtime=211.0s
+config=67 trial=3 status=success reached=14.14/14.14s runtime=332.6s

@@ -1,0 +1,15 @@
+[
+  {
+    "configuration_index": 70,
+    "lowpass_hz": 35.0,
+    "degree": 2,
+    "n_delays": 8,
+    "delay_samples": 5,
+    "smooth_window_samples": 0,
+    "test_trials": 9,
+    "successful_simulations": 6,
+    "configuration_runtime_s": 1270.3374556712806,
+    "figure": "/oscar/data/tdesroch/dbuyukya/AidaCarneyProject/outputs/pysindy/raw_grid/simulations/figures/config_0070.png",
+    "status_csv": "/oscar/data/tdesroch/dbuyukya/AidaCarneyProject/outputs/pysindy/raw_grid/simulations/status/config_0070.csv"
+  }
+]
