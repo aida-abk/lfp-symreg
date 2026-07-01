@@ -1,0 +1,131 @@
+{
+  "created_utc": "2026-07-01T04:44:21.018505+00:00",
+  "command": [
+    "scripts/pysindy/raw_grid_sweep.py",
+    "--trial-type",
+    "fixation",
+    "--channel",
+    "0",
+    "--test-fraction",
+    "0.25",
+    "--seed",
+    "0",
+    "--downsample",
+    "2",
+    "--lowpass-list",
+    "35",
+    "--degree-list",
+    "3",
+    "--n-delays-list",
+    "2,4,6,8",
+    "--delay-list",
+    "1,2,5",
+    "--smooth-window-list",
+    "0,5,9",
+    "--out-csv",
+    "outputs/pysindy/raw_grid/parts/part_lp35_degree3.csv",
+    "--equations-out",
+    "outputs/pysindy/raw_grid/parts/part_lp35_degree3_equations.txt",
+    "--metadata-out",
+    "outputs/pysindy/raw_grid/parts/part_lp35_degree3_metadata.json"
+  ],
+  "slurm_job_id": "3590740",
+  "slurm_array_task_id": "4",
+  "source": "lfp",
+  "mat_file": "/oscar/data/tdesroch/dbuyukya/AidaCarneyProject/raw_data/trialdata_v03_buzz_20231106_pre-0.100_post0.100.mat",
+  "session": "buzz_20231106",
+  "trial_type": "fixation",
+  "validity_rule": "is_fixation_trial & goodFix",
+  "channel": 0,
+  "signal_units": "microvolts (uV)",
+  "raw_sampling_hz": 500.0,
+  "downsample_factor": 2,
+  "processed_sampling_hz": 250.0,
+  "preprocessing": {
+    "demean_each_trial": true,
+    "lowpass_filter": "fourth-order Butterworth, zero-phase sosfiltfilt",
+    "normalization": "none",
+    "software_highpass": "none",
+    "full_stored_trial": true
+  },
+  "split": {
+    "method": "random whole-trial split",
+    "test_fraction": 0.25,
+    "seed": 0,
+    "train_trial_ids": [
+      1398,
+      1,
+      0,
+      776,
+      934,
+      775,
+      311,
+      1086,
+      310,
+      156,
+      930,
+      621,
+      777,
+      158,
+      467,
+      931,
+      313,
+      932,
+      314,
+      157,
+      155,
+      469,
+      779,
+      465,
+      933,
+      1087,
+      466,
+      1085
+    ],
+    "test_trial_ids": [
+      4,
+      1088,
+      622,
+      620,
+      2,
+      3,
+      1244,
+      778,
+      312
+    ]
+  },
+  "fixed_model_settings": {
+    "optimizer": "STLSQ",
+    "threshold": 0.1,
+    "alpha": 0.05,
+    "normalize_columns": true,
+    "savgol_polyorder": 3,
+    "simulation_performed": false,
+    "diagnostics_calculated": false
+  },
+  "grid": {
+    "lowpass_hz": [
+      35.0
+    ],
+    "degree": [
+      3
+    ],
+    "n_delays": [
+      2,
+      4,
+      6,
+      8
+    ],
+    "delay_samples": [
+      1,
+      2,
+      5
+    ],
+    "smooth_window_samples": [
+      0,
+      5,
+      9
+    ]
+  },
+  "expected_configurations": 36
+}
