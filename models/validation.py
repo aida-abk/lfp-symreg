@@ -86,11 +86,13 @@ def simulate_model_detailed(
     )
   time = np.arange(n_samples, dtype=float) * dt
   rhs_evaluations = 0
+  last_rhs_time = 0.0
 
   def right_hand_side(_time: float, state: np.ndarray) -> np.ndarray:
     """Evaluate the learned right-hand side at one state."""
-    nonlocal rhs_evaluations
+    nonlocal last_rhs_time, rhs_evaluations
     rhs_evaluations += 1
+    last_rhs_time = max(last_rhs_time, float(_time))
     derivative = np.asarray(model.predict(state.reshape(1, -1)), dtype=float)[0]
     if not np.all(np.isfinite(derivative)):
       raise FloatingPointError("model derivative became non-finite")
@@ -110,7 +112,7 @@ def simulate_model_detailed(
   except Exception as exc:
     return SimulationResult(
       trajectory=None,
-      time=np.empty(0),
+      time=np.asarray([last_rhs_time]),
       completed=False,
       failure_reason=f"integration error: {exc}",
       rhs_evaluations=rhs_evaluations,
