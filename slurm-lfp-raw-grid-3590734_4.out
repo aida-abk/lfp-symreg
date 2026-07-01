@@ -1,0 +1,49 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 3590740
+##  Job Name : lfp_raw_grid
+##  Nodelist : node2337
+##      CPUs : 
+##  Mem/Node : 16384 MB
+## Directory : /oscar/data/tdesroch/dbuyukya/AidaCarneyProject
+##   Job Started : Wed Jul  1 12:43:10 AM EDT 2026
+###############################################################################
+[1/36] status=success lowpass=35.0 degree=3 delays=2 delay=1 smooth=0 terms=20 runtime=0.8s
+[2/36] status=success lowpass=35.0 degree=3 delays=2 delay=1 smooth=5 terms=20 runtime=0.2s
+[3/36] status=success lowpass=35.0 degree=3 delays=2 delay=1 smooth=9 terms=20 runtime=0.2s
+[4/36] status=success lowpass=35.0 degree=3 delays=2 delay=2 smooth=0 terms=20 runtime=0.2s
+[5/36] status=success lowpass=35.0 degree=3 delays=2 delay=2 smooth=5 terms=20 runtime=0.2s
+[6/36] status=success lowpass=35.0 degree=3 delays=2 delay=2 smooth=9 terms=20 runtime=0.2s
+[7/36] status=success lowpass=35.0 degree=3 delays=2 delay=5 smooth=0 terms=20 runtime=0.2s
+[8/36] status=success lowpass=35.0 degree=3 delays=2 delay=5 smooth=5 terms=20 runtime=0.2s
+[9/36] status=success lowpass=35.0 degree=3 delays=2 delay=5 smooth=9 terms=20 runtime=0.2s
+[10/36] status=success lowpass=35.0 degree=3 delays=4 delay=1 smooth=0 terms=140 runtime=1.6s
+[11/36] status=success lowpass=35.0 degree=3 delays=4 delay=1 smooth=5 terms=140 runtime=1.4s
+[12/36] status=success lowpass=35.0 degree=3 delays=4 delay=1 smooth=9 terms=140 runtime=1.5s
+[13/36] status=success lowpass=35.0 degree=3 delays=4 delay=2 smooth=0 terms=140 runtime=1.3s
+[14/36] status=success lowpass=35.0 degree=3 delays=4 delay=2 smooth=5 terms=140 runtime=1.5s
+[15/36] status=success lowpass=35.0 degree=3 delays=4 delay=2 smooth=9 terms=140 runtime=1.5s
+[16/36] status=success lowpass=35.0 degree=3 delays=4 delay=5 smooth=0 terms=140 runtime=1.6s
+[17/36] status=success lowpass=35.0 degree=3 delays=4 delay=5 smooth=5 terms=140 runtime=1.3s
+[18/36] status=success lowpass=35.0 degree=3 delays=4 delay=5 smooth=9 terms=140 runtime=1.4s
+[19/36] status=success lowpass=35.0 degree=3 delays=6 delay=1 smooth=0 terms=504 runtime=10.0s
+[20/36] status=success lowpass=35.0 degree=3 delays=6 delay=1 smooth=5 terms=504 runtime=10.1s
+[21/36] status=success lowpass=35.0 degree=3 delays=6 delay=1 smooth=9 terms=504 runtime=10.0s
+[22/36] status=success lowpass=35.0 degree=3 delays=6 delay=2 smooth=0 terms=504 runtime=10.5s
+[23/36] status=success lowpass=35.0 degree=3 delays=6 delay=2 smooth=5 terms=504 runtime=10.0s
+[24/36] status=success lowpass=35.0 degree=3 delays=6 delay=2 smooth=9 terms=504 runtime=9.3s
+[25/36] status=success lowpass=35.0 degree=3 delays=6 delay=5 smooth=0 terms=504 runtime=9.0s
+[26/36] status=success lowpass=35.0 degree=3 delays=6 delay=5 smooth=5 terms=504 runtime=7.8s
+[27/36] status=success lowpass=35.0 degree=3 delays=6 delay=5 smooth=9 terms=504 runtime=8.8s
+[28/36] status=success lowpass=35.0 degree=3 delays=8 delay=1 smooth=0 terms=1320 runtime=26.4s
+[29/36] status=success lowpass=35.0 degree=3 delays=8 delay=1 smooth=5 terms=1320 runtime=26.8s
+[30/36] status=success lowpass=35.0 degree=3 delays=8 delay=1 smooth=9 terms=1320 runtime=24.2s
+[31/36] status=success lowpass=35.0 degree=3 delays=8 delay=2 smooth=0 terms=1320 runtime=29.5s
+[32/36] status=success lowpass=35.0 degree=3 delays=8 delay=2 smooth=5 terms=1320 runtime=36.2s
+[33/36] status=success lowpass=35.0 degree=3 delays=8 delay=2 smooth=9 terms=1320 runtime=31.6s
+[34/36] status=success lowpass=35.0 degree=3 delays=8 delay=5 smooth=0 terms=1320 runtime=26.9s
+[35/36] status=success lowpass=35.0 degree=3 delays=8 delay=5 smooth=5 terms=1320 runtime=24.5s
+[36/36] status=success lowpass=35.0 degree=3 delays=8 delay=5 smooth=9 terms=1320 runtime=24.5s
+saved: outputs/pysindy/raw_grid/parts/part_lp35_degree3.csv
+saved: outputs/pysindy/raw_grid/parts/part_lp35_degree3_equations.txt
+saved: outputs/pysindy/raw_grid/parts/part_lp35_degree3_metadata.json
+successful fits: 36/36
