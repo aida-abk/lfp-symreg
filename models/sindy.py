@@ -15,15 +15,19 @@ class SINDyConfig:
       fixed at PySINDy's default of 0.1 in the active exploration pipeline.
     alpha: STLSQ ridge regularization strength. Its numerical interpretation
       depends on feature scaling; this records PySINDy's current default of 0.05.
+    normalize_columns: Whether STLSQ normalizes library columns internally
+      before thresholding and rescales final coefficients to original units.
     smooth_window: Optional Savitzky-Golay smoothing window in samples. A value
-      of zero uses PySINDy's default finite-difference derivative. Smoothing is
-      retained for backwards compatibility but is inactive in the main sweep.
+      of zero uses PySINDy's default finite-difference derivative.
+    smoothing_polyorder: Polynomial order used by Savitzky-Golay smoothing.
   """
 
   degree: int
   threshold: float = 0.1
   alpha: float = 0.05
+  normalize_columns: bool = False
   smooth_window: int = 0
+  smoothing_polyorder: int = 3
 
 
 def delay_embed_trace(trace: np.ndarray, n_delays: int, delay: int) -> np.ndarray:
@@ -110,12 +114,21 @@ def fit_sindy_model(trajectories: list[np.ndarray], dt: float, config: SINDyConf
     window = config.smooth_window
     if window % 2 == 0:
       window += 1
+    if config.smoothing_polyorder >= window:
+      raise ValueError("smoothing_polyorder must be smaller than smooth_window")
     kwargs["differentiation_method"] = ps.SmoothedFiniteDifference(
-      smoother_kws={"window_length": window, "polyorder": 3}
+      smoother_kws={
+        "window_length": window,
+        "polyorder": config.smoothing_polyorder,
+      }
     )
 
   model = ps.SINDy(
-    optimizer=ps.STLSQ(threshold=config.threshold, alpha=config.alpha),
+    optimizer=ps.STLSQ(
+      threshold=config.threshold,
+      alpha=config.alpha,
+      normalize_columns=config.normalize_columns,
+    ),
     feature_library=ps.PolynomialLibrary(degree=config.degree),
     **kwargs,
   )

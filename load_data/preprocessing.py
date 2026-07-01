@@ -39,7 +39,7 @@ def preprocess_trace(
   if (window_start is None) != (window_end is None):
     raise ValueError("window_start and window_end must be provided together.")
 
-  x = signal.detrend(x, type="constant")
+  x = signal.detrend(x, type="constant") # ==>LOOK UP
   nyquist = fs / 2
   if lowpass_hz is not None and not 0 < lowpass_hz < nyquist:
     raise ValueError(f"lowpass_hz must be between 0 and {nyquist}, got {lowpass_hz}")

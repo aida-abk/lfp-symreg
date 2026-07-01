@@ -19,7 +19,12 @@ for path in (ROOT, SCRIPTS, PYSINDY_SCRIPTS):
   if str(path) not in sys.path:
     sys.path.insert(0, str(path))
 
-from load_data.convert import MAT_FILE, TrialData, load_bhv_trial_table
+from load_data.convert import (
+  LFP_AMPLITUDE_UNIT,
+  MAT_FILE,
+  TrialData,
+  load_bhv_trial_table,
+)
 from load_data.preprocessing import channel_traces
 from load_data.synthetic import make_lorenz_dataset
 from load_data.trial_selection import select_valid_trials
@@ -369,7 +374,7 @@ def signal_units(source: str, normalization: str) -> str:
     return "Lorenz state units"
   if normalization == "zscore":
     return "per-trial standard deviations"
-  return "MAT-file LFP amplitude units"
+  return LFP_AMPLITUDE_UNIT
 
 
 def model_row_defaults() -> dict[str, object]:
