@@ -5,6 +5,67 @@ from dataclasses import dataclass
 import numpy as np
 
 
+@dataclass
+class StoredPolynomialModel:
+  """Evaluate a polynomial SINDy ODE reconstructed from saved coefficients.
+
+  Attributes:
+    degree: Maximum polynomial degree. Unitless.
+    coefficients: Coefficient matrix with shape ``(state, feature)``. Its
+      units are those of the fitted differential equations.
+    feature_names: Ordered polynomial-library feature names saved at fitting.
+  """
+
+  degree: int
+  coefficients: np.ndarray
+  feature_names: list[str]
+
+  def __post_init__(self) -> None:
+    """Build and validate the polynomial feature library."""
+    try:
+      import pysindy as ps
+    except ImportError as exc:
+      raise ImportError("PySINDy is required to reconstruct a stored model.") from exc
+
+    self.coefficients = np.asarray(self.coefficients, dtype=float)
+    if self.coefficients.ndim != 2:
+      raise ValueError(
+        f"Expected a 2D coefficient matrix, got {self.coefficients.shape}."
+      )
+    n_states, n_features = self.coefficients.shape
+    if len(self.feature_names) != n_features:
+      raise ValueError(
+        f"Stored {len(self.feature_names)} feature names for {n_features} coefficients."
+      )
+
+    self._feature_library = ps.PolynomialLibrary(degree=self.degree)
+    self._feature_library.fit(np.zeros((2, n_states), dtype=float))
+    reconstructed_names = self._feature_library.get_feature_names()
+    if reconstructed_names != self.feature_names:
+      raise ValueError(
+        "Reconstructed polynomial features do not match the stored feature order."
+      )
+
+  def predict(self, states: np.ndarray) -> np.ndarray:
+    """Evaluate state derivatives for one or more states.
+
+    Args:
+      states: State matrix with shape ``(samples, state)`` in the signal units
+        used during fitting.
+
+    Returns:
+      Derivative matrix with shape ``(samples, state)`` in signal units per
+      second.
+    """
+    values = np.asarray(states, dtype=float)
+    if values.ndim != 2 or values.shape[1] != self.coefficients.shape[0]:
+      raise ValueError(
+        "states must have shape (samples, state) matching the coefficient matrix."
+      )
+    features = np.asarray(self._feature_library.transform(values), dtype=float)
+    return features @ self.coefficients.T
+
+
 @dataclass(frozen=True)
 class SINDyConfig:
   """PySINDy hyperparameters for one fitted model.
