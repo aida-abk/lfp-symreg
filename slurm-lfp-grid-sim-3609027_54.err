@@ -1,0 +1,2 @@
+/oscar/data/tdesroch/dbuyukya/symreg_env/lib/python3.11/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
