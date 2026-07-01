@@ -12,3 +12,9 @@ config=76 trial=4 status=success reached=14.08/14.08s runtime=22.7s
 config=76 trial=1088 status=success reached=14.19/14.19s runtime=29.9s
 config=76 trial=622 status=success reached=14.19/14.19s runtime=29.6s
 config=76 trial=620 status=success reached=14.19/14.19s runtime=21.5s
+config=76 trial=2 status=success reached=14.19/14.19s runtime=30.8s
+config=76 trial=3 status=success reached=14.19/14.19s runtime=28.2s
+config=76 trial=1244 status=success reached=14.08/14.08s runtime=27.8s
+config=76 trial=778 status=success reached=14.19/14.19s runtime=26.6s
+config=76 trial=312 status=success reached=14.19/14.19s runtime=26.2s
+saved: /oscar/data/tdesroch/dbuyukya/AidaCarneyProject/outputs/pysindy/raw_grid/simulations/config_0076_summary.json

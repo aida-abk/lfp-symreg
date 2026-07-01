@@ -9,3 +9,9 @@
 ###############################################################################
 [1/1] configuration=69 degree=2 lowpass=35.0
 config=69 trial=4 status=success reached=14.03/14.03s runtime=259.8s
+config=69 trial=1088 status=success reached=14.14/14.14s runtime=220.8s
+config=69 trial=622 status=success reached=14.14/14.14s runtime=297.5s
+config=69 trial=620 status=success reached=14.14/14.14s runtime=262.1s
+config=69 trial=2 status=success reached=14.14/14.14s runtime=216.0s
+config=69 trial=3 status=success reached=14.14/14.14s runtime=327.7s
+config=69 trial=1244 status=success reached=14.03/14.03s runtime=228.0s
