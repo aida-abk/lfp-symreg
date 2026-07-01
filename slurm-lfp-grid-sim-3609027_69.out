@@ -1,0 +1,11 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 3609169
+##  Job Name : lfp_grid_sim
+##  Nodelist : node2335
+##      CPUs : 
+##  Mem/Node : 16384 MB
+## Directory : /oscar/data/tdesroch/dbuyukya/AidaCarneyProject
+##   Job Started : Wed Jul  1 03:24:25 PM EDT 2026
+###############################################################################
+[1/1] configuration=69 degree=2 lowpass=35.0
+config=69 trial=4 status=success reached=14.03/14.03s runtime=259.8s
