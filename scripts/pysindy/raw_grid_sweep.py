@@ -23,7 +23,7 @@ from exploration_sweep import (
   prepare_lfp_trials,
 )
 from load_data.convert import LFP_AMPLITUDE_UNIT, MAT_FILE
-from load_data.preprocessing import channel_traces
+from load_data.preprocessing import channel_traces, pooled_trace_rms
 from models.sindy import (
   SINDyConfig,
   count_terms,
@@ -43,6 +43,7 @@ DEFAULT_METADATA = DEFAULT_OUTPUT_DIR / "run_metadata.json"
 FIELDNAMES = [
   "configuration_index",
   "lowpass_hz",
+  "training_lfp_rms_uv",
   "degree",
   "n_delays",
   "delay_samples",
@@ -208,6 +209,7 @@ def run_raw_grid(args: argparse.Namespace) -> list[dict[str, object]]:
       lowpass_hz=lowpass_hz,
       normalize="none",
     )
+    training_lfp_rms_uv = pooled_trace_rms(train_raw)
     dt = args.downsample / data.fs
     for degree, n_delays, delay, smooth_window in itertools.product(
       degree_values,
@@ -221,6 +223,7 @@ def run_raw_grid(args: argparse.Namespace) -> list[dict[str, object]]:
       row: dict[str, object] = {
         "configuration_index": configuration_index,
         "lowpass_hz": lowpass_hz if lowpass_hz is not None else "none",
+        "training_lfp_rms_uv": training_lfp_rms_uv,
         "degree": degree,
         "n_delays": n_delays,
         "delay_samples": delay,
