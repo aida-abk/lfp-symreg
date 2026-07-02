@@ -1,8 +1,28 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import comb
 
 import numpy as np
+
+
+def maximum_polynomial_terms(n_states: int, degree: int) -> int:
+  """Return the available coefficients in a polynomial SINDy system.
+
+  Args:
+    n_states: Number of state equations and input coordinates. Unitless count.
+    degree: Maximum polynomial degree. Unitless.
+
+  Returns:
+    Number of state-feature coefficients, including one constant feature per
+    equation. PySINDy's default polynomial library contains
+    ``comb(n_states + degree, degree)`` features.
+  """
+  if n_states < 1:
+    raise ValueError("n_states must be at least 1.")
+  if degree < 0:
+    raise ValueError("degree must be nonnegative.")
+  return n_states * comb(n_states + degree, degree)
 
 
 @dataclass
@@ -186,8 +206,8 @@ def fit_sindy_model(trajectories: list[np.ndarray], dt: float, config: SINDyConf
 
   model = ps.SINDy(
     optimizer=ps.STLSQ(
-      threshold=config.threshold,
-      alpha=config.alpha,
+      threshold=config.threshold, 
+      alpha=config.alpha, # add ridge regularization strength
       normalize_columns=config.normalize_columns,
     ),
     feature_library=ps.PolynomialLibrary(degree=config.degree),

@@ -30,6 +30,7 @@ from models.sindy import (
   delay_embed_trajectories,
   equation_text,
   fit_sindy_model,
+  maximum_polynomial_terms,
 )
 from pipeline_utils import parse_int_list
 
@@ -53,6 +54,8 @@ FIELDNAMES = [
   "fit_status",
   "fit_failure_reason",
   "nonzero_terms",
+  "possible_terms",
+  "term_utilization_percent",
   "fit_runtime_s",
   "feature_names_json",
   "coefficients_json",
@@ -214,6 +217,7 @@ def run_raw_grid(args: argparse.Namespace) -> list[dict[str, object]]:
     ):
       configuration_index += 1
       started = time.perf_counter()
+      possible_terms = maximum_polynomial_terms(n_delays, degree)
       row: dict[str, object] = {
         "configuration_index": configuration_index,
         "lowpass_hz": lowpass_hz if lowpass_hz is not None else "none",
@@ -228,6 +232,8 @@ def run_raw_grid(args: argparse.Namespace) -> list[dict[str, object]]:
         "fit_status": "failed",
         "fit_failure_reason": "",
         "nonzero_terms": 0,
+        "possible_terms": possible_terms,
+        "term_utilization_percent": "",
         "fit_runtime_s": float("nan"),
         "feature_names_json": "",
         "coefficients_json": "",
@@ -253,6 +259,9 @@ def run_raw_grid(args: argparse.Namespace) -> list[dict[str, object]]:
         )
         row["fit_status"] = "success"
         row["nonzero_terms"] = count_terms(model)
+        row["term_utilization_percent"] = (
+          100 * int(row["nonzero_terms"]) / possible_terms
+        )
         row["feature_names_json"] = json.dumps(model.get_feature_names())
         row["coefficients_json"] = json.dumps(model.coefficients().tolist())
         row["equations"] = equation_text(model)

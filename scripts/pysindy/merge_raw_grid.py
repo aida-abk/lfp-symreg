@@ -2,7 +2,17 @@ from __future__ import annotations
 
 import argparse
 import csv
+import sys
 from pathlib import Path
+
+# Project imports
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+  sys.path.insert(0, str(ROOT))
+
+from models.sindy import maximum_polynomial_terms
+
+DERIVED_FIELDS = ["possible_terms", "term_utilization_percent"]
 
 
 def configuration_key(row: dict[str, str]) -> tuple[float, int, int, int, int]:
@@ -13,6 +23,20 @@ def configuration_key(row: dict[str, str]) -> tuple[float, int, int, int, int]:
     int(row["n_delays"]),
     int(row["delay_samples"]),
     int(row["smooth_window_samples"]),
+  )
+
+
+def add_term_utilization(row: dict[str, str]) -> None:
+  """Add polynomial-library capacity and percent utilization to one row."""
+  possible_terms = maximum_polynomial_terms(
+    n_states=int(row["n_delays"]),
+    degree=int(row["degree"]),
+  )
+  row["possible_terms"] = str(possible_terms)
+  row["term_utilization_percent"] = (
+    str(100 * int(row["nonzero_terms"]) / possible_terms)
+    if row["fit_status"] == "success"
+    else ""
   )
 
 
@@ -51,10 +75,17 @@ def merge_raw_grid(input_dir: Path, output_csv: Path, expected: int) -> list[dic
   rows.sort(key=configuration_key)
   for index, row in enumerate(rows, start=1):
     row["configuration_index"] = str(index)
+    add_term_utilization(row)
+
+  output_fieldnames = [*fieldnames]
+  for derived_field in DERIVED_FIELDS:
+    if derived_field not in output_fieldnames:
+      insert_at = output_fieldnames.index("fit_runtime_s")
+      output_fieldnames.insert(insert_at, derived_field)
 
   output_csv.parent.mkdir(parents=True, exist_ok=True)
   with output_csv.open("w", newline="") as file:
-    writer = csv.DictWriter(file, fieldnames=fieldnames)
+    writer = csv.DictWriter(file, fieldnames=output_fieldnames)
     writer.writeheader()
     writer.writerows(rows)
   return rows

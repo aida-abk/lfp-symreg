@@ -1,0 +1,217 @@
+configuration_index,lowpass_hz,degree,n_delays,delay_samples,delay_ms,embedding_span_ms,smooth_window_samples,smooth_window_ms,derivative_method,nonzero_terms,possible_terms,term_utilization_percent,fit_runtime_s,simulation_attempts,completed_simulations,failed_simulations,completion_fraction,all_held_out_completed,failure_reasons,figure_exists
+1,35.0,1,2,1,4.0,4.0,0,0.0,finite_difference,6,6,100.0,0.7621560273692012,9,9,0,1.0,True,,True
+2,35.0,1,2,1,4.0,4.0,5,20.0,smoothed_finite_difference_savgol_order_3,6,6,100.0,0.12153424881398678,9,9,0,1.0,True,,True
+3,35.0,1,2,1,4.0,4.0,9,36.0,smoothed_finite_difference_savgol_order_3,6,6,100.0,0.09608330205082893,9,9,0,1.0,True,,True
+4,35.0,1,2,2,8.0,8.0,0,0.0,finite_difference,6,6,100.0,0.08418026939034462,9,9,0,1.0,True,,True
+5,35.0,1,2,2,8.0,8.0,5,20.0,smoothed_finite_difference_savgol_order_3,6,6,100.0,0.09323031082749367,9,9,0,1.0,True,,True
+6,35.0,1,2,2,8.0,8.0,9,36.0,smoothed_finite_difference_savgol_order_3,6,6,100.0,0.09708619955927134,9,9,0,1.0,True,,True
+7,35.0,1,2,5,20.0,20.0,0,0.0,finite_difference,6,6,100.0,0.08228942938148975,9,9,0,1.0,True,,True
+8,35.0,1,2,5,20.0,20.0,5,20.0,smoothed_finite_difference_savgol_order_3,6,6,100.0,0.09454501327127218,9,9,0,1.0,True,,True
+9,35.0,1,2,5,20.0,20.0,9,36.0,smoothed_finite_difference_savgol_order_3,6,6,100.0,0.09520633239299059,9,9,0,1.0,True,,True
+10,35.0,1,4,1,4.0,12.0,0,0.0,finite_difference,20,20,100.0,0.15172613319009542,9,9,0,1.0,True,,True
+11,35.0,1,4,1,4.0,12.0,5,20.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.1587117211893201,9,9,0,1.0,True,,True
+12,35.0,1,4,1,4.0,12.0,9,36.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.15862522646784782,9,9,0,1.0,True,,True
+13,35.0,1,4,2,8.0,24.0,0,0.0,finite_difference,20,20,100.0,0.14227424189448357,9,9,0,1.0,True,,True
+14,35.0,1,4,2,8.0,24.0,5,20.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.15658734180033207,9,9,0,1.0,True,,True
+15,35.0,1,4,2,8.0,24.0,9,36.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.157551989890635,9,9,0,1.0,True,,True
+16,35.0,1,4,5,20.0,60.0,0,0.0,finite_difference,20,20,100.0,0.14487587474286556,9,9,0,1.0,True,,True
+17,35.0,1,4,5,20.0,60.0,5,20.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.1587201338261366,9,9,0,1.0,True,,True
+18,35.0,1,4,5,20.0,60.0,9,36.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.15991097781807184,9,9,0,1.0,True,,True
+19,35.0,1,6,1,4.0,20.0,0,0.0,finite_difference,42,42,100.0,0.2640855582430959,9,9,0,1.0,True,,True
+20,35.0,1,6,1,4.0,20.0,5,20.0,smoothed_finite_difference_savgol_order_3,42,42,100.0,0.26689909026026726,9,9,0,1.0,True,,True
+21,35.0,1,6,1,4.0,20.0,9,36.0,smoothed_finite_difference_savgol_order_3,42,42,100.0,0.26550797559320927,9,9,0,1.0,True,,True
+22,35.0,1,6,2,8.0,40.0,0,0.0,finite_difference,42,42,100.0,0.2432282418012619,9,9,0,1.0,True,,True
+23,35.0,1,6,2,8.0,40.0,5,20.0,smoothed_finite_difference_savgol_order_3,42,42,100.0,0.26059014815837145,9,9,0,1.0,True,,True
+24,35.0,1,6,2,8.0,40.0,9,36.0,smoothed_finite_difference_savgol_order_3,42,42,100.0,0.2610946921631694,9,9,0,1.0,True,,True
+25,35.0,1,6,5,20.0,100.0,0,0.0,finite_difference,42,42,100.0,0.24749412294477224,9,9,0,1.0,True,,True
+26,35.0,1,6,5,20.0,100.0,5,20.0,smoothed_finite_difference_savgol_order_3,42,42,100.0,0.2614159546792507,9,9,0,1.0,True,,True
+27,35.0,1,6,5,20.0,100.0,9,36.0,smoothed_finite_difference_savgol_order_3,42,42,100.0,0.26484655123203993,9,9,0,1.0,True,,True
+28,35.0,1,8,1,4.0,28.0,0,0.0,finite_difference,72,72,100.0,0.3965569566935301,9,9,0,1.0,True,,True
+29,35.0,1,8,1,4.0,28.0,5,20.0,smoothed_finite_difference_savgol_order_3,72,72,100.0,0.406692280434072,9,9,0,1.0,True,,True
+30,35.0,1,8,1,4.0,28.0,9,36.0,smoothed_finite_difference_savgol_order_3,72,72,100.0,0.40407131612300873,9,9,0,1.0,True,,True
+31,35.0,1,8,2,8.0,56.0,0,0.0,finite_difference,72,72,100.0,0.388041652739048,9,9,0,1.0,True,,True
+32,35.0,1,8,2,8.0,56.0,5,20.0,smoothed_finite_difference_savgol_order_3,72,72,100.0,0.4041572380810976,9,9,0,1.0,True,,True
+33,35.0,1,8,2,8.0,56.0,9,36.0,smoothed_finite_difference_savgol_order_3,72,72,100.0,0.4055781699717045,9,9,0,1.0,True,,True
+34,35.0,1,8,5,20.0,140.0,0,0.0,finite_difference,72,72,100.0,0.3839737009257078,9,9,0,1.0,True,,True
+35,35.0,1,8,5,20.0,140.0,5,20.0,smoothed_finite_difference_savgol_order_3,72,72,100.0,0.41345669981092215,9,9,0,1.0,True,,True
+36,35.0,1,8,5,20.0,140.0,9,36.0,smoothed_finite_difference_savgol_order_3,72,72,100.0,0.41045642644166946,9,9,0,1.0,True,,True
+37,35.0,2,2,1,4.0,4.0,0,0.0,finite_difference,12,12,100.0,0.7122102007269859,9,9,0,1.0,True,,True
+38,35.0,2,2,1,4.0,4.0,5,20.0,smoothed_finite_difference_savgol_order_3,12,12,100.0,0.1319029312580824,9,9,0,1.0,True,,True
+39,35.0,2,2,1,4.0,4.0,9,36.0,smoothed_finite_difference_savgol_order_3,12,12,100.0,0.12852867506444454,9,9,0,1.0,True,,True
+40,35.0,2,2,2,8.0,8.0,0,0.0,finite_difference,12,12,100.0,0.11374151334166527,9,9,0,1.0,True,,True
+41,35.0,2,2,2,8.0,8.0,5,20.0,smoothed_finite_difference_savgol_order_3,12,12,100.0,0.12929563596844673,9,9,0,1.0,True,,True
+42,35.0,2,2,2,8.0,8.0,9,36.0,smoothed_finite_difference_savgol_order_3,12,12,100.0,0.13177968002855778,9,9,0,1.0,True,,True
+43,35.0,2,2,5,20.0,20.0,0,0.0,finite_difference,12,12,100.0,0.11542982049286366,9,9,0,1.0,True,,True
+44,35.0,2,2,5,20.0,20.0,5,20.0,smoothed_finite_difference_savgol_order_3,12,12,100.0,0.12649847380816936,9,9,0,1.0,True,,True
+45,35.0,2,2,5,20.0,20.0,9,36.0,smoothed_finite_difference_savgol_order_3,12,12,100.0,0.12909654714167118,9,9,0,1.0,True,,True
+46,35.0,2,4,1,4.0,12.0,0,0.0,finite_difference,60,60,100.0,0.4748212192207575,9,9,0,1.0,True,,True
+47,35.0,2,4,1,4.0,12.0,5,20.0,smoothed_finite_difference_savgol_order_3,60,60,100.0,0.45690485276281834,9,9,0,1.0,True,,True
+48,35.0,2,4,1,4.0,12.0,9,36.0,smoothed_finite_difference_savgol_order_3,60,60,100.0,0.4787253551185131,9,9,0,1.0,True,,True
+49,35.0,2,4,2,8.0,24.0,0,0.0,finite_difference,60,60,100.0,0.4632017705589533,9,9,0,1.0,True,,True
+50,35.0,2,4,2,8.0,24.0,5,20.0,smoothed_finite_difference_savgol_order_3,60,60,100.0,0.45644758827984333,9,9,0,1.0,True,,True
+51,35.0,2,4,2,8.0,24.0,9,36.0,smoothed_finite_difference_savgol_order_3,60,60,100.0,0.4396824836730957,9,9,0,1.0,True,,True
+52,35.0,2,4,5,20.0,60.0,0,0.0,finite_difference,60,60,100.0,0.4771673046052456,9,8,1,0.8888888888888888,False,integration error: model derivative became non-finite,True
+53,35.0,2,4,5,20.0,60.0,5,20.0,smoothed_finite_difference_savgol_order_3,60,60,100.0,0.4644815642386675,9,8,1,0.8888888888888888,False,integration error: model derivative became non-finite,True
+54,35.0,2,4,5,20.0,60.0,9,36.0,smoothed_finite_difference_savgol_order_3,60,60,100.0,0.4402343835681677,9,8,1,0.8888888888888888,False,integration error: model derivative became non-finite,True
+55,35.0,2,6,1,4.0,20.0,0,0.0,finite_difference,168,168,100.0,1.929959861561656,9,8,1,0.8888888888888888,False,integration error: model derivative became non-finite,True
+56,35.0,2,6,1,4.0,20.0,5,20.0,smoothed_finite_difference_savgol_order_3,168,168,100.0,1.3432954512536526,9,8,1,0.8888888888888888,False,integration error: model derivative became non-finite,True
+57,35.0,2,6,1,4.0,20.0,9,36.0,smoothed_finite_difference_savgol_order_3,168,168,100.0,1.3572714440524578,9,9,0,1.0,True,,True
+58,35.0,2,6,2,8.0,40.0,0,0.0,finite_difference,168,168,100.0,1.4137024879455566,9,8,1,0.8888888888888888,False,integration error: model derivative became non-finite,True
+59,35.0,2,6,2,8.0,40.0,5,20.0,smoothed_finite_difference_savgol_order_3,168,168,100.0,1.3958078362047672,9,7,2,0.7777777777777778,False,integration error: model derivative became non-finite,True
+60,35.0,2,6,2,8.0,40.0,9,36.0,smoothed_finite_difference_savgol_order_3,168,168,100.0,1.3450341876596212,9,8,1,0.8888888888888888,False,integration error: model derivative became non-finite,True
+61,35.0,2,6,5,20.0,100.0,0,0.0,finite_difference,168,168,100.0,1.2913594283163548,9,8,1,0.8888888888888888,False,integration error: model derivative became non-finite,True
+62,35.0,2,6,5,20.0,100.0,5,20.0,smoothed_finite_difference_savgol_order_3,168,168,100.0,1.4594701621681452,9,7,2,0.7777777777777778,False,integration error: model derivative became non-finite,True
+63,35.0,2,6,5,20.0,100.0,9,36.0,smoothed_finite_difference_savgol_order_3,168,168,100.0,1.3484772257506847,9,8,1,0.8888888888888888,False,integration error: model derivative became non-finite,True
+64,35.0,2,8,1,4.0,28.0,0,0.0,finite_difference,360,360,100.0,5.463045950978994,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+65,35.0,2,8,1,4.0,28.0,5,20.0,smoothed_finite_difference_savgol_order_3,360,360,100.0,4.988644417375326,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+66,35.0,2,8,1,4.0,28.0,9,36.0,smoothed_finite_difference_savgol_order_3,360,360,100.0,5.353007877245545,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+67,35.0,2,8,2,8.0,56.0,0,0.0,finite_difference,360,360,100.0,5.181689228862524,9,9,0,1.0,True,,True
+68,35.0,2,8,2,8.0,56.0,5,20.0,smoothed_finite_difference_savgol_order_3,360,360,100.0,5.583781810477376,9,9,0,1.0,True,,True
+69,35.0,2,8,2,8.0,56.0,9,36.0,smoothed_finite_difference_savgol_order_3,360,360,100.0,5.039448253810406,9,9,0,1.0,True,,True
+70,35.0,2,8,5,20.0,140.0,0,0.0,finite_difference,360,360,100.0,4.98807149939239,9,6,3,0.6666666666666666,False,integration error: model derivative became non-finite,True
+71,35.0,2,8,5,20.0,140.0,5,20.0,smoothed_finite_difference_savgol_order_3,360,360,100.0,5.197180762887001,9,6,3,0.6666666666666666,False,integration error: model derivative became non-finite,True
+72,35.0,2,8,5,20.0,140.0,9,36.0,smoothed_finite_difference_savgol_order_3,360,360,100.0,5.374249063432217,9,5,4,0.5555555555555556,False,integration error: model derivative became non-finite,True
+73,35.0,3,2,1,4.0,4.0,0,0.0,finite_difference,20,20,100.0,0.7753340881317854,9,9,0,1.0,True,,True
+74,35.0,3,2,1,4.0,4.0,5,20.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.21016048826277256,9,9,0,1.0,True,,True
+75,35.0,3,2,1,4.0,4.0,9,36.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.19933758489787579,9,9,0,1.0,True,,True
+76,35.0,3,2,2,8.0,8.0,0,0.0,finite_difference,20,20,100.0,0.19641784206032753,9,9,0,1.0,True,,True
+77,35.0,3,2,2,8.0,8.0,5,20.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.19750547595322132,9,9,0,1.0,True,,True
+78,35.0,3,2,2,8.0,8.0,9,36.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.1918416991829872,9,9,0,1.0,True,,True
+79,35.0,3,2,5,20.0,20.0,0,0.0,finite_difference,20,20,100.0,0.19197147339582443,9,9,0,1.0,True,,True
+80,35.0,3,2,5,20.0,20.0,5,20.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.18143935315310955,9,9,0,1.0,True,,True
+81,35.0,3,2,5,20.0,20.0,9,36.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.184995973482728,9,9,0,1.0,True,,True
+82,35.0,3,4,1,4.0,12.0,0,0.0,finite_difference,140,140,100.0,1.6331625301390886,9,9,0,1.0,True,,True
+83,35.0,3,4,1,4.0,12.0,5,20.0,smoothed_finite_difference_savgol_order_3,140,140,100.0,1.3687720689922571,9,9,0,1.0,True,,True
+84,35.0,3,4,1,4.0,12.0,9,36.0,smoothed_finite_difference_savgol_order_3,140,140,100.0,1.5007788818329573,9,9,0,1.0,True,,True
+85,35.0,3,4,2,8.0,24.0,0,0.0,finite_difference,140,140,100.0,1.2895548231899738,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+86,35.0,3,4,2,8.0,24.0,5,20.0,smoothed_finite_difference_savgol_order_3,140,140,100.0,1.473185820505023,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+87,35.0,3,4,2,8.0,24.0,9,36.0,smoothed_finite_difference_savgol_order_3,140,140,100.0,1.4779828656464815,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+88,35.0,3,4,5,20.0,60.0,0,0.0,finite_difference,140,140,100.0,1.5672966167330742,9,4,5,0.4444444444444444,False,integration error: model derivative became non-finite,True
+89,35.0,3,4,5,20.0,60.0,5,20.0,smoothed_finite_difference_savgol_order_3,140,140,100.0,1.3448852468281984,9,4,5,0.4444444444444444,False,integration error: model derivative became non-finite,True
+90,35.0,3,4,5,20.0,60.0,9,36.0,smoothed_finite_difference_savgol_order_3,140,140,100.0,1.4246434457600117,9,4,5,0.4444444444444444,False,integration error: model derivative became non-finite,True
+91,35.0,3,6,1,4.0,20.0,0,0.0,finite_difference,504,504,100.0,9.998469527810812,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+92,35.0,3,6,1,4.0,20.0,5,20.0,smoothed_finite_difference_savgol_order_3,504,504,100.0,10.134420009329915,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+93,35.0,3,6,1,4.0,20.0,9,36.0,smoothed_finite_difference_savgol_order_3,504,504,100.0,10.010824790224433,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+94,35.0,3,6,2,8.0,40.0,0,0.0,finite_difference,504,504,100.0,10.472882524132729,9,3,6,0.3333333333333333,False,integration error: model derivative became non-finite,True
+95,35.0,3,6,2,8.0,40.0,5,20.0,smoothed_finite_difference_savgol_order_3,504,504,100.0,9.999727884307504,9,4,5,0.4444444444444444,False,integration error: model derivative became non-finite,True
+96,35.0,3,6,2,8.0,40.0,9,36.0,smoothed_finite_difference_savgol_order_3,504,504,100.0,9.262014463543892,9,7,2,0.7777777777777778,False,integration error: model derivative became non-finite,True
+97,35.0,3,6,5,20.0,100.0,0,0.0,finite_difference,504,504,100.0,8.991970336064696,9,1,8,0.1111111111111111,False,integration error: model derivative became non-finite,True
+98,35.0,3,6,5,20.0,100.0,5,20.0,smoothed_finite_difference_savgol_order_3,504,504,100.0,7.82896282710135,9,1,8,0.1111111111111111,False,integration error: model derivative became non-finite,True
+99,35.0,3,6,5,20.0,100.0,9,36.0,smoothed_finite_difference_savgol_order_3,504,504,100.0,8.846153303980827,9,3,6,0.3333333333333333,False,integration error: model derivative became non-finite,True
+100,35.0,3,8,1,4.0,28.0,0,0.0,finite_difference,1320,1320,100.0,26.42432938888669,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+101,35.0,3,8,1,4.0,28.0,5,20.0,smoothed_finite_difference_savgol_order_3,1320,1320,100.0,26.805168353021145,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+102,35.0,3,8,1,4.0,28.0,9,36.0,smoothed_finite_difference_savgol_order_3,1320,1320,100.0,24.219507195055485,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+103,35.0,3,8,2,8.0,56.0,0,0.0,finite_difference,1320,1320,100.0,29.47683287411928,9,2,7,0.2222222222222222,False,integration error: model derivative became non-finite,True
+104,35.0,3,8,2,8.0,56.0,5,20.0,smoothed_finite_difference_savgol_order_3,1320,1320,100.0,36.1634784899652,9,2,7,0.2222222222222222,False,integration error: model derivative became non-finite,True
+105,35.0,3,8,2,8.0,56.0,9,36.0,smoothed_finite_difference_savgol_order_3,1320,1320,100.0,31.562388882040977,9,2,7,0.2222222222222222,False,integration error: model derivative became non-finite,True
+106,35.0,3,8,5,20.0,140.0,0,0.0,finite_difference,1320,1320,100.0,26.86574270389974,9,5,4,0.5555555555555556,False,integration error: model derivative became non-finite,True
+107,35.0,3,8,5,20.0,140.0,5,20.0,smoothed_finite_difference_savgol_order_3,1320,1320,100.0,24.46415909193456,9,5,4,0.5555555555555556,False,integration error: model derivative became non-finite,True
+108,35.0,3,8,5,20.0,140.0,9,36.0,smoothed_finite_difference_savgol_order_3,1320,1320,100.0,24.523235926404595,9,4,5,0.4444444444444444,False,integration error: model derivative became non-finite,True
+109,80.0,1,2,1,4.0,4.0,0,0.0,finite_difference,6,6,100.0,0.9288135077804327,9,9,0,1.0,True,,True
+110,80.0,1,2,1,4.0,4.0,5,20.0,smoothed_finite_difference_savgol_order_3,6,6,100.0,0.13949079997837543,9,9,0,1.0,True,,True
+111,80.0,1,2,1,4.0,4.0,9,36.0,smoothed_finite_difference_savgol_order_3,6,6,100.0,0.11471452936530113,9,9,0,1.0,True,,True
+112,80.0,1,2,2,8.0,8.0,0,0.0,finite_difference,6,6,100.0,0.09706160426139832,9,9,0,1.0,True,,True
+113,80.0,1,2,2,8.0,8.0,5,20.0,smoothed_finite_difference_savgol_order_3,6,6,100.0,0.10917693749070168,9,9,0,1.0,True,,True
+114,80.0,1,2,2,8.0,8.0,9,36.0,smoothed_finite_difference_savgol_order_3,6,6,100.0,0.1084357500076294,9,9,0,1.0,True,,True
+115,80.0,1,2,5,20.0,20.0,0,0.0,finite_difference,6,6,100.0,0.09067657217383385,9,9,0,1.0,True,,True
+116,80.0,1,2,5,20.0,20.0,5,20.0,smoothed_finite_difference_savgol_order_3,6,6,100.0,0.10590233281254768,9,9,0,1.0,True,,True
+117,80.0,1,2,5,20.0,20.0,9,36.0,smoothed_finite_difference_savgol_order_3,6,6,100.0,0.10711851343512535,9,9,0,1.0,True,,True
+118,80.0,1,4,1,4.0,12.0,0,0.0,finite_difference,20,20,100.0,0.18493494763970375,9,9,0,1.0,True,,True
+119,80.0,1,4,1,4.0,12.0,5,20.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.18520224653184414,9,9,0,1.0,True,,True
+120,80.0,1,4,1,4.0,12.0,9,36.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.19336255826056004,9,9,0,1.0,True,,True
+121,80.0,1,4,2,8.0,24.0,0,0.0,finite_difference,20,20,100.0,0.17341170459985733,9,9,0,1.0,True,,True
+122,80.0,1,4,2,8.0,24.0,5,20.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.1867293193936348,9,9,0,1.0,True,,True
+123,80.0,1,4,2,8.0,24.0,9,36.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.18770422786474228,9,9,0,1.0,True,,True
+124,80.0,1,4,5,20.0,60.0,0,0.0,finite_difference,20,20,100.0,0.16534831933677197,9,9,0,1.0,True,,True
+125,80.0,1,4,5,20.0,60.0,5,20.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.1852816715836525,9,9,0,1.0,True,,True
+126,80.0,1,4,5,20.0,60.0,9,36.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.18418645299971104,9,9,0,1.0,True,,True
+127,80.0,1,6,1,4.0,20.0,0,0.0,finite_difference,42,42,100.0,0.30329793132841587,9,9,0,1.0,True,,True
+128,80.0,1,6,1,4.0,20.0,5,20.0,smoothed_finite_difference_savgol_order_3,42,42,100.0,0.34175785817205906,9,9,0,1.0,True,,True
+129,80.0,1,6,1,4.0,20.0,9,36.0,smoothed_finite_difference_savgol_order_3,42,42,100.0,0.3544397857040167,9,9,0,1.0,True,,True
+130,80.0,1,6,2,8.0,40.0,0,0.0,finite_difference,42,42,100.0,0.32166786305606365,9,9,0,1.0,True,,True
+131,80.0,1,6,2,8.0,40.0,5,20.0,smoothed_finite_difference_savgol_order_3,42,42,100.0,0.331984193995595,9,9,0,1.0,True,,True
+132,80.0,1,6,2,8.0,40.0,9,36.0,smoothed_finite_difference_savgol_order_3,42,42,100.0,0.32984987646341324,9,9,0,1.0,True,,True
+133,80.0,1,6,5,20.0,100.0,0,0.0,finite_difference,42,42,100.0,0.3067082818597555,9,9,0,1.0,True,,True
+134,80.0,1,6,5,20.0,100.0,5,20.0,smoothed_finite_difference_savgol_order_3,42,42,100.0,0.32971412502229214,9,9,0,1.0,True,,True
+135,80.0,1,6,5,20.0,100.0,9,36.0,smoothed_finite_difference_savgol_order_3,42,42,100.0,0.3301087412983179,9,9,0,1.0,True,,True
+136,80.0,1,8,1,4.0,28.0,0,0.0,finite_difference,72,72,100.0,0.5128913689404726,9,9,0,1.0,True,,True
+137,80.0,1,8,1,4.0,28.0,5,20.0,smoothed_finite_difference_savgol_order_3,72,72,100.0,0.5242515485733747,9,9,0,1.0,True,,True
+138,80.0,1,8,1,4.0,28.0,9,36.0,smoothed_finite_difference_savgol_order_3,72,72,100.0,0.5314259082078934,9,9,0,1.0,True,,True
+139,80.0,1,8,2,8.0,56.0,0,0.0,finite_difference,72,72,100.0,0.4981483966112137,9,9,0,1.0,True,,True
+140,80.0,1,8,2,8.0,56.0,5,20.0,smoothed_finite_difference_savgol_order_3,72,72,100.0,0.5506925284862518,9,9,0,1.0,True,,True
+141,80.0,1,8,2,8.0,56.0,9,36.0,smoothed_finite_difference_savgol_order_3,72,72,100.0,0.5209359955042601,9,9,0,1.0,True,,False
+142,80.0,1,8,5,20.0,140.0,0,0.0,finite_difference,72,72,100.0,0.4856605362147093,9,9,0,1.0,True,,True
+143,80.0,1,8,5,20.0,140.0,5,20.0,smoothed_finite_difference_savgol_order_3,72,72,100.0,0.5149639379233122,9,9,0,1.0,True,,True
+144,80.0,1,8,5,20.0,140.0,9,36.0,smoothed_finite_difference_savgol_order_3,72,72,100.0,0.5140608604997396,9,9,0,1.0,True,,True
+145,80.0,2,2,1,4.0,4.0,0,0.0,finite_difference,12,12,100.0,0.7452747356146574,9,7,2,0.7777777777777778,False,integration error: model derivative became non-finite,True
+146,80.0,2,2,1,4.0,4.0,5,20.0,smoothed_finite_difference_savgol_order_3,12,12,100.0,0.1297641433775425,9,7,2,0.7777777777777778,False,integration error: model derivative became non-finite,True
+147,80.0,2,2,1,4.0,4.0,9,36.0,smoothed_finite_difference_savgol_order_3,12,12,100.0,0.1281182561069727,9,9,0,1.0,True,,True
+148,80.0,2,2,2,8.0,8.0,0,0.0,finite_difference,12,12,100.0,0.11036904528737068,9,8,1,0.8888888888888888,False,integration error: model derivative became non-finite,True
+149,80.0,2,2,2,8.0,8.0,5,20.0,smoothed_finite_difference_savgol_order_3,12,12,100.0,0.1265434119850397,9,8,1,0.8888888888888888,False,integration error: model derivative became non-finite,True
+150,80.0,2,2,2,8.0,8.0,9,36.0,smoothed_finite_difference_savgol_order_3,12,12,100.0,0.13065866008400917,9,9,0,1.0,True,,True
+151,80.0,2,2,5,20.0,20.0,0,0.0,finite_difference,12,12,100.0,0.11676246859133244,9,9,0,1.0,True,,True
+152,80.0,2,2,5,20.0,20.0,5,20.0,smoothed_finite_difference_savgol_order_3,12,12,100.0,0.12682194635272026,9,9,0,1.0,True,,True
+153,80.0,2,2,5,20.0,20.0,9,36.0,smoothed_finite_difference_savgol_order_3,12,12,100.0,0.13056216947734356,9,9,0,1.0,True,,True
+154,80.0,2,4,1,4.0,12.0,0,0.0,finite_difference,60,60,100.0,0.4700000640004873,9,3,6,0.3333333333333333,False,integration error: model derivative became non-finite,True
+155,80.0,2,4,1,4.0,12.0,5,20.0,smoothed_finite_difference_savgol_order_3,60,60,100.0,0.4063528850674629,9,1,8,0.1111111111111111,False,integration error: model derivative became non-finite,True
+156,80.0,2,4,1,4.0,12.0,9,36.0,smoothed_finite_difference_savgol_order_3,60,60,100.0,0.4427534732967615,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+157,80.0,2,4,2,8.0,24.0,0,0.0,finite_difference,60,60,100.0,0.44547396525740623,9,9,0,1.0,True,,True
+158,80.0,2,4,2,8.0,24.0,5,20.0,smoothed_finite_difference_savgol_order_3,60,60,100.0,0.4208104442805052,9,9,0,1.0,True,,True
+159,80.0,2,4,2,8.0,24.0,9,36.0,smoothed_finite_difference_savgol_order_3,60,60,100.0,0.41542320139706135,9,9,0,1.0,True,,True
+160,80.0,2,4,5,20.0,60.0,0,0.0,finite_difference,60,60,100.0,0.46203854866325855,9,6,3,0.6666666666666666,False,integration error: model derivative became non-finite,True
+161,80.0,2,4,5,20.0,60.0,5,20.0,smoothed_finite_difference_savgol_order_3,60,60,100.0,0.46154898405075073,9,4,5,0.4444444444444444,False,integration error: model derivative became non-finite,True
+162,80.0,2,4,5,20.0,60.0,9,36.0,smoothed_finite_difference_savgol_order_3,60,60,100.0,0.4287616014480591,9,8,1,0.8888888888888888,False,integration error: model derivative became non-finite,True
+163,80.0,2,6,1,4.0,20.0,0,0.0,finite_difference,168,168,100.0,1.7999141439795494,9,9,0,1.0,True,,True
+164,80.0,2,6,1,4.0,20.0,5,20.0,smoothed_finite_difference_savgol_order_3,168,168,100.0,1.365717587992549,9,9,0,1.0,True,,True
+165,80.0,2,6,1,4.0,20.0,9,36.0,smoothed_finite_difference_savgol_order_3,168,168,100.0,1.3870231304317713,9,6,3,0.6666666666666666,False,integration error: model derivative became non-finite,True
+166,80.0,2,6,2,8.0,40.0,0,0.0,finite_difference,168,168,100.0,1.5092447008937597,9,5,4,0.5555555555555556,False,integration error: model derivative became non-finite,True
+167,80.0,2,6,2,8.0,40.0,5,20.0,smoothed_finite_difference_savgol_order_3,168,168,100.0,1.418682772666216,9,3,6,0.3333333333333333,False,integration error: model derivative became non-finite,True
+168,80.0,2,6,2,8.0,40.0,9,36.0,smoothed_finite_difference_savgol_order_3,168,168,100.0,1.2084283214062452,9,8,1,0.8888888888888888,False,integration error: model derivative became non-finite,True
+169,80.0,2,6,5,20.0,100.0,0,0.0,finite_difference,168,168,100.0,1.4059757888317108,9,9,0,1.0,True,,True
+170,80.0,2,6,5,20.0,100.0,5,20.0,smoothed_finite_difference_savgol_order_3,168,168,100.0,1.2051383666694164,9,9,0,1.0,True,,True
+171,80.0,2,6,5,20.0,100.0,9,36.0,smoothed_finite_difference_savgol_order_3,168,168,100.0,1.265431609004736,9,7,2,0.7777777777777778,False,integration error: model derivative became non-finite,True
+172,80.0,2,8,1,4.0,28.0,0,0.0,finite_difference,360,360,100.0,5.221474038437009,9,9,0,1.0,True,,True
+173,80.0,2,8,1,4.0,28.0,5,20.0,smoothed_finite_difference_savgol_order_3,360,360,100.0,4.820288151502609,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+174,80.0,2,8,1,4.0,28.0,9,36.0,smoothed_finite_difference_savgol_order_3,360,360,100.0,5.237993309274316,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+175,80.0,2,8,2,8.0,56.0,0,0.0,finite_difference,360,360,100.0,4.752879498526454,9,4,5,0.4444444444444444,False,integration error: model derivative became non-finite,True
+176,80.0,2,8,2,8.0,56.0,5,20.0,smoothed_finite_difference_savgol_order_3,360,360,100.0,5.258899236097932,9,2,7,0.2222222222222222,False,integration error: model derivative became non-finite,True
+177,80.0,2,8,2,8.0,56.0,9,36.0,smoothed_finite_difference_savgol_order_3,360,360,100.0,4.653773613274097,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+178,80.0,2,8,5,20.0,140.0,0,0.0,finite_difference,360,360,100.0,5.178796799853444,9,9,0,1.0,True,,True
+179,80.0,2,8,5,20.0,140.0,5,20.0,smoothed_finite_difference_savgol_order_3,360,360,100.0,5.092343434691429,9,9,0,1.0,True,,True
+180,80.0,2,8,5,20.0,140.0,9,36.0,smoothed_finite_difference_savgol_order_3,360,360,100.0,5.14473938383162,9,3,6,0.3333333333333333,False,integration error: model derivative became non-finite,True
+181,80.0,3,2,1,4.0,4.0,0,0.0,finite_difference,20,20,100.0,0.7753163762390614,9,9,0,1.0,True,,True
+182,80.0,3,2,1,4.0,4.0,5,20.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.21138152107596397,9,9,0,1.0,True,,True
+183,80.0,3,2,1,4.0,4.0,9,36.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.21051165834069252,9,9,0,1.0,True,,True
+184,80.0,3,2,2,8.0,8.0,0,0.0,finite_difference,20,20,100.0,0.1941848024725914,9,9,0,1.0,True,,True
+185,80.0,3,2,2,8.0,8.0,5,20.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.19201526790857315,9,9,0,1.0,True,,True
+186,80.0,3,2,2,8.0,8.0,9,36.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.1985925640910864,9,9,0,1.0,True,,True
+187,80.0,3,2,5,20.0,20.0,0,0.0,finite_difference,20,20,100.0,0.19613089598715305,9,9,0,1.0,True,,True
+188,80.0,3,2,5,20.0,20.0,5,20.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.18348916061222553,9,9,0,1.0,True,,True
+189,80.0,3,2,5,20.0,20.0,9,36.0,smoothed_finite_difference_savgol_order_3,20,20,100.0,0.186368178576231,9,9,0,1.0,True,,True
+190,80.0,3,4,1,4.0,12.0,0,0.0,finite_difference,140,140,100.0,1.6952915247529745,9,5,4,0.5555555555555556,False,integration error: model derivative became non-finite,True
+191,80.0,3,4,1,4.0,12.0,5,20.0,smoothed_finite_difference_savgol_order_3,140,140,100.0,1.4454255513846874,9,6,3,0.6666666666666666,False,integration error: model derivative became non-finite,True
+192,80.0,3,4,1,4.0,12.0,9,36.0,smoothed_finite_difference_savgol_order_3,140,140,100.0,1.520406423136592,9,6,3,0.6666666666666666,False,integration error: model derivative became non-finite,True
+193,80.0,3,4,2,8.0,24.0,0,0.0,finite_difference,140,140,100.0,1.4361004866659641,9,9,0,1.0,True,,True
+194,80.0,3,4,2,8.0,24.0,5,20.0,smoothed_finite_difference_savgol_order_3,140,140,100.0,1.3808979857712984,9,1,8,0.1111111111111111,False,integration error: model derivative became non-finite,True
+195,80.0,3,4,2,8.0,24.0,9,36.0,smoothed_finite_difference_savgol_order_3,140,140,100.0,1.4389321561902761,9,1,8,0.1111111111111111,False,integration error: model derivative became non-finite,True
+196,80.0,3,4,5,20.0,60.0,0,0.0,finite_difference,140,140,100.0,1.5234145168215036,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+197,80.0,3,4,5,20.0,60.0,5,20.0,smoothed_finite_difference_savgol_order_3,140,140,100.0,1.447695855051279,9,1,8,0.1111111111111111,False,integration error: model derivative became non-finite,True
+198,80.0,3,4,5,20.0,60.0,9,36.0,smoothed_finite_difference_savgol_order_3,140,140,100.0,1.309588696807623,9,4,5,0.4444444444444444,False,integration error: model derivative became non-finite,True
+199,80.0,3,6,1,4.0,20.0,0,0.0,finite_difference,504,504,100.0,10.207591408863664,9,9,0,1.0,True,,True
+200,80.0,3,6,1,4.0,20.0,5,20.0,smoothed_finite_difference_savgol_order_3,504,504,100.0,10.615429479628801,9,9,0,1.0,True,,True
+201,80.0,3,6,1,4.0,20.0,9,36.0,smoothed_finite_difference_savgol_order_3,504,504,100.0,10.19968843087554,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+202,80.0,3,6,2,8.0,40.0,0,0.0,finite_difference,504,504,100.0,10.207148130983114,9,9,0,1.0,True,,True
+203,80.0,3,6,2,8.0,40.0,5,20.0,smoothed_finite_difference_savgol_order_3,504,504,100.0,10.048633487895131,9,9,0,1.0,True,,True
+204,80.0,3,6,2,8.0,40.0,9,36.0,smoothed_finite_difference_savgol_order_3,504,504,100.0,9.059043798595667,9,2,7,0.2222222222222222,False,integration error: model derivative became non-finite,True
+205,80.0,3,6,5,20.0,100.0,0,0.0,finite_difference,504,504,100.0,9.045925375074148,9,5,4,0.5555555555555556,False,integration error: model derivative became non-finite,True
+206,80.0,3,6,5,20.0,100.0,5,20.0,smoothed_finite_difference_savgol_order_3,504,504,100.0,8.782356511801481,9,5,4,0.5555555555555556,False,integration error: model derivative became non-finite,True
+207,80.0,3,6,5,20.0,100.0,9,36.0,smoothed_finite_difference_savgol_order_3,504,504,100.0,8.457739043980837,9,2,7,0.2222222222222222,False,integration error: model derivative became non-finite,True
+208,80.0,3,8,1,4.0,28.0,0,0.0,finite_difference,1320,1320,100.0,25.579378973692656,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+209,80.0,3,8,1,4.0,28.0,5,20.0,smoothed_finite_difference_savgol_order_3,1320,1320,100.0,27.31378118880093,9,3,6,0.3333333333333333,False,integration error: model derivative became non-finite,True
+210,80.0,3,8,1,4.0,28.0,9,36.0,smoothed_finite_difference_savgol_order_3,1320,1320,100.0,25.608399281278253,9,0,9,0.0,False,integration error: model derivative became non-finite,True
+211,80.0,3,8,2,8.0,56.0,0,0.0,finite_difference,1320,1320,100.0,28.36481325700879,9,5,4,0.5555555555555556,False,integration error: model derivative became non-finite,True
+212,80.0,3,8,2,8.0,56.0,5,20.0,smoothed_finite_difference_savgol_order_3,1320,1320,100.0,37.30224208533764,9,3,6,0.3333333333333333,False,integration error: model derivative became non-finite,True
+213,80.0,3,8,2,8.0,56.0,9,36.0,smoothed_finite_difference_savgol_order_3,1320,1320,100.0,31.371614642441273,9,1,8,0.1111111111111111,False,integration error: model derivative became non-finite,True
+214,80.0,3,8,5,20.0,140.0,0,0.0,finite_difference,1320,1320,100.0,28.3990032132715,9,6,3,0.6666666666666666,False,integration error: model derivative became non-finite,True
+215,80.0,3,8,5,20.0,140.0,5,20.0,smoothed_finite_difference_savgol_order_3,1320,1320,100.0,25.61602316237986,9,6,3,0.6666666666666666,False,integration error: model derivative became non-finite,True
+216,80.0,3,8,5,20.0,140.0,9,36.0,smoothed_finite_difference_savgol_order_3,1320,1320,100.0,24.187698297202587,9,6,3,0.6666666666666666,False,integration error: model derivative became non-finite,True

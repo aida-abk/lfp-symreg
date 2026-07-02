@@ -1,0 +1,80 @@
+[
+  {
+    "configuration_index": 14,
+    "lowpass_hz": 35.0,
+    "degree": 1,
+    "n_delays": 4,
+    "delay_samples": 2,
+    "smooth_window_samples": 5,
+    "test_trials": 9,
+    "successful_simulations": 9,
+    "configuration_runtime_s": 42.28899958403781,
+    "figure": "/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/raw_grid/simulations/figures/config_0014.png",
+    "status_csv": "/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/raw_grid/simulations/status/config_0014.csv"
+  },
+  {
+    "configuration_index": 50,
+    "lowpass_hz": 35.0,
+    "degree": 2,
+    "n_delays": 4,
+    "delay_samples": 2,
+    "smooth_window_samples": 5,
+    "test_trials": 9,
+    "successful_simulations": 9,
+    "configuration_runtime_s": 140.1718497920083,
+    "figure": "/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/raw_grid/simulations/figures/config_0050.png",
+    "status_csv": "/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/raw_grid/simulations/status/config_0050.csv"
+  },
+  {
+    "configuration_index": 86,
+    "lowpass_hz": 35.0,
+    "degree": 3,
+    "n_delays": 4,
+    "delay_samples": 2,
+    "smooth_window_samples": 5,
+    "test_trials": 9,
+    "successful_simulations": 0,
+    "configuration_runtime_s": 235.18032116699032,
+    "figure": "/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/raw_grid/simulations/figures/config_0086.png",
+    "status_csv": "/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/raw_grid/simulations/status/config_0086.csv"
+  },
+  {
+    "configuration_index": 122,
+    "lowpass_hz": 80.0,
+    "degree": 1,
+    "n_delays": 4,
+    "delay_samples": 2,
+    "smooth_window_samples": 5,
+    "test_trials": 9,
+    "successful_simulations": 9,
+    "configuration_runtime_s": 41.67125966597814,
+    "figure": "/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/raw_grid/simulations/figures/config_0122.png",
+    "status_csv": "/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/raw_grid/simulations/status/config_0122.csv"
+  },
+  {
+    "configuration_index": 158,
+    "lowpass_hz": 80.0,
+    "degree": 2,
+    "n_delays": 4,
+    "delay_samples": 2,
+    "smooth_window_samples": 5,
+    "test_trials": 9,
+    "successful_simulations": 9,
+    "configuration_runtime_s": 101.2336206670152,
+    "figure": "/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/raw_grid/simulations/figures/config_0158.png",
+    "status_csv": "/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/raw_grid/simulations/status/config_0158.csv"
+  },
+  {
+    "configuration_index": 194,
+    "lowpass_hz": 80.0,
+    "degree": 3,
+    "n_delays": 4,
+    "delay_samples": 2,
+    "smooth_window_samples": 5,
+    "test_trials": 9,
+    "successful_simulations": 1,
+    "configuration_runtime_s": 277.2567905829055,
+    "figure": "/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/raw_grid/simulations/figures/config_0194.png",
+    "status_csv": "/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/raw_grid/simulations/status/config_0194.csv"
+  }
+]
