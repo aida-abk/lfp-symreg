@@ -1,0 +1,10 @@
+{
+  "configuration_index": 216,
+  "stlsq_threshold": 100000.0,
+  "nonzero_terms": 18,
+  "possible_terms": 1320,
+  "test_trials": 9,
+  "successful_simulations": 9,
+  "signal_units": "microvolts (uV)",
+  "comparison_target": "low-pass-only held-out x0; no z-scoring or SG smoothing"
+}
