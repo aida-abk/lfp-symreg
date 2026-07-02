@@ -125,6 +125,7 @@ def plot_configuration(
   measured_trials: list[np.ndarray],
   results: list[SimulationResult],
   dt: float,
+  title: str | None = None,
 ) -> None:
   """Plot measured and simulated x0 for every held-out trial.
 
@@ -135,6 +136,7 @@ def plot_configuration(
     measured_trials: Embedded measured trajectories in microvolts.
     results: Numerical simulation results corresponding to the trials.
     dt: Processed sample interval in seconds.
+    title: Optional figure title overriding the raw-grid configuration title.
   """
   import matplotlib
 
@@ -175,10 +177,13 @@ def plot_configuration(
     axis.set_visible(False)
   axes.ravel()[0].legend(loc="upper right")
   figure.suptitle(
-    f"Configuration {row['configuration_index']}: "
-    f"LP={row['lowpass_hz']} Hz, degree={row['degree']}, "
-    f"delays={row['n_delays']}, spacing={row['delay_samples']} samples, "
-    f"smoothing={row['smooth_window_samples']} samples"
+    title
+    or (
+      f"Configuration {row['configuration_index']}: "
+      f"LP={row['lowpass_hz']} Hz, degree={row['degree']}, "
+      f"delays={row['n_delays']}, spacing={row['delay_samples']} samples, "
+      f"smoothing={row['smooth_window_samples']} samples"
+    )
   )
   figure.tight_layout(rect=(0, 0, 1, 0.97))
   path.parent.mkdir(parents=True, exist_ok=True)
