@@ -8,3 +8,13 @@
 ##   Job Started : Wed Jul  1 03:54:06 PM EDT 2026
 ###############################################################################
 [1/1] configuration=96 degree=3 lowpass=35.0
+config=96 trial=4 status=failed reached=1.08/14.05s runtime=172.0s
+config=96 trial=1088 status=success reached=14.16/14.16s runtime=565.4s
+config=96 trial=622 status=success reached=14.16/14.16s runtime=478.9s
+config=96 trial=620 status=success reached=14.16/14.16s runtime=483.5s
+config=96 trial=2 status=success reached=14.16/14.16s runtime=403.2s
+config=96 trial=3 status=success reached=14.16/14.16s runtime=435.8s
+config=96 trial=1244 status=failed reached=0.38/14.05s runtime=126.5s
+config=96 trial=778 status=success reached=14.16/14.16s runtime=431.7s
+config=96 trial=312 status=success reached=14.16/14.16s runtime=378.6s
+saved: /oscar/data/tdesroch/dbuyukya/AidaCarneyProject/outputs/pysindy/raw_grid/simulations/config_0096_summary.json

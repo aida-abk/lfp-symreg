@@ -15,3 +15,6 @@ config=69 trial=620 status=success reached=14.14/14.14s runtime=262.1s
 config=69 trial=2 status=success reached=14.14/14.14s runtime=216.0s
 config=69 trial=3 status=success reached=14.14/14.14s runtime=327.7s
 config=69 trial=1244 status=success reached=14.03/14.03s runtime=228.0s
+config=69 trial=778 status=success reached=14.14/14.14s runtime=216.6s
+config=69 trial=312 status=success reached=14.14/14.14s runtime=249.4s
+saved: /oscar/data/tdesroch/dbuyukya/AidaCarneyProject/outputs/pysindy/raw_grid/simulations/config_0069_summary.json

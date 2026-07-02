@@ -1,0 +1,4 @@
+/oscar/data/tdesroch/dbuyukya/AidaCarneyProject/models/sindy.py:66: RuntimeWarning: overflow encountered in matmul
+  return features @ self.coefficients.T
+/oscar/data/tdesroch/dbuyukya/AidaCarneyProject/models/sindy.py:66: RuntimeWarning: invalid value encountered in matmul
+  return features @ self.coefficients.T
