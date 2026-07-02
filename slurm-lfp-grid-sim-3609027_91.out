@@ -9,3 +9,12 @@
 ###############################################################################
 [1/1] configuration=91 degree=3 lowpass=35.0
 config=91 trial=4 status=failed reached=4.03/14.07s runtime=417.9s
+config=91 trial=1088 status=failed reached=4.29/14.18s runtime=388.9s
+config=91 trial=622 status=failed reached=8.87/14.18s runtime=559.3s
+config=91 trial=620 status=failed reached=4.24/14.18s runtime=414.6s
+config=91 trial=2 status=failed reached=5.74/14.18s runtime=416.3s
+config=91 trial=3 status=failed reached=8.60/14.18s runtime=524.6s
+config=91 trial=1244 status=failed reached=0.21/14.07s runtime=290.5s
+config=91 trial=778 status=failed reached=10.34/14.18s runtime=604.9s
+config=91 trial=312 status=failed reached=7.41/14.18s runtime=538.4s
+saved: /oscar/data/tdesroch/dbuyukya/AidaCarneyProject/outputs/pysindy/raw_grid/simulations/config_0091_summary.json

@@ -7,3 +7,14 @@
 ## Directory : /oscar/data/tdesroch/dbuyukya/AidaCarneyProject
 ##   Job Started : Wed Jul  1 03:55:07 PM EDT 2026
 ###############################################################################
+[1/1] configuration=97 degree=3 lowpass=35.0
+config=97 trial=4 status=failed reached=4.18/13.99s runtime=211.9s
+config=97 trial=1088 status=success reached=14.10/14.10s runtime=288.5s
+config=97 trial=622 status=failed reached=6.13/14.10s runtime=258.0s
+config=97 trial=620 status=failed reached=3.49/14.10s runtime=185.5s
+config=97 trial=2 status=failed reached=2.84/14.10s runtime=198.3s
+config=97 trial=3 status=failed reached=2.99/14.10s runtime=195.8s
+config=97 trial=1244 status=failed reached=3.17/13.99s runtime=181.5s
+config=97 trial=778 status=failed reached=2.70/14.10s runtime=175.0s
+config=97 trial=312 status=failed reached=1.96/14.10s runtime=155.5s
+saved: /oscar/data/tdesroch/dbuyukya/AidaCarneyProject/outputs/pysindy/raw_grid/simulations/config_0097_summary.json
