@@ -19,7 +19,7 @@ for path in (ROOT, SCRIPTS, PYSINDY_SCRIPTS):
     sys.path.insert(0, str(path))
 
 from load_data.convert import LFP_AMPLITUDE_UNIT, MAT_FILE, TrialData
-from load_data.preprocessing import channel_traces
+from load_data.preprocessing import channel_traces, pooled_trace_rms
 from models.sindy import StoredPolynomialModel, delay_embed_trajectories
 from models.validation import SimulationResult, simulate_model_detailed
 
@@ -44,6 +44,8 @@ STATUS_FIELDS = [
   "reached_duration_s",
   "simulation_runtime_s",
   "rhs_evaluations",
+  "simulated_samples",
+  "simulated_x0_rms_uv",
 ]
 
 
@@ -221,6 +223,11 @@ def simulate_configuration(
     )
     runtime_s = time.perf_counter() - started
     results.append(result)
+    simulated_x0 = (
+      result.trajectory[:, 0]
+      if result.trajectory is not None and result.trajectory.size
+      else None
+    )
     status_rows.append(
       {
         "configuration_index": configuration_index,
@@ -231,6 +238,10 @@ def simulate_configuration(
         "reached_duration_s": result.reached_horizon_s,
         "simulation_runtime_s": runtime_s,
         "rhs_evaluations": result.rhs_evaluations,
+        "simulated_samples": 0 if simulated_x0 is None else simulated_x0.size,
+        "simulated_x0_rms_uv": (
+          "" if simulated_x0 is None else pooled_trace_rms([simulated_x0])
+        ),
       }
     )
     print(

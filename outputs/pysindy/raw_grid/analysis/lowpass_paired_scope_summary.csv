@@ -1,0 +1,5 @@
+scope,degree,matched_configuration_pairs,configuration_wins_35hz,configuration_wins_80hz,configuration_ties,mean_completed_trial_difference_80_minus_35,all9_35hz_only,all9_80hz_only,all9_discordance_exact_p,matched_trial_pairs,trial_completion_35hz_only,trial_completion_80hz_only,trial_completion_discordance_exact_p,mean_reached_fraction_difference_80_minus_35
+overall,all,108,25,22,61,-0.12962962962962962,14,12,0.8450189828872681,972,101,87,0.343090278924958,-0.009467849719866465
+degree,1,36,0,0,36,0.0,0,0,1.0,324,0,0,1.0,0.0
+degree,2,36,17,7,12,-1.3611111111111112,11,7,0.480682373046875,324,73,24,6.404732398670512e-07,-0.09640605119929511
+degree,3,36,8,15,13,0.9722222222222222,3,5,0.7265625,324,28,63,0.0003128389964067163,0.06800250203969571

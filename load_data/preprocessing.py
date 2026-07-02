@@ -6,6 +6,31 @@ from scipy import signal
 from load_data.convert import TrialData
 
 
+def pooled_trace_rms(traces: list[np.ndarray]) -> float:
+  """Return RMS across every sample in a collection of unequal-length traces.
+
+  Args:
+    traces: One-dimensional traces with a shared amplitude unit. Trials may
+      contain different numbers of samples.
+
+  Returns:
+    Root mean square in the input amplitude unit. Each sample has equal weight.
+  """
+  if not traces:
+    raise ValueError("At least one trace is required to calculate RMS.")
+  squared_sum = 0.0
+  sample_count = 0
+  for trace in traces:
+    values = np.asarray(trace, dtype=float).squeeze()
+    if values.ndim != 1:
+      raise ValueError(f"Expected a 1D trace, got shape {values.shape}.")
+    squared_sum += float(np.sum(values**2))
+    sample_count += values.size
+  if sample_count == 0:
+    raise ValueError("Cannot calculate RMS from empty traces.")
+  return float(np.sqrt(squared_sum / sample_count))
+
+
 def preprocess_trace(
   trace: np.ndarray,
   fs: float,
