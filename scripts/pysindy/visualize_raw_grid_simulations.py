@@ -22,6 +22,7 @@ from load_data.convert import LFP_AMPLITUDE_UNIT, MAT_FILE, TrialData
 from load_data.preprocessing import channel_traces, pooled_trace_rms
 from models.sindy import StoredPolynomialModel, delay_embed_trajectories
 from models.validation import SimulationResult, simulate_model_detailed
+from raw_grid_io import write_csv_checkpoint
 
 # Default raw-grid artifacts
 DEFAULT_GRID = ROOT / "outputs" / "pysindy" / "raw_grid" / "raw_grid_merged.csv"
@@ -46,6 +47,9 @@ STATUS_FIELDS = [
   "rhs_evaluations",
   "simulated_samples",
   "simulated_x0_rms_uv",
+  "compared_samples",
+  "x0_rmse_uv",
+  "trajectory_rmse_uv",
 ]
 
 
@@ -178,13 +182,18 @@ def plot_configuration(
   for axis in axes.ravel()[len(trial_ids):]:
     axis.set_visible(False)
   axes.ravel()[0].legend(loc="upper right")
+  threshold_text = (
+    f", threshold={row['stlsq_threshold']}"
+    if row.get("stlsq_threshold")
+    else ""
+  )
   figure.suptitle(
     title
     or (
       f"Configuration {row['configuration_index']}: "
       f"LP={row['lowpass_hz']} Hz, degree={row['degree']}, "
       f"delays={row['n_delays']}, spacing={row['delay_samples']} samples, "
-      f"smoothing={row['smooth_window_samples']} samples"
+      f"smoothing={row['smooth_window_samples']} samples{threshold_text}"
     )
   )
   figure.tight_layout(rect=(0, 0, 1, 0.97))
@@ -199,8 +208,21 @@ def simulate_configuration(
   test_trial_ids: list[int],
   dt: float,
   output_dir: Path,
+  trial_timeout_s: float | None,
 ) -> dict[str, object]:
-  """Simulate one stored equation from every held-out initial condition."""
+  """Simulate one stored equation from every held-out initial condition.
+
+  Args:
+    row: Stored raw-grid configuration.
+    test_raw: Preprocessed held-out LFP traces in microvolts.
+    test_trial_ids: Original zero-based held-out trial identifiers.
+    dt: Processed sample interval in seconds.
+    output_dir: Destination for status checkpoints and figures.
+    trial_timeout_s: Optional operational wall-time limit per simulation.
+
+  Returns:
+    Configuration-level simulation summary.
+  """
   configuration_index = int(row["configuration_index"])
   measured_trials = delay_embed_trajectories(
     test_raw,
@@ -211,6 +233,8 @@ def simulate_configuration(
   results = []
   status_rows = []
   configuration_started = time.perf_counter()
+  stem = f"config_{configuration_index:04d}"
+  status_path = output_dir / "status" / f"{stem}.csv"
 
   for trial_id, measured in zip(test_trial_ids, measured_trials):
     requested_duration_s = (measured.shape[0] - 1) * dt
@@ -220,6 +244,7 @@ def simulate_configuration(
       initial_state=measured[0],
       dt=dt,
       horizon_s=requested_duration_s,
+      wall_timeout_s=trial_timeout_s,
     )
     runtime_s = time.perf_counter() - started
     results.append(result)
@@ -228,6 +253,26 @@ def simulate_configuration(
       if result.trajectory is not None and result.trajectory.size
       else None
     )
+    compared_samples = (
+      0
+      if result.trajectory is None
+      else min(measured.shape[0], result.trajectory.shape[0])
+    )
+    if compared_samples:
+      measured_segment = measured[:compared_samples]
+      simulated_segment = result.trajectory[:compared_samples]
+      with np.errstate(over="ignore", invalid="ignore"):
+        x0_rmse_uv = float(
+          np.sqrt(
+            np.mean((simulated_segment[:, 0] - measured_segment[:, 0]) ** 2)
+          )
+        )
+        trajectory_rmse_uv = float(
+          np.sqrt(np.mean((simulated_segment - measured_segment) ** 2))
+        )
+    else:
+      x0_rmse_uv = ""
+      trajectory_rmse_uv = ""
     status_rows.append(
       {
         "configuration_index": configuration_index,
@@ -242,23 +287,20 @@ def simulate_configuration(
         "simulated_x0_rms_uv": (
           "" if simulated_x0 is None else pooled_trace_rms([simulated_x0])
         ),
+        "compared_samples": compared_samples,
+        "x0_rmse_uv": x0_rmse_uv,
+        "trajectory_rmse_uv": trajectory_rmse_uv,
       }
     )
+    write_csv_checkpoint(status_path, STATUS_FIELDS, status_rows)
     print(
       f"config={configuration_index} trial={trial_id} "
       f"status={status_rows[-1]['simulation_status']} "
       f"reached={result.reached_horizon_s:.2f}/{requested_duration_s:.2f}s "
+      f"x0_rmse={x0_rmse_uv} uV "
       f"runtime={runtime_s:.1f}s",
       flush=True,
     )
-
-  stem = f"config_{configuration_index:04d}"
-  status_path = output_dir / "status" / f"{stem}.csv"
-  status_path.parent.mkdir(parents=True, exist_ok=True)
-  with status_path.open("w", newline="") as file:
-    writer = csv.DictWriter(file, fieldnames=STATUS_FIELDS)
-    writer.writeheader()
-    writer.writerows(status_rows)
 
   figure_path = output_dir / "figures" / f"{stem}.png"
   plot_configuration(
@@ -331,6 +373,7 @@ def run(args: argparse.Namespace) -> list[dict[str, object]]:
         test_trial_ids=test_trial_ids,
         dt=dt,
         output_dir=args.output_dir,
+        trial_timeout_s=args.trial_timeout_s,
       )
     )
 
@@ -368,9 +411,20 @@ def main() -> None:
     default=None,
     help="Optional computational smoke-test limit; default uses every held-out trial.",
   )
+  parser.add_argument(
+    "--trial-timeout-s",
+    type=float,
+    default=None,
+    help=(
+      "Optional operational wall-time limit per held-out simulation in seconds; "
+      "timeouts are saved as failed simulations."
+    ),
+  )
   args = parser.parse_args()
   if args.max_test_trials is not None and args.max_test_trials < 1:
     parser.error("--max-test-trials must be at least 1.")
+  if args.trial_timeout_s is not None and args.trial_timeout_s <= 0:
+    parser.error("--trial-timeout-s must be positive.")
   run(args)
 
 

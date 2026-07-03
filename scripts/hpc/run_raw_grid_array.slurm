@@ -14,6 +14,7 @@ cd "$SLURM_SUBMIT_DIR"
 
 PYTHON_BIN="${PYTHON_BIN:-python}"
 OUTPUT_DIR="${OUTPUT_DIR:-outputs/pysindy/raw_grid}"
+STLSQ_THRESHOLD="${STLSQ_THRESHOLD:-0.1}"
 PARTS_DIR="$OUTPUT_DIR/parts"
 mkdir -p "$PARTS_DIR"
 
@@ -40,6 +41,7 @@ export MKL_NUM_THREADS=1
   --n-delays-list 2,4,6,8 \
   --delay-list 1,2,5 \
   --smooth-window-list 0,5,9 \
+  --threshold "$STLSQ_THRESHOLD" \
   --out-csv "$PARTS_DIR/$PART_NAME.csv" \
   --equations-out "$PARTS_DIR/${PART_NAME}_equations.txt" \
   --metadata-out "$PARTS_DIR/${PART_NAME}_metadata.json"
