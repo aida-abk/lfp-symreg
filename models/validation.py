@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import signal as operating_system_signal
 from dataclasses import dataclass
 
 import numpy as np
@@ -58,6 +59,7 @@ def simulate_model_detailed(
   initial_state: np.ndarray,
   dt: float,
   horizon_s: float,
+  wall_timeout_s: float | None = None,
 ) -> SimulationResult:
   """Simulate a model while retaining a trajectory produced before failure.
 
@@ -66,6 +68,8 @@ def simulate_model_detailed(
     initial_state: Initial state vector in the model's signal units.
     dt: Requested output interval in seconds.
     horizon_s: Maximum integration duration in seconds.
+    wall_timeout_s: Optional operational wall-clock limit in seconds. This
+      protects batch jobs and is not a scientific rejection threshold.
 
   Returns:
     Complete or partial simulation output and an explicit failure reason.
@@ -76,6 +80,8 @@ def simulate_model_detailed(
     settings, not model-acceptance criteria.
   """
   n_samples = int(round(horizon_s / dt)) + 1
+  if wall_timeout_s is not None and wall_timeout_s <= 0:
+    raise ValueError("wall_timeout_s must be positive")
   if n_samples < 2:
     return SimulationResult(
       trajectory=None,
@@ -98,6 +104,26 @@ def simulate_model_detailed(
       raise FloatingPointError("model derivative became non-finite")
     return derivative
 
+  previous_alarm_handler = None
+  if wall_timeout_s is not None:
+    previous_alarm_handler = operating_system_signal.getsignal(
+      operating_system_signal.SIGALRM
+    )
+
+    def timeout_handler(_signum, _frame) -> None:
+      """Interrupt integration after its operational wall-time allocation."""
+      raise TimeoutError(
+        f"simulation exceeded {wall_timeout_s:g} wall-clock seconds"
+      )
+
+    operating_system_signal.signal(
+      operating_system_signal.SIGALRM,
+      timeout_handler,
+    )
+    operating_system_signal.setitimer(
+      operating_system_signal.ITIMER_REAL,
+      wall_timeout_s,
+    )
   try:
     solution = solve_ivp(
       right_hand_side,
@@ -117,6 +143,13 @@ def simulate_model_detailed(
       failure_reason=f"integration error: {exc}",
       rhs_evaluations=rhs_evaluations,
     )
+  finally:
+    if wall_timeout_s is not None:
+      operating_system_signal.setitimer(operating_system_signal.ITIMER_REAL, 0)
+      operating_system_signal.signal(
+        operating_system_signal.SIGALRM,
+        previous_alarm_handler,
+      )
 
   simulated = solution.y.T
   if not np.all(np.isfinite(simulated)):

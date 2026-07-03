@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=lfp_c216_thresholds
 #SBATCH --array=0-4
-#SBATCH --time=04:00:00
+#SBATCH --time=24:00:00
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=1
 #SBATCH --output=slurm-lfp-c216-thresholds-%A_%a.out
@@ -32,4 +32,5 @@ mkdir -p "$MPLCONFIGDIR"
 "$PYTHON_BIN" \
   scripts/pysindy/sweep_analysis/simulate_threshold_comparison.py \
   --threshold "$THRESHOLD" \
-  --refit-csv "$REFIT_CSV"
+  --refit-csv "$REFIT_CSV" \
+  --trial-timeout-s 1800

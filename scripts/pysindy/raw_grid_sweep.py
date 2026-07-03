@@ -43,6 +43,7 @@ DEFAULT_METADATA = DEFAULT_OUTPUT_DIR / "run_metadata.json"
 FIELDNAMES = [
   "configuration_index",
   "lowpass_hz",
+  "stlsq_threshold",
   "training_lfp_rms_uv",
   "degree",
   "n_delays",
@@ -147,7 +148,7 @@ def build_metadata(
     },
     "fixed_model_settings": {
       "optimizer": "STLSQ",
-      "threshold": 0.1,
+      "threshold": args.threshold,
       "alpha": 0.05,
       "normalize_columns": True,
       "savgol_polyorder": 3,
@@ -223,6 +224,7 @@ def run_raw_grid(args: argparse.Namespace) -> list[dict[str, object]]:
       row: dict[str, object] = {
         "configuration_index": configuration_index,
         "lowpass_hz": lowpass_hz if lowpass_hz is not None else "none",
+        "stlsq_threshold": args.threshold,
         "training_lfp_rms_uv": training_lfp_rms_uv,
         "degree": degree,
         "n_delays": n_delays,
@@ -253,7 +255,7 @@ def run_raw_grid(args: argparse.Namespace) -> list[dict[str, object]]:
           dt=dt,
           config=SINDyConfig(
             degree=degree,
-            threshold=0.1,
+            threshold=args.threshold,
             alpha=0.05,
             normalize_columns=True,
             smooth_window=smooth_window,
@@ -302,10 +304,18 @@ def main() -> None:
   parser.add_argument("--n-delays-list", default="2,4,6,8")
   parser.add_argument("--delay-list", default="1,2,5", help="Processed samples.")
   parser.add_argument("--smooth-window-list", default="0,5,9", help="Processed samples.")
+  parser.add_argument(
+    "--threshold",
+    type=float,
+    default=0.1,
+    help="Fixed STLSQ coefficient threshold; default preserves the original grid.",
+  )
   parser.add_argument("--out-csv", type=Path, default=DEFAULT_RESULTS)
   parser.add_argument("--equations-out", type=Path, default=DEFAULT_EQUATIONS)
   parser.add_argument("--metadata-out", type=Path, default=DEFAULT_METADATA)
   args = parser.parse_args()
+  if args.threshold < 0:
+    parser.error("--threshold must be nonnegative.")
 
   rows = run_raw_grid(args)
   successful = sum(row["fit_status"] == "success" for row in rows)

@@ -18,6 +18,7 @@ from load_data.convert import MAT_FILE, TrialData
 from load_data.preprocessing import channel_traces
 from models.sindy import StoredPolynomialModel, delay_embed_trajectories
 from models.validation import SimulationResult, simulate_model_detailed
+from raw_grid_io import write_csv_checkpoint
 from plot_threshold_path import (
   DEFAULT_GRID,
   DEFAULT_REFIT_CSVS,
@@ -87,8 +88,25 @@ def simulate_trials(
   configuration_index: int,
   threshold: float,
   dt: float,
+  status_path: Path,
+  trial_timeout_s: float | None,
 ) -> tuple[list[SimulationResult], list[dict[str, object]]]:
-  """Simulate one thresholded equation from every held-out initial state."""
+  """Simulate held-out trials with immediate status checkpointing.
+
+  Args:
+    model: Stored polynomial ODE model.
+    measured_trials: Embedded held-out trajectories in microvolts.
+    trial_ids: Original zero-based trial identifiers.
+    configuration_index: Raw-grid configuration identifier.
+    threshold: STLSQ coefficient threshold used for the model.
+    dt: Processed sample interval in seconds.
+    status_path: Trial-level CSV checkpoint path.
+    trial_timeout_s: Optional operational wall-time limit per simulation in
+      seconds. This is not a scientific rejection threshold.
+
+  Returns:
+    Simulation results and trial-level status rows.
+  """
   results = []
   rows = []
   for trial_id, measured in zip(trial_ids, measured_trials):
@@ -99,6 +117,7 @@ def simulate_trials(
       initial_state=measured[0],
       dt=dt,
       horizon_s=requested_duration_s,
+      wall_timeout_s=trial_timeout_s,
     )
     runtime_s = time.perf_counter() - started
     results.append(result)
@@ -115,6 +134,7 @@ def simulate_trials(
         "rhs_evaluations": result.rhs_evaluations,
       }
     )
+    write_csv_checkpoint(status_path, STATUS_FIELDS, rows)
     print(
       f"threshold={threshold:g} trial={trial_id} "
       f"status={rows[-1]['simulation_status']} "
@@ -162,6 +182,8 @@ def run(args: argparse.Namespace) -> None:
     coefficients=selected["coefficients"],
     feature_names=selected["feature_names"],
   )
+  label = threshold_label(args.threshold)
+  status_path = args.output_dir / f"threshold_{label}_status.csv"
   results, status_rows = simulate_trials(
     model,
     measured_trials,
@@ -169,17 +191,13 @@ def run(args: argparse.Namespace) -> None:
     configuration_index=args.configuration_index,
     threshold=args.threshold,
     dt=dt,
+    status_path=status_path,
+    trial_timeout_s=args.trial_timeout_s,
   )
 
-  label = threshold_label(args.threshold)
-  status_path = args.output_dir / f"threshold_{label}_status.csv"
   figure_path = args.output_dir / f"threshold_{label}_simulations.png"
   summary_path = args.output_dir / f"threshold_{label}_summary.json"
   args.output_dir.mkdir(parents=True, exist_ok=True)
-  with status_path.open("w", newline="") as file:
-    writer = csv.DictWriter(file, fieldnames=STATUS_FIELDS)
-    writer.writeheader()
-    writer.writerows(status_rows)
   plot_configuration(
     figure_path,
     row=configuration,
@@ -223,9 +241,20 @@ def main() -> None:
   parser.add_argument("--refit-csv", type=Path, action="append", default=None)
   parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
   parser.add_argument("--max-test-trials", type=int, default=None)
+  parser.add_argument(
+    "--trial-timeout-s",
+    type=float,
+    default=None,
+    help=(
+      "Optional operational wall-time limit per held-out simulation in seconds; "
+      "timeouts are recorded as numerical failures."
+    ),
+  )
   args = parser.parse_args()
   if args.max_test_trials is not None and args.max_test_trials < 1:
     parser.error("--max-test-trials must be at least 1.")
+  if args.trial_timeout_s is not None and args.trial_timeout_s <= 0:
+    parser.error("--trial-timeout-s must be positive.")
   run(args)
 
 

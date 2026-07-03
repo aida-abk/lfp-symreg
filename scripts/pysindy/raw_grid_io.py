@@ -21,3 +21,24 @@ def load_successful_grid(path: Path) -> list[dict[str, str]]:
   if failed:
     raise ValueError(f"The grid contains {len(failed)} unsuccessful fits.")
   return rows
+
+
+def write_csv_checkpoint(
+  path: Path,
+  fieldnames: list[str],
+  rows: list[dict[str, object]],
+) -> None:
+  """Atomically write rows so interrupted jobs retain completed work.
+
+  Args:
+    path: Destination CSV path.
+    fieldnames: Explicit output column order.
+    rows: Rows completed so far.
+  """
+  path.parent.mkdir(parents=True, exist_ok=True)
+  temporary_path = path.with_suffix(path.suffix + ".tmp")
+  with temporary_path.open("w", newline="") as file:
+    writer = csv.DictWriter(file, fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerows(rows)
+  temporary_path.replace(path)
