@@ -1,0 +1,33 @@
+{
+  "configurations": 216,
+  "all_held_out_completed_count": 131,
+  "all_held_out_completed_fraction": 0.6064814814814815,
+  "simulation_attempts": 1944,
+  "completed_simulations": 1496,
+  "failed_simulations": 448,
+  "simulation_completion_fraction": 0.7695473251028807,
+  "completed_trials_per_configuration_distribution": {
+    "0": 19,
+    "1": 9,
+    "2": 6,
+    "3": 7,
+    "4": 8,
+    "5": 6,
+    "6": 10,
+    "7": 7,
+    "8": 13,
+    "9": 131
+  },
+  "nonzero_terms_vs_completed_trials_spearman_rho": -0.6860542461114554,
+  "nonzero_terms_vs_completed_trials_spearman_p": 2.169368588857611e-31,
+  "failure_reason_counts": {
+    "integration error: model derivative became non-finite": 446,
+    "integration error: simulation exceeded 1800 wall-clock seconds": 2
+  },
+  "missing_figure_configuration_ids": [
+    121,
+    122,
+    140,
+    141
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "lowpass_35_hz": {
+    "degree_1": {
+      "groups": 12,
+      "median_relative_rms_variability": 0.05304649807215256,
+      "maximum_relative_rms_variability": 0.17122488543503722,
+      "median_minimum_pairwise_cosine_similarity": 0.9980259009366139,
+      "minimum_pairwise_cosine_similarity": 0.988325579207944
+    },
+    "degree_2": {
+      "groups": 12,
+      "median_relative_rms_variability": 0.05637777712676962,
+      "maximum_relative_rms_variability": 0.18181074547164056,
+      "median_minimum_pairwise_cosine_similarity": 0.9961291359753006,
+      "minimum_pairwise_cosine_similarity": 0.9841806472776705
+    },
+    "degree_3": {
+      "groups": 12,
+      "median_relative_rms_variability": 0.05608120831976609,
+      "maximum_relative_rms_variability": 0.17977151028367652,
+      "median_minimum_pairwise_cosine_similarity": 0.9961455894040838,
+      "minimum_pairwise_cosine_similarity": 0.9846101499613116
+    }
+  },
+  "lowpass_80_hz": {
+    "degree_1": {
+      "groups": 12,
+      "median_relative_rms_variability": 0.11483559486618204,
+      "maximum_relative_rms_variability": 0.29864784697694174,
+      "median_minimum_pairwise_cosine_similarity": 0.9951821880724563,
+      "minimum_pairwise_cosine_similarity": 0.8784907635099226
+    },
+    "degree_2": {
+      "groups": 12,
+      "median_relative_rms_variability": 0.246453892882737,
+      "maximum_relative_rms_variability": 0.30823904960382004,
+      "median_minimum_pairwise_cosine_similarity": 0.9016464760066306,
+      "minimum_pairwise_cosine_similarity": 0.828173589503399
+    },
+    "degree_3": {
+      "groups": 12,
+      "median_relative_rms_variability": 0.24758993925907086,
+      "maximum_relative_rms_variability": 0.31599587358242176,
+      "median_minimum_pairwise_cosine_similarity": 0.8915624009096893,
+      "minimum_pairwise_cosine_similarity": 0.8147141383284711
+    }
+  }
+}

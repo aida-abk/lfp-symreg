@@ -1,0 +1,14 @@
+{
+  "configurations": 216,
+  "stlsq_thresholds": [
+    100.0
+  ],
+  "total_nonzero_terms": 48412,
+  "total_possible_terms": 49032,
+  "pooled_term_utilization_percent": 98.73551966062979,
+  "mean_configuration_utilization_percent": 94.67960023515577,
+  "median_configuration_utilization_percent": 99.28571428571429,
+  "minimum_configuration_utilization_percent": 66.66666666666667,
+  "maximum_configuration_utilization_percent": 100.0,
+  "fully_utilized_configurations": 74
+}

@@ -1,0 +1,18 @@
+{
+  "matched_configuration_pairs": 108,
+  "matched_trial_pairs": 972,
+  "configuration_pairs_35hz_more_completed_trials": 27,
+  "configuration_pairs_80hz_more_completed_trials": 21,
+  "configuration_pairs_tied": 60,
+  "mean_completed_trial_difference_80_minus_35": -0.18518518518518517,
+  "all9_35hz_only": 13,
+  "all9_80hz_only": 8,
+  "all9_discordance_exact_p": 0.38331031799316406,
+  "trial_completion_35hz_only": 106,
+  "trial_completion_80hz_only": 86,
+  "trial_completion_discordance_exact_p": 0.17014785959635734,
+  "mean_reached_fraction_difference_80_minus_35": -0.016225727759837084,
+  "mean_coefficient_cosine_similarity": 0.9079790643827207,
+  "median_coefficient_cosine_similarity": 0.9767637784142106,
+  "median_coefficient_relative_l2_change_from_35hz": 0.48479812735080896
+}

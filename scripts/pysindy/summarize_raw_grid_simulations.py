@@ -78,10 +78,19 @@ def write_html_index(
   figures_dir: Path,
   output_html: Path,
   expected_configurations: int,
+  allow_missing: bool = False,
 ) -> None:
-  """Write a clickable thumbnail index for all configuration figures."""
+  """Write a clickable thumbnail index for available configuration figures.
+
+  Args:
+    figures_dir: Directory containing configuration PNG files.
+    output_html: Destination HTML gallery.
+    expected_configurations: Expected total number of configuration figures.
+    allow_missing: Whether to index available figures instead of raising when
+      some figures are absent.
+  """
   paths = sorted(figures_dir.glob("config_*.png"))
-  if len(paths) != expected_configurations:
+  if len(paths) != expected_configurations and not allow_missing:
     raise ValueError(
       f"Found {len(paths)} figures; expected {expected_configurations}."
     )
@@ -227,6 +236,11 @@ def main() -> None:
   parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
   parser.add_argument("--grid-csv", type=Path, default=DEFAULT_GRID)
   parser.add_argument("--expected", type=int, default=216)
+  parser.add_argument(
+    "--allow-missing-figures",
+    action="store_true",
+    help="Build the index from available PNGs while retaining all status rows.",
+  )
   args = parser.parse_args()
 
   status_output = args.output_dir / "simulation_status_merged.csv"
@@ -255,6 +269,7 @@ def main() -> None:
     args.output_dir / "figures",
     index_output,
     expected_configurations=args.expected,
+    allow_missing=args.allow_missing_figures,
   )
   successful = sum(row["simulation_status"] == "success" for row in rows)
   print(f"merged trial simulations: {len(rows)}")
