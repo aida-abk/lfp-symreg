@@ -4,10 +4,14 @@
 #SBATCH --time=24:00:00
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=1
+#SBATCH --export=ALL
 #SBATCH --output=slurm-lfp-raw-grid-%A_%a.out
 #SBATCH --error=slurm-lfp-raw-grid-%A_%a.err
 
 set -euo pipefail
+
+# Prevent inherited export restrictions from triggering user-environment lookup.
+export SLURM_EXPORT_ENV=ALL
 
 # Run from the repository submitted to Slurm.
 cd "$SLURM_SUBMIT_DIR"
