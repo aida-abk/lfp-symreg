@@ -1,0 +1,17 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 3617555
+##  Job Name : lfp_c216_thresholds
+##  Nodelist : node2309
+##      CPUs : 
+##  Mem/Node : 16384 MB
+## Directory : /oscar/data/tdesroch/dbuyukya/AidaCarneyProject
+##   Job Started : Thu Jul  2 12:08:01 PM EDT 2026
+###############################################################################
+threshold=30000 trial=4 status=success reached=13.95/13.95s runtime=446.1s
+threshold=30000 trial=1088 status=success reached=14.06/14.06s runtime=465.8s
+threshold=30000 trial=622 status=success reached=14.06/14.06s runtime=438.7s
+threshold=30000 trial=620 status=success reached=14.06/14.06s runtime=410.8s
+threshold=30000 trial=2 status=success reached=14.06/14.06s runtime=446.9s
+threshold=30000 trial=3 status=success reached=14.06/14.06s runtime=426.5s
+threshold=30000 trial=1244 status=failed reached=1.95/13.95s runtime=281.8s
+threshold=30000 trial=778 status=success reached=14.06/14.06s runtime=440.4s

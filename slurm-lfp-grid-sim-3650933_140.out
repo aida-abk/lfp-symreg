@@ -1,0 +1,19 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 3651019
+##  Job Name : lfp_grid_sim
+##  Nodelist : node2333
+##      CPUs : 
+##  Mem/Node : 16384 MB
+## Directory : /oscar/data/tdesroch/dbuyukya/AidaCarneyProject
+##   Job Started : Sun Jul  5 12:49:51 AM EDT 2026
+###############################################################################
+[1/1] configuration=140 degree=1 lowpass=80.0
+config=140 trial=4 status=success reached=14.03/14.03s x0_rmse=5.212643960456718e+17 uV runtime=54.7s
+config=140 trial=1088 status=success reached=14.14/14.14s x0_rmse=2.580205703885264e+18 uV runtime=38.8s
+config=140 trial=622 status=success reached=14.14/14.14s x0_rmse=2.122040470909982e+18 uV runtime=67.0s
+config=140 trial=620 status=success reached=14.14/14.14s x0_rmse=2.25045503474516e+18 uV runtime=45.8s
+config=140 trial=2 status=success reached=14.14/14.14s x0_rmse=2.8661969887953787e+18 uV runtime=39.7s
+config=140 trial=3 status=success reached=14.14/14.14s x0_rmse=1.8228042017968668e+18 uV runtime=38.5s
+config=140 trial=1244 status=success reached=14.03/14.03s x0_rmse=2.8668147311778954e+18 uV runtime=53.4s
+config=140 trial=778 status=success reached=14.14/14.14s x0_rmse=3.5393917348684503e+18 uV runtime=44.5s
+config=140 trial=312 status=success reached=14.14/14.14s x0_rmse=1.373885604271757e+18 uV runtime=35.4s
