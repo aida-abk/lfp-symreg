@@ -23,7 +23,7 @@ from exploration_sweep import (
   prepare_lfp_trials,
 )
 from load_data.convert import LFP_AMPLITUDE_UNIT, MAT_FILE
-from load_data.preprocessing import channel_traces, pooled_trace_rms
+from load_data.preprocessing import channel_traces
 from models.sindy import (
   SINDyConfig,
   count_terms,
@@ -44,7 +44,6 @@ FIELDNAMES = [
   "configuration_index",
   "lowpass_hz",
   "stlsq_threshold",
-  "training_lfp_rms_uv",
   "degree",
   "n_delays",
   "delay_samples",
@@ -150,7 +149,7 @@ def build_metadata(
       "optimizer": "STLSQ",
       "threshold": args.threshold,
       "alpha": 0.05,
-      "normalize_columns": True,
+      "normalize_columns": args.normalize_columns,
       "savgol_polyorder": 3,
       "simulation_performed": False,
       "diagnostics_calculated": False,
@@ -210,7 +209,6 @@ def run_raw_grid(args: argparse.Namespace) -> list[dict[str, object]]:
       lowpass_hz=lowpass_hz,
       normalize="none",
     )
-    training_lfp_rms_uv = pooled_trace_rms(train_raw)
     dt = args.downsample / data.fs
     for degree, n_delays, delay, smooth_window in itertools.product(
       degree_values,
@@ -225,7 +223,6 @@ def run_raw_grid(args: argparse.Namespace) -> list[dict[str, object]]:
         "configuration_index": configuration_index,
         "lowpass_hz": lowpass_hz if lowpass_hz is not None else "none",
         "stlsq_threshold": args.threshold,
-        "training_lfp_rms_uv": training_lfp_rms_uv,
         "degree": degree,
         "n_delays": n_delays,
         "delay_samples": delay,
@@ -257,7 +254,7 @@ def run_raw_grid(args: argparse.Namespace) -> list[dict[str, object]]:
             degree=degree,
             threshold=args.threshold,
             alpha=0.05,
-            normalize_columns=True,
+            normalize_columns=args.normalize_columns,
             smooth_window=smooth_window,
             smoothing_polyorder=3,
           ),
@@ -309,6 +306,12 @@ def main() -> None:
     type=float,
     default=0.1,
     help="Fixed STLSQ coefficient threshold; default preserves the original grid.",
+  )
+  parser.add_argument(
+    "--normalize-columns",
+    action=argparse.BooleanOptionalAction,
+    default=True,
+    help="Whether STLSQ normalizes feature-library columns before thresholding.",
   )
   parser.add_argument("--out-csv", type=Path, default=DEFAULT_RESULTS)
   parser.add_argument("--equations-out", type=Path, default=DEFAULT_EQUATIONS)

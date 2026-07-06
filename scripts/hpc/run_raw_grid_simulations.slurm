@@ -5,8 +5,8 @@
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=1
 #SBATCH --export=ALL
-#SBATCH --output=slurm-lfp-grid-sim-%A_%a.out
-#SBATCH --error=slurm-lfp-grid-sim-%A_%a.err
+#SBATCH --output=slurm/slurm-lfp-grid-sim-%A_%a.out
+#SBATCH --error=slurm/slurm-lfp-grid-sim-%A_%a.err
 
 set -euo pipefail
 

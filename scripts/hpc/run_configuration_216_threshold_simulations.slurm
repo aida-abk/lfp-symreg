@@ -4,8 +4,8 @@
 #SBATCH --time=24:00:00
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=1
-#SBATCH --output=slurm-lfp-c216-thresholds-%A_%a.out
-#SBATCH --error=slurm-lfp-c216-thresholds-%A_%a.err
+#SBATCH --output=slurm/slurm-lfp-c216-thresholds-%A_%a.out
+#SBATCH --error=slurm/slurm-lfp-c216-thresholds-%A_%a.err
 
 set -euo pipefail
 
