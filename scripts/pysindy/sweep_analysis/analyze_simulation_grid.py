@@ -19,7 +19,6 @@ DEFAULT_OUTPUT_DIR = ROOT / "outputs" / "pysindy" / "raw_grid" / "analysis"
 CONFIGURATION_FIELDS = [
   "configuration_index",
   "lowpass_hz",
-  "training_lfp_rms_uv",
   "degree",
   "n_delays",
   "delay_samples",
@@ -159,7 +158,6 @@ def configuration_summary(
       {
         "configuration_index": configuration_id,
         "lowpass_hz": float(grid_row["lowpass_hz"]),
-        "training_lfp_rms_uv": float(grid_row["training_lfp_rms_uv"]),
         "degree": int(grid_row["degree"]),
         "n_delays": int(grid_row["n_delays"]),
         "delay_samples": int(grid_row["delay_samples"]),
