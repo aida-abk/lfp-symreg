@@ -21,7 +21,6 @@ from load_data.convert import MAT_FILE, TrialData, load_bhv_trial_table
 from load_data.preprocessing import preprocess_trace
 from load_data.trial_selection import select_valid_trials
 from models.sindy import delay_embed_trajectories
-from scripts.pysindy.pipeline_utils import parse_trials, split_trials_sequential
 
 
 def optional_float(value: str) -> float | None:

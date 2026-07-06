@@ -18,10 +18,7 @@ for path in (ROOT, SCRIPTS, PYSINDY_SCRIPTS):
   if str(path) not in sys.path:
     sys.path.insert(0, str(path))
 
-from exploration_sweep import (
-  parse_optional_float_list,
-  prepare_lfp_trials,
-)
+from sweep_io import parse_optional_float_list, prepare_lfp_trials
 from load_data.convert import LFP_AMPLITUDE_UNIT, MAT_FILE
 from load_data.preprocessing import channel_traces
 from models.sindy import (

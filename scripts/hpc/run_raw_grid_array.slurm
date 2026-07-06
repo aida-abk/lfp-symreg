@@ -1,5 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=lfp_raw_grid
+#SBATCH --partition=batch
+#SBATCH --nodes=1
 #SBATCH --array=0-5
 #SBATCH --time=24:00:00
 #SBATCH --mem=16G
