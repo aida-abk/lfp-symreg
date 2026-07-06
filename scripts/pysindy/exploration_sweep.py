@@ -19,15 +19,11 @@ for path in (ROOT, SCRIPTS, PYSINDY_SCRIPTS):
   if str(path) not in sys.path:
     sys.path.insert(0, str(path))
 
-from load_data.convert import (
-  LFP_AMPLITUDE_UNIT,
-  MAT_FILE,
-  TrialData,
-  load_bhv_trial_table,
-)
+from load_data.convert import LFP_AMPLITUDE_UNIT, MAT_FILE, TrialData
 from load_data.preprocessing import channel_traces
 from load_data.synthetic import make_lorenz_dataset
-from load_data.trial_selection import select_valid_trials
+from load_data.trial_selection import split_trials_random
+from sweep_io import parse_optional_float_list, prepare_lfp_trials
 from models.sindy import (
   SINDyConfig,
   count_terms,
@@ -40,7 +36,7 @@ from models.validation import (
   evaluate_simulation,
   simulate_model_detailed,
 )
-from pipeline_utils import parse_float_list, parse_int_list, split_trials_random
+from pipeline_utils import parse_float_list, parse_int_list
 
 # Default output locations
 DEFAULT_OUTPUT_DIR = ROOT / "outputs" / "pysindy"
@@ -67,11 +63,6 @@ def optional_float(value: str) -> float | None:
   if value.lower() in {"none", "null"}:
     return None
   return float(value)
-
-
-def parse_optional_float_list(value: str) -> list[float | None]:
-  """Parse comma-separated filter cutoffs in hertz, allowing ``none``."""
-  return [optional_float(part.strip()) for part in value.split(",") if part.strip()]
 
 
 def evaluation_horizons(args: argparse.Namespace) -> list[float]:
@@ -301,23 +292,6 @@ def evaluate_model_on_trials(
   maximum_summary = dict(checkpoint_rows[-1])
   maximum_summary.pop("evaluation_horizon_s")
   return maximum_summary, checkpoint_rows, trial_rows
-
-
-def prepare_lfp_trials(
-  args: argparse.Namespace,
-) -> tuple[TrialData, list[int], list[int]]:
-  """Load valid trial identifiers and make one reproducible whole-trial split."""
-  data = TrialData.load(args.mat_file)
-  table = load_bhv_trial_table(args.mat_file)
-  trials = select_valid_trials(table, args.trial_type)
-  if args.max_trials is not None:
-    trials = trials[: args.max_trials]
-  train_ids, test_ids = split_trials_random(
-    trials,
-    test_fraction=args.test_fraction,
-    seed=args.seed,
-  )
-  return data, train_ids, test_ids
 
 
 def preprocess_lfp_trials(

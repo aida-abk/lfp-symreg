@@ -1,14 +1,8 @@
-# data files
-*.mat
-*.h5
-*.hdf5
-*.npy
-*.npz
-
 # folders
 raw_data/
-archive/
+archive/*
 docs/
+CLAUDE.md
 
 
 # python/cache

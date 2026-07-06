@@ -1,5 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=lfp_grid_sim
+#SBATCH --partition=batch
+#SBATCH --nodes=1
 #SBATCH --array=1-216%12
 #SBATCH --time=24:00:00
 #SBATCH --mem=16G
