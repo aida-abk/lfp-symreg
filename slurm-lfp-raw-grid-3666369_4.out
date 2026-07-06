@@ -1,0 +1,49 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 3666374
+##  Job Name : lfp_raw_grid
+##  Nodelist : node2335
+##      CPUs : 
+##  Mem/Node : 16384 MB
+## Directory : /oscar/data/tdesroch/dbuyukya/AidaCarneyProject
+##   Job Started : Sun Jul  5 07:29:41 PM EDT 2026
+###############################################################################
+[1/36] status=success lowpass=35.0 degree=3 delays=2 delay=1 smooth=0 terms=20 runtime=0.7s
+[2/36] status=success lowpass=35.0 degree=3 delays=2 delay=1 smooth=5 terms=20 runtime=0.2s
+[3/36] status=success lowpass=35.0 degree=3 delays=2 delay=1 smooth=9 terms=20 runtime=0.2s
+[4/36] status=success lowpass=35.0 degree=3 delays=2 delay=2 smooth=0 terms=20 runtime=0.2s
+[5/36] status=success lowpass=35.0 degree=3 delays=2 delay=2 smooth=5 terms=20 runtime=0.2s
+[6/36] status=success lowpass=35.0 degree=3 delays=2 delay=2 smooth=9 terms=20 runtime=0.2s
+[7/36] status=success lowpass=35.0 degree=3 delays=2 delay=5 smooth=0 terms=19 runtime=0.2s
+[8/36] status=success lowpass=35.0 degree=3 delays=2 delay=5 smooth=5 terms=19 runtime=0.2s
+[9/36] status=success lowpass=35.0 degree=3 delays=2 delay=5 smooth=9 terms=20 runtime=0.2s
+[10/36] status=success lowpass=35.0 degree=3 delays=4 delay=1 smooth=0 terms=135 runtime=1.8s
+[11/36] status=success lowpass=35.0 degree=3 delays=4 delay=1 smooth=5 terms=136 runtime=1.7s
+[12/36] status=success lowpass=35.0 degree=3 delays=4 delay=1 smooth=9 terms=135 runtime=1.5s
+[13/36] status=success lowpass=35.0 degree=3 delays=4 delay=2 smooth=0 terms=136 runtime=1.5s
+[14/36] status=success lowpass=35.0 degree=3 delays=4 delay=2 smooth=5 terms=137 runtime=1.5s
+[15/36] status=success lowpass=35.0 degree=3 delays=4 delay=2 smooth=9 terms=135 runtime=1.4s
+[16/36] status=success lowpass=35.0 degree=3 delays=4 delay=5 smooth=0 terms=136 runtime=1.4s
+[17/36] status=success lowpass=35.0 degree=3 delays=4 delay=5 smooth=5 terms=135 runtime=1.4s
+[18/36] status=success lowpass=35.0 degree=3 delays=4 delay=5 smooth=9 terms=137 runtime=1.5s
+[19/36] status=success lowpass=35.0 degree=3 delays=6 delay=1 smooth=0 terms=474 runtime=7.6s
+[20/36] status=success lowpass=35.0 degree=3 delays=6 delay=1 smooth=5 terms=476 runtime=7.7s
+[21/36] status=success lowpass=35.0 degree=3 delays=6 delay=1 smooth=9 terms=470 runtime=7.5s
+[22/36] status=success lowpass=35.0 degree=3 delays=6 delay=2 smooth=0 terms=481 runtime=8.6s
+[23/36] status=success lowpass=35.0 degree=3 delays=6 delay=2 smooth=5 terms=485 runtime=7.7s
+[24/36] status=success lowpass=35.0 degree=3 delays=6 delay=2 smooth=9 terms=483 runtime=8.6s
+[25/36] status=success lowpass=35.0 degree=3 delays=6 delay=5 smooth=0 terms=479 runtime=7.7s
+[26/36] status=success lowpass=35.0 degree=3 delays=6 delay=5 smooth=5 terms=480 runtime=7.7s
+[27/36] status=success lowpass=35.0 degree=3 delays=6 delay=5 smooth=9 terms=479 runtime=7.7s
+[28/36] status=success lowpass=35.0 degree=3 delays=8 delay=1 smooth=0 terms=1213 runtime=21.3s
+[29/36] status=success lowpass=35.0 degree=3 delays=8 delay=1 smooth=5 terms=1211 runtime=21.8s
+[30/36] status=success lowpass=35.0 degree=3 delays=8 delay=1 smooth=9 terms=1198 runtime=23.0s
+[31/36] status=success lowpass=35.0 degree=3 delays=8 delay=2 smooth=0 terms=1210 runtime=23.3s
+[32/36] status=success lowpass=35.0 degree=3 delays=8 delay=2 smooth=5 terms=1209 runtime=23.3s
+[33/36] status=success lowpass=35.0 degree=3 delays=8 delay=2 smooth=9 terms=1206 runtime=23.7s
+[34/36] status=success lowpass=35.0 degree=3 delays=8 delay=5 smooth=0 terms=1204 runtime=25.8s
+[35/36] status=success lowpass=35.0 degree=3 delays=8 delay=5 smooth=5 terms=1210 runtime=23.6s
+[36/36] status=success lowpass=35.0 degree=3 delays=8 delay=5 smooth=9 terms=1208 runtime=23.8s
+saved: outputs/pysindy/raw_grid_threshold1000/parts/part_lp35_degree3.csv
+saved: outputs/pysindy/raw_grid_threshold1000/parts/part_lp35_degree3_equations.txt
+saved: outputs/pysindy/raw_grid_threshold1000/parts/part_lp35_degree3_metadata.json
+successful fits: 36/36
