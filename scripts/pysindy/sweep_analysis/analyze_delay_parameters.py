@@ -233,38 +233,60 @@ def plot_delay_geometry(path: Path, grid_rows: list[dict[str, str]]) -> None:
 
 
 def plot_library_growth(path: Path, grid_rows: list[dict[str, str]]) -> None:
-  """Plot maximum fitted coefficients as delay count increases."""
+  """Plot maximum and mean-actual coefficients as delay count increases."""
+  import math
+  from collections import defaultdict
+
   import matplotlib
 
   matplotlib.use("Agg")
   import matplotlib.pyplot as plt
 
-  unique = {
+  possible = {
     (int(row["degree"]), int(row["n_delays"])): int(row["possible_terms"])
     for row in grid_rows
   }
+  # Mean nonzero terms across all successful configurations per (degree, n_delays)
+  actual_buckets: dict[tuple[int, int], list[int]] = defaultdict(list)
+  for row in grid_rows:
+    if row["fit_status"] == "success" and row.get("nonzero_terms"):
+      actual_buckets[(int(row["degree"]), int(row["n_delays"]))].append(
+        int(row["nonzero_terms"])
+      )
+  actual_mean = {
+    k: sum(v) / len(v) for k, v in actual_buckets.items() if v
+  }
+
   colors = {1: "#176b57", 2: "#d97706", 3: "#4f46e5"}
   figure, axis = plt.subplots(figsize=(8, 5))
+  counts = (2, 4, 6, 8)
   for degree in (1, 2, 3):
-    counts = (2, 4, 6, 8)
-    terms = [unique[(degree, count)] for count in counts]
+    poss_vals = [possible[(degree, c)] for c in counts]
+    used_vals = [actual_mean.get((degree, c), float("nan")) for c in counts]
     axis.plot(
-      counts,
-      terms,
-      marker="o",
-      color=colors[degree],
-      label=f"Degree {degree}",
+      counts, poss_vals,
+      marker="o", color=colors[degree], label=f"Degree {degree} (max)",
     )
-    for count, term_count in zip(counts, terms):
-      axis.annotate(str(term_count), (count, term_count), xytext=(0, 7),
+    axis.plot(
+      counts, used_vals,
+      marker="s", color=colors[degree], linestyle="--", alpha=0.65,
+      label=f"Degree {degree} (mean used)",
+    )
+    for c, v in zip(counts, poss_vals):
+      axis.annotate(str(v), (c, v), xytext=(0, 7),
                     textcoords="offset points", ha="center", fontsize=8)
+    for c, v in zip(counts, used_vals):
+      if not math.isnan(v):
+        axis.annotate(f"{v:.0f}", (c, v), xytext=(0, -12),
+                      textcoords="offset points", ha="center", fontsize=7,
+                      color=colors[degree], alpha=0.8)
   axis.set_yscale("log")
   axis.set_xticks([2, 4, 6, 8])
   axis.set_xlabel("Number of delay coordinates")
-  axis.set_ylabel("Possible equation coefficients (log scale)")
-  axis.set_title("Polynomial-library growth with additional delays")
+  axis.set_ylabel("Coefficients (log scale)")
+  axis.set_title("Polynomial-library growth: max possible vs mean terms used")
   axis.grid(alpha=0.25)
-  axis.legend()
+  axis.legend(fontsize=8)
   figure.tight_layout()
   path.parent.mkdir(parents=True, exist_ok=True)
   figure.savefig(path, dpi=180)
@@ -483,7 +505,6 @@ def main() -> None:
     completion_rows,
     COMPLETION_FIELDS,
   )
-  plot_delay_geometry(args.output_dir / "delay_embedding_geometry.png", grid_rows)
   plot_library_growth(args.output_dir / "delay_library_growth.png", grid_rows)
   plot_spacing_variability(
     args.output_dir / "delay_spacing_coefficient_variability.png",

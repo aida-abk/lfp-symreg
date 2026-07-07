@@ -184,10 +184,6 @@ def main() -> None:
   grouped = grouped_utilization(rows)
   overall = overall_utilization(rows)
   write_summary(args.output_dir / "term_utilization_by_parameter.csv", grouped)
-  args.output_dir.mkdir(parents=True, exist_ok=True)
-  (args.output_dir / "term_utilization_summary.json").write_text(
-    json.dumps(overall, indent=2) + "\n"
-  )
   plot_utilization(args.output_dir / "term_utilization_by_delay.png", rows)
   print(
     "pooled utilization: "

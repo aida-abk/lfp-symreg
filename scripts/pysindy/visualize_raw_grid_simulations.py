@@ -20,7 +20,7 @@ for path in (ROOT, SCRIPTS, PYSINDY_SCRIPTS):
 
 from load_data.convert import LFP_AMPLITUDE_UNIT, MAT_FILE, TrialData
 from load_data.preprocessing import channel_traces, pooled_trace_rms
-from models.sindy import StoredPolynomialModel, delay_embed_trajectories
+from models.sindy import StoredFourierModel, StoredPolynomialModel, delay_embed_trajectories
 from models.validation import SimulationResult, simulate_model_detailed
 from raw_grid_io import write_csv_checkpoint
 
@@ -115,12 +115,36 @@ def select_rows(
   return matches
 
 
-def reconstruct_model(row: dict[str, str]) -> StoredPolynomialModel:
-  """Reconstruct one fitted polynomial ODE without fitting it again."""
+def _is_fourier_row(row: dict[str, str]) -> bool:
+  """Return True when the CSV row comes from a Fourier-library sweep."""
+  return "n_frequencies" in row and bool(row.get("n_frequencies"))
+
+
+def _model_order_label(row: dict[str, str]) -> str:
+  """Return a short label describing model order for figure titles."""
+  if _is_fourier_row(row):
+    return f"n_freq={row['n_frequencies']}"
+  return f"degree={row.get('degree', '?')}"
+
+
+def reconstruct_model(row: dict[str, str]) -> StoredPolynomialModel | StoredFourierModel:
+  """Reconstruct one fitted ODE from stored coefficients.
+
+  Automatically selects ``StoredFourierModel`` when the row contains an
+  ``n_frequencies`` column, and ``StoredPolynomialModel`` otherwise.
+  """
+  coefs = np.asarray(json.loads(row["coefficients_json"]), dtype=float)
+  names = list(json.loads(row["feature_names_json"]))
+  if _is_fourier_row(row):
+    return StoredFourierModel(
+      n_frequencies=int(row["n_frequencies"]),
+      coefficients=coefs,
+      feature_names=names,
+    )
   return StoredPolynomialModel(
     degree=int(row["degree"]),
-    coefficients=np.asarray(json.loads(row["coefficients_json"]), dtype=float),
-    feature_names=list(json.loads(row["feature_names_json"])),
+    coefficients=coefs,
+    feature_names=names,
   )
 
 
@@ -133,6 +157,7 @@ def plot_configuration(
   dt: float,
   title: str | None = None,
   raw_unfiltered_trials: list[np.ndarray] | None = None,
+  signal_units: str = LFP_AMPLITUDE_UNIT,
 ) -> None:
   """Plot raw, lowpass-filtered, and simulated x0 for every held-out trial.
 
@@ -140,13 +165,15 @@ def plot_configuration(
     path: Destination PNG path.
     row: Raw-grid configuration row.
     trial_ids: Original zero-based trial identifiers.
-    measured_trials: Delay-embedded lowpass-filtered trajectories (µV, normalize=none).
+    measured_trials: Delay-embedded lowpass-filtered trajectories.
     results: Numerical simulation results corresponding to the trials.
     dt: Processed sample interval in seconds.
     title: Optional figure title overriding the raw-grid configuration title.
     raw_unfiltered_trials: Optional unfiltered (detrended, downsampled) traces, one
       per trial, cropped to align with the delay-embedded x0. Plotted in grey on a
-      secondary y-axis to show the full-bandwidth signal alongside the lowpass target.
+      secondary y-axis in µV regardless of signal_units.
+    signal_units: Units label for the primary y-axis. Use ``"z-score"`` when
+      global z-score normalization was applied before fitting.
   """
   import matplotlib
 
@@ -203,7 +230,7 @@ def plot_configuration(
       fontsize=9,
     )
     axis.set_xlabel("Time from embedded initial state (s)")
-    axis.set_ylabel(f"x0 ({LFP_AMPLITUDE_UNIT})", fontsize=8)
+    axis.set_ylabel(f"x0 ({signal_units})", fontsize=8)
 
     lines, labels = axis.get_legend_handles_labels()
     if ax2 is not None:
@@ -223,7 +250,7 @@ def plot_configuration(
     title
     or (
       f"Configuration {row['configuration_index']}: "
-      f"LP={row['lowpass_hz']} Hz, degree={row['degree']}, "
+      f"LP={row['lowpass_hz']} Hz, {_model_order_label(row)}, "
       f"delays={row['n_delays']}, spacing={row['delay_samples']} samples, "
       f"smoothing={row['smooth_window_samples']} samples{threshold_text}"
     )
@@ -242,18 +269,20 @@ def simulate_configuration(
   output_dir: Path,
   trial_timeout_s: float | None,
   test_raw_unfiltered: list[np.ndarray] | None = None,
+  signal_units: str = LFP_AMPLITUDE_UNIT,
 ) -> dict[str, object]:
   """Simulate one stored equation from every held-out initial condition.
 
   Args:
     row: Stored raw-grid configuration.
-    test_raw: Lowpass-filtered held-out LFP traces (µV, normalize=none).
+    test_raw: Lowpass-filtered held-out traces in model input units (µV or z-score).
     test_trial_ids: Original zero-based held-out trial identifiers.
     dt: Processed sample interval in seconds.
     output_dir: Destination for status checkpoints and figures.
     trial_timeout_s: Optional operational wall-time limit per simulation.
-    test_raw_unfiltered: Optional unfiltered (detrended, downsampled) traces for
-      the grey raw-signal overlay in simulation plots.
+    test_raw_unfiltered: Optional unfiltered (detrended, downsampled) µV traces for
+      the grey raw-signal overlay.
+    signal_units: Units label for the primary axis in simulation plots.
 
   Returns:
     Configuration-level simulation summary.
@@ -353,11 +382,13 @@ def simulate_configuration(
     results=results,
     dt=dt,
     raw_unfiltered_trials=raw_unfiltered_x0,
+    signal_units=signal_units,
   )
+  model_order_key = "n_frequencies" if _is_fourier_row(row) else "degree"
   return {
     "configuration_index": configuration_index,
     "lowpass_hz": float(row["lowpass_hz"]),
-    "degree": int(row["degree"]),
+    model_order_key: int(row[model_order_key]),
     "n_delays": int(row["n_delays"]),
     "delay_samples": int(row["delay_samples"]),
     "smooth_window_samples": int(row["smooth_window_samples"]),
@@ -377,8 +408,17 @@ def run(args: argparse.Namespace) -> list[dict[str, object]]:
     benchmark=args.benchmark,
   )
   metadata = json.loads(args.metadata_json.read_text())
-  if metadata["preprocessing"]["normalization"] != "none":
-    raise ValueError("This visualizer requires the raw grid's normalization='none'.")
+  normalization = metadata["preprocessing"]["normalization"]
+  if normalization not in ("none", "global_zscore"):
+    raise ValueError(
+      f"Unsupported normalization '{normalization}'; expected 'none' or 'global_zscore'."
+    )
+  signal_units = "z-score" if normalization == "global_zscore" else LFP_AMPLITUDE_UNIT
+  # Load per-lowpass (μ, σ) computed from training data; keyed by float lowpass_hz.
+  global_zscore_stats: dict[float, dict] = {}
+  if normalization == "global_zscore" and "global_zscore" in metadata:
+    for lp_key, stats in metadata["global_zscore"].items():
+      global_zscore_stats[float(lp_key)] = stats
 
   data = TrialData.load(args.mat_file)
   if float(metadata["raw_sampling_hz"]) != float(data.fs):
@@ -405,7 +445,7 @@ def run(args: argparse.Namespace) -> list[dict[str, object]]:
   for index, row in enumerate(rows, start=1):
     lowpass_hz = float(row["lowpass_hz"])
     if lowpass_hz not in traces_by_lowpass:
-      traces_by_lowpass[lowpass_hz] = channel_traces(
+      raw_traces = channel_traces(
         data,
         channel=channel,
         trials=test_trial_ids,
@@ -413,9 +453,13 @@ def run(args: argparse.Namespace) -> list[dict[str, object]]:
         lowpass_hz=lowpass_hz,
         normalize="none",
       )
+      if lowpass_hz in global_zscore_stats:
+        stats = global_zscore_stats[lowpass_hz]
+        raw_traces = [(t - stats["mean"]) / stats["std"] for t in raw_traces]
+      traces_by_lowpass[lowpass_hz] = raw_traces
     print(
       f"[{index}/{len(rows)}] configuration={row['configuration_index']} "
-      f"degree={row['degree']} lowpass={row['lowpass_hz']}",
+      f"{_model_order_label(row)} lowpass={row['lowpass_hz']}",
       flush=True,
     )
     summaries.append(
@@ -427,6 +471,7 @@ def run(args: argparse.Namespace) -> list[dict[str, object]]:
         output_dir=args.output_dir,
         trial_timeout_s=args.trial_timeout_s,
         test_raw_unfiltered=traces_unfiltered,
+        signal_units=signal_units,
       )
     )
 

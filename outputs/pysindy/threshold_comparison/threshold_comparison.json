@@ -1,0 +1,26 @@
+[
+  {
+    "threshold": "0.1",
+    "n_configs": 216,
+    "fit_success": 216,
+    "mean_nonzero_terms": 227,
+    "sim_trial_success_pct": 77.2,
+    "config_allok_pct": 61.1
+  },
+  {
+    "threshold": "100",
+    "n_configs": 216,
+    "fit_success": 216,
+    "mean_nonzero_terms": 224.1,
+    "sim_trial_success_pct": 77.0,
+    "config_allok_pct": 60.6
+  },
+  {
+    "threshold": "1000",
+    "n_configs": 216,
+    "fit_success": 216,
+    "mean_nonzero_terms": 210.4,
+    "sim_trial_success_pct": 74.2,
+    "config_allok_pct": 60.2
+  }
+]
