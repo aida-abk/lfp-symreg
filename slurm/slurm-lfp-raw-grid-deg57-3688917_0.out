@@ -1,0 +1,49 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 3688918
+##  Job Name : lfp_raw_grid_deg57
+##  Nodelist : node2336
+##      CPUs : 
+##  Mem/Node : 16384 MB
+## Directory : /oscar/data/tdesroch/dbuyukya/AidaCarneyProject
+##   Job Started : Mon Jul  6 09:36:13 PM EDT 2026
+###############################################################################
+[1/36] status=success lowpass=35.0 degree=5 delays=2 delay=1 smooth=0 terms=42 runtime=3.7s
+[2/36] status=success lowpass=35.0 degree=5 delays=2 delay=1 smooth=5 terms=42 runtime=0.4s
+[3/36] status=success lowpass=35.0 degree=5 delays=2 delay=1 smooth=9 terms=42 runtime=0.4s
+[4/36] status=success lowpass=35.0 degree=5 delays=2 delay=2 smooth=0 terms=42 runtime=0.4s
+[5/36] status=success lowpass=35.0 degree=5 delays=2 delay=2 smooth=5 terms=42 runtime=0.4s
+[6/36] status=success lowpass=35.0 degree=5 delays=2 delay=2 smooth=9 terms=42 runtime=0.4s
+[7/36] status=success lowpass=35.0 degree=5 delays=2 delay=5 smooth=0 terms=41 runtime=0.4s
+[8/36] status=success lowpass=35.0 degree=5 delays=2 delay=5 smooth=5 terms=42 runtime=0.4s
+[9/36] status=success lowpass=35.0 degree=5 delays=2 delay=5 smooth=9 terms=42 runtime=0.4s
+[10/36] status=success lowpass=35.0 degree=5 delays=4 delay=1 smooth=0 terms=502 runtime=10.1s
+[11/36] status=success lowpass=35.0 degree=5 delays=4 delay=1 smooth=5 terms=501 runtime=10.1s
+[12/36] status=success lowpass=35.0 degree=5 delays=4 delay=1 smooth=9 terms=500 runtime=10.1s
+[13/36] status=success lowpass=35.0 degree=5 delays=4 delay=2 smooth=0 terms=499 runtime=10.1s
+[14/36] status=success lowpass=35.0 degree=5 delays=4 delay=2 smooth=5 terms=499 runtime=10.1s
+[15/36] status=success lowpass=35.0 degree=5 delays=4 delay=2 smooth=9 terms=498 runtime=10.0s
+[16/36] status=success lowpass=35.0 degree=5 delays=4 delay=5 smooth=0 terms=497 runtime=10.0s
+[17/36] status=success lowpass=35.0 degree=5 delays=4 delay=5 smooth=5 terms=497 runtime=10.0s
+[18/36] status=success lowpass=35.0 degree=5 delays=4 delay=5 smooth=9 terms=498 runtime=10.0s
+[19/36] status=success lowpass=35.0 degree=5 delays=6 delay=1 smooth=0 terms=2708 runtime=46.6s
+[20/36] status=success lowpass=35.0 degree=5 delays=6 delay=1 smooth=5 terms=2711 runtime=41.7s
+[21/36] status=success lowpass=35.0 degree=5 delays=6 delay=1 smooth=9 terms=2687 runtime=40.5s
+[22/36] status=success lowpass=35.0 degree=5 delays=6 delay=2 smooth=0 terms=2693 runtime=46.3s
+[23/36] status=success lowpass=35.0 degree=5 delays=6 delay=2 smooth=5 terms=2703 runtime=46.1s
+[24/36] status=success lowpass=35.0 degree=5 delays=6 delay=2 smooth=9 terms=2709 runtime=41.0s
+[25/36] status=success lowpass=35.0 degree=5 delays=6 delay=5 smooth=0 terms=2701 runtime=45.4s
+[26/36] status=success lowpass=35.0 degree=5 delays=6 delay=5 smooth=5 terms=2704 runtime=40.2s
+[27/36] status=success lowpass=35.0 degree=5 delays=6 delay=5 smooth=9 terms=2701 runtime=41.1s
+[28/36] status=success lowpass=35.0 degree=5 delays=8 delay=1 smooth=0 terms=9759 runtime=230.7s
+[29/36] status=success lowpass=35.0 degree=5 delays=8 delay=1 smooth=5 terms=9776 runtime=229.7s
+[30/36] status=success lowpass=35.0 degree=5 delays=8 delay=1 smooth=9 terms=9660 runtime=227.7s
+[31/36] status=success lowpass=35.0 degree=5 delays=8 delay=2 smooth=0 terms=9878 runtime=231.2s
+[32/36] status=success lowpass=35.0 degree=5 delays=8 delay=2 smooth=5 terms=9825 runtime=231.3s
+[33/36] status=success lowpass=35.0 degree=5 delays=8 delay=2 smooth=9 terms=9810 runtime=230.2s
+[34/36] status=success lowpass=35.0 degree=5 delays=8 delay=5 smooth=0 terms=9925 runtime=268.2s
+[35/36] status=success lowpass=35.0 degree=5 delays=8 delay=5 smooth=5 terms=9903 runtime=238.2s
+[36/36] status=success lowpass=35.0 degree=5 delays=8 delay=5 smooth=9 terms=9826 runtime=266.1s
+saved: outputs/pysindy/raw_grid_deg57_t100/parts/part_lp35_degree5.csv
+saved: outputs/pysindy/raw_grid_deg57_t100/parts/part_lp35_degree5_equations.txt
+saved: outputs/pysindy/raw_grid_deg57_t100/parts/part_lp35_degree5_metadata.json
+successful fits: 36/36

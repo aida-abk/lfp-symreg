@@ -1,0 +1,20 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 3682898
+##  Job Name : lfp_grid_sim
+##  Nodelist : node2342
+##      CPUs : 
+##  Mem/Node : 16384 MB
+## Directory : /oscar/data/tdesroch/dbuyukya/AidaCarneyProject
+##   Job Started : Mon Jul  6 03:24:16 PM EDT 2026
+###############################################################################
+[1/1] configuration=2 degree=1 lowpass=35.0
+config=2 trial=4 status=success reached=14.08/14.08s x0_rmse=28.180454138237295 uV runtime=8.7s
+config=2 trial=1088 status=success reached=14.20/14.20s x0_rmse=72.07466559200141 uV runtime=8.8s
+config=2 trial=622 status=success reached=14.19/14.19s x0_rmse=60.40403416185316 uV runtime=9.4s
+config=2 trial=620 status=success reached=14.19/14.19s x0_rmse=40.936419124059455 uV runtime=8.6s
+config=2 trial=2 status=success reached=14.19/14.19s x0_rmse=69.0377352948994 uV runtime=9.7s
+config=2 trial=3 status=success reached=14.19/14.19s x0_rmse=48.774209581389385 uV runtime=9.5s
+config=2 trial=1244 status=success reached=14.08/14.08s x0_rmse=53.049235204462576 uV runtime=8.8s
+config=2 trial=778 status=success reached=14.19/14.19s x0_rmse=48.92496390215745 uV runtime=9.1s
+config=2 trial=312 status=success reached=14.19/14.19s x0_rmse=42.16497513640941 uV runtime=8.2s
+saved: outputs/pysindy/raw_grid_threshold1000/simulations/config_0002_summary.json

@@ -1,0 +1,15 @@
+[
+  {
+    "configuration_index": 186,
+    "lowpass_hz": 80.0,
+    "degree": 3,
+    "n_delays": 2,
+    "delay_samples": 2,
+    "smooth_window_samples": 9,
+    "test_trials": 9,
+    "successful_simulations": 9,
+    "configuration_runtime_s": 254.32162727415562,
+    "figure": "outputs/pysindy/raw_grid_threshold1000/simulations/figures/config_0186.png",
+    "status_csv": "outputs/pysindy/raw_grid_threshold1000/simulations/status/config_0186.csv"
+  }
+]

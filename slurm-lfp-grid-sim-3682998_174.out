@@ -1,0 +1,20 @@
+## SLURM PROLOG ###############################################################
+##    Job ID : 3684287
+##  Job Name : lfp_grid_sim
+##  Nodelist : node2348
+##      CPUs : 
+##  Mem/Node : 4096 MB
+## Directory : /oscar/data/tdesroch/dbuyukya/AidaCarneyProject
+##   Job Started : Mon Jul  6 04:31:51 PM EDT 2026
+###############################################################################
+[1/1] configuration=174 degree=2 lowpass=80.0
+config=174 trial=4 status=failed reached=0.08/14.06s x0_rmse= uV runtime=64.0s
+config=174 trial=1088 status=failed reached=0.16/14.17s x0_rmse= uV runtime=69.1s
+config=174 trial=622 status=failed reached=0.11/14.17s x0_rmse= uV runtime=92.5s
+config=174 trial=620 status=failed reached=0.23/14.17s x0_rmse= uV runtime=66.8s
+config=174 trial=2 status=failed reached=0.10/14.17s x0_rmse= uV runtime=88.5s
+config=174 trial=3 status=failed reached=0.03/14.17s x0_rmse= uV runtime=62.5s
+config=174 trial=1244 status=failed reached=0.07/14.06s x0_rmse= uV runtime=63.6s
+config=174 trial=778 status=failed reached=0.06/14.17s x0_rmse= uV runtime=70.4s
+config=174 trial=312 status=failed reached=0.84/14.17s x0_rmse= uV runtime=88.4s
+saved: outputs/pysindy/raw_grid_threshold1000/simulations/config_0174_summary.json

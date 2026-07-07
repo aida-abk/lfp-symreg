@@ -1,0 +1,55 @@
+Traceback (most recent call last):
+  File "/oscar/data/tdesroch/dbuyukya/AidaCarneyProject/scripts/pysindy/visualize_raw_grid_simulations.py", line 432, in <module>
+    main()
+  File "/oscar/data/tdesroch/dbuyukya/AidaCarneyProject/scripts/pysindy/visualize_raw_grid_simulations.py", line 428, in main
+    run(args)
+  File "/oscar/data/tdesroch/dbuyukya/AidaCarneyProject/scripts/pysindy/visualize_raw_grid_simulations.py", line 370, in run
+    simulate_configuration(
+  File "/oscar/data/tdesroch/dbuyukya/AidaCarneyProject/scripts/pysindy/visualize_raw_grid_simulations.py", line 306, in simulate_configuration
+    plot_configuration(
+  File "/oscar/data/tdesroch/dbuyukya/AidaCarneyProject/scripts/pysindy/visualize_raw_grid_simulations.py", line 201, in plot_configuration
+    figure.savefig(path, dpi=160)
+  File "/oscar/data/tdesroch/dbuyukya/symreg_env/lib/python3.11/site-packages/matplotlib/figure.py", line 3515, in savefig
+    self.canvas.print_figure(fname, **kwargs)
+  File "/oscar/data/tdesroch/dbuyukya/symreg_env/lib/python3.11/site-packages/matplotlib/backend_bases.py", line 2249, in print_figure
+    self.figure.draw(renderer)
+  File "/oscar/data/tdesroch/dbuyukya/symreg_env/lib/python3.11/site-packages/matplotlib/artist.py", line 94, in draw_wrapper
+    result = draw(artist, renderer, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/oscar/data/tdesroch/dbuyukya/symreg_env/lib/python3.11/site-packages/matplotlib/artist.py", line 71, in draw_wrapper
+    return draw(artist, renderer)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/oscar/data/tdesroch/dbuyukya/symreg_env/lib/python3.11/site-packages/matplotlib/figure.py", line 3282, in draw
+    mimage._draw_list_compositing_images(
+  File "/oscar/data/tdesroch/dbuyukya/symreg_env/lib/python3.11/site-packages/matplotlib/image.py", line 133, in _draw_list_compositing_images
+    a.draw(renderer)
+  File "/oscar/data/tdesroch/dbuyukya/symreg_env/lib/python3.11/site-packages/matplotlib/artist.py", line 71, in draw_wrapper
+    return draw(artist, renderer)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/oscar/data/tdesroch/dbuyukya/symreg_env/lib/python3.11/site-packages/matplotlib/axes/_base.py", line 3314, in draw
+    self._update_title_position(renderer)
+  File "/oscar/data/tdesroch/dbuyukya/symreg_env/lib/python3.11/site-packages/matplotlib/axes/_base.py", line 3258, in _update_title_position
+    ax.yaxis.get_tightbbox(renderer)  # update offsetText
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/oscar/data/tdesroch/dbuyukya/symreg_env/lib/python3.11/site-packages/matplotlib/axis.py", line 1425, in get_tightbbox
+    ticks_to_draw = self._update_ticks()
+                    ^^^^^^^^^^^^^^^^^^^^
+  File "/oscar/data/tdesroch/dbuyukya/symreg_env/lib/python3.11/site-packages/matplotlib/axis.py", line 1344, in _update_ticks
+    major_locs = self.get_majorticklocs()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/oscar/data/tdesroch/dbuyukya/symreg_env/lib/python3.11/site-packages/matplotlib/axis.py", line 1673, in get_majorticklocs
+    return self.major.locator()
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/oscar/data/tdesroch/dbuyukya/symreg_env/lib/python3.11/site-packages/matplotlib/ticker.py", line 2299, in __call__
+    return self.tick_values(vmin, vmax)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/oscar/data/tdesroch/dbuyukya/symreg_env/lib/python3.11/site-packages/matplotlib/ticker.py", line 2307, in tick_values
+    locs = self._raw_ticks(vmin, vmax)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/oscar/data/tdesroch/dbuyukya/symreg_env/lib/python3.11/site-packages/matplotlib/ticker.py", line 2237, in _raw_ticks
+    nbins = np.clip(self.axis.get_tick_space(),
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/oscar/data/tdesroch/dbuyukya/symreg_env/lib/python3.11/site-packages/matplotlib/axis.py", line 2984, in get_tick_space
+    return int(np.floor(length / size))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: cannot convert float NaN to integer
