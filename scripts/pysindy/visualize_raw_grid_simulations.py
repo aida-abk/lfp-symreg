@@ -132,17 +132,21 @@ def plot_configuration(
   results: list[SimulationResult],
   dt: float,
   title: str | None = None,
+  raw_unfiltered_trials: list[np.ndarray] | None = None,
 ) -> None:
-  """Plot measured and simulated x0 for every held-out trial.
+  """Plot raw, lowpass-filtered, and simulated x0 for every held-out trial.
 
   Args:
     path: Destination PNG path.
     row: Raw-grid configuration row.
     trial_ids: Original zero-based trial identifiers.
-    measured_trials: Embedded measured trajectories in microvolts.
+    measured_trials: Delay-embedded lowpass-filtered trajectories (µV, normalize=none).
     results: Numerical simulation results corresponding to the trials.
     dt: Processed sample interval in seconds.
     title: Optional figure title overriding the raw-grid configuration title.
+    raw_unfiltered_trials: Optional unfiltered (detrended, downsampled) traces, one
+      per trial, cropped to align with the delay-embedded x0. Plotted in grey on a
+      secondary y-axis to show the full-bandwidth signal alongside the lowpass target.
   """
   import matplotlib
 
@@ -156,19 +160,41 @@ def plot_configuration(
     columns,
     figsize=(5 * columns, 2.7 * n_rows),
     sharex=False,
-    sharey=True,
+    sharey=False,
     squeeze=False,
   )
-  for axis, trial_id, measured, result in zip(
-    axes.ravel(), trial_ids, measured_trials, results
+  first_ax2 = None
+  for i, (axis, trial_id, measured, result) in enumerate(
+    zip(axes.ravel(), trial_ids, measured_trials, results)
   ):
     measured_time = np.arange(measured.shape[0]) * dt
-    axis.plot(measured_time, measured[:, 0], label="Measured", linewidth=0.9)
+
+    # Grey secondary axis: raw unfiltered signal in µV
+    ax2 = None
+    if raw_unfiltered_trials is not None and i < len(raw_unfiltered_trials):
+      ax2 = axis.twinx()
+      raw = raw_unfiltered_trials[i][:measured.shape[0]]
+      ax2.plot(
+        measured_time[:len(raw)], raw,
+        color="grey", linewidth=0.7, alpha=0.4, label="raw (µV)",
+      )
+      ax2.set_ylabel("µV (raw)", fontsize=7, color="grey")
+      ax2.tick_params(axis="y", labelcolor="grey", labelsize=6)
+      ax2.spines["right"].set_color("grey")
+      ax2.spines["right"].set_alpha(0.5)
+      if first_ax2 is None:
+        first_ax2 = ax2
+      # Keep primary axis on top so coloured lines render over the grey trace
+      axis.set_zorder(ax2.get_zorder() + 1)
+      axis.patch.set_visible(False)
+
+    axis.plot(measured_time, measured[:, 0], color="steelblue",
+              label="lowpass (µV)", linewidth=0.9)
     if result.trajectory is not None and result.trajectory.size:
       axis.plot(
         result.time,
         result.trajectory[:, 0],
-        label="Simulated",
+        color="darkorange", linestyle="--", label="simulated",
         linewidth=0.9,
       )
     status = "complete" if result.completed else "failed"
@@ -177,11 +203,17 @@ def plot_configuration(
       fontsize=9,
     )
     axis.set_xlabel("Time from embedded initial state (s)")
-    axis.set_ylabel(f"x0 ({LFP_AMPLITUDE_UNIT})")
+    axis.set_ylabel(f"x0 ({LFP_AMPLITUDE_UNIT})", fontsize=8)
+
+    lines, labels = axis.get_legend_handles_labels()
+    if ax2 is not None:
+      lines2, labels2 = ax2.get_legend_handles_labels()
+      axis.legend(lines2 + lines, labels2 + labels, loc="upper right", fontsize=7)
+    else:
+      axis.legend(loc="upper right", fontsize=7)
 
   for axis in axes.ravel()[len(trial_ids):]:
     axis.set_visible(False)
-  axes.ravel()[0].legend(loc="upper right")
   threshold_text = (
     f", threshold={row['stlsq_threshold']}"
     if row.get("stlsq_threshold")
@@ -209,16 +241,19 @@ def simulate_configuration(
   dt: float,
   output_dir: Path,
   trial_timeout_s: float | None,
+  test_raw_unfiltered: list[np.ndarray] | None = None,
 ) -> dict[str, object]:
   """Simulate one stored equation from every held-out initial condition.
 
   Args:
     row: Stored raw-grid configuration.
-    test_raw: Preprocessed held-out LFP traces in microvolts.
+    test_raw: Lowpass-filtered held-out LFP traces (µV, normalize=none).
     test_trial_ids: Original zero-based held-out trial identifiers.
     dt: Processed sample interval in seconds.
     output_dir: Destination for status checkpoints and figures.
     trial_timeout_s: Optional operational wall-time limit per simulation.
+    test_raw_unfiltered: Optional unfiltered (detrended, downsampled) traces for
+      the grey raw-signal overlay in simulation plots.
 
   Returns:
     Configuration-level simulation summary.
@@ -302,6 +337,13 @@ def simulate_configuration(
       flush=True,
     )
 
+  # Crop unfiltered traces to align with delay-embedded x0 (same offset applied in
+  # delay_embed_trace: first valid row starts at (n_delays - 1) * delay samples).
+  raw_unfiltered_x0: list[np.ndarray] | None = None
+  if test_raw_unfiltered is not None:
+    offset = (int(row["n_delays"]) - 1) * int(row["delay_samples"])
+    raw_unfiltered_x0 = [tr[offset:] for tr in test_raw_unfiltered]
+
   figure_path = output_dir / "figures" / f"{stem}.png"
   plot_configuration(
     figure_path,
@@ -310,6 +352,7 @@ def simulate_configuration(
     measured_trials=measured_trials,
     results=results,
     dt=dt,
+    raw_unfiltered_trials=raw_unfiltered_x0,
   )
   return {
     "configuration_index": configuration_index,
@@ -347,8 +390,17 @@ def run(args: argparse.Namespace) -> list[dict[str, object]]:
   channel = int(metadata["channel"])
   dt = downsample / data.fs
 
-  # Cache measured traces because configurations reuse the same two cutoffs.
+  # Cache lowpass-filtered traces (model target) and unfiltered traces (grey overlay).
+  # Keyed by lowpass_hz; unfiltered uses lowpass_hz=None (detrend + downsample only).
   traces_by_lowpass: dict[float, list[np.ndarray]] = {}
+  traces_unfiltered: list[np.ndarray] = channel_traces(
+    data,
+    channel=channel,
+    trials=test_trial_ids,
+    downsample=downsample,
+    lowpass_hz=None,
+    normalize="none",
+  )
   summaries = []
   for index, row in enumerate(rows, start=1):
     lowpass_hz = float(row["lowpass_hz"])
@@ -374,6 +426,7 @@ def run(args: argparse.Namespace) -> list[dict[str, object]]:
         dt=dt,
         output_dir=args.output_dir,
         trial_timeout_s=args.trial_timeout_s,
+        test_raw_unfiltered=traces_unfiltered,
       )
     )
 

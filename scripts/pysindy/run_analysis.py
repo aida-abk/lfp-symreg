@@ -54,6 +54,15 @@ def main() -> None:
     description="Run all post-sweep analysis steps in order."
   )
   parser.add_argument(
+    "--sweep-dir",
+    type=Path,
+    default=None,
+    help=(
+      "Base directory of a sweep output (e.g. outputs/pysindy/raw_grid_threshold1000). "
+      "Overrides all default input/output paths. Defaults to outputs/pysindy/raw_grid."
+    ),
+  )
+  parser.add_argument(
     "--expected",
     type=int,
     default=216,
@@ -75,7 +84,22 @@ def main() -> None:
     action="store_true",
     help="Skip steps 1–3. Use when raw_grid_merged.csv already has RMS columns.",
   )
+  parser.add_argument(
+    "--allow-missing-figures",
+    action="store_true",
+    help="Pass --allow-missing-figures to summarize step; use when some simulation figures are absent.",
+  )
   args = parser.parse_args()
+
+  sweep_dir: Path = (
+    args.sweep_dir.resolve() if args.sweep_dir else ROOT / "outputs" / "pysindy" / "raw_grid"
+  )
+  parts_dir = sweep_dir / "parts"
+  grid_csv = sweep_dir / "raw_grid_merged.csv"
+  sim_dir = sweep_dir / "simulations"
+  sim_status_csv = sim_dir / "simulation_status_merged.csv"
+  figures_dir = sim_dir / "figures"
+  analysis_dir = sweep_dir / "analysis"
 
   expected = str(args.expected)
   expected_trials = str(args.expected_trials)
@@ -84,49 +108,68 @@ def main() -> None:
     run(
       "1/8  merge_raw_grid",
       PYSINDY / "merge_raw_grid.py",
-      ["--expected", expected],
+      ["--input-dir", str(parts_dir), "--output-csv", str(grid_csv), "--expected", expected],
     )
 
   if not args.skip_summarize:
+    summarize_extra = ["--allow-missing-figures"] if args.allow_missing_figures else []
     run(
       "2/8  summarize_raw_grid_simulations",
       PYSINDY / "summarize_raw_grid_simulations.py",
-      ["--expected", expected],
+      ["--output-dir", str(sim_dir), "--grid-csv", str(grid_csv), "--expected", expected]
+      + summarize_extra,
     )
 
     run(
       "3/8  add_simulation_rms_to_grid",
       SWEEP_ANALYSIS / "add_simulation_rms_to_grid.py",
+      ["--grid-csv", str(grid_csv), "--status-csv", str(sim_status_csv)],
     )
 
   run(
     "4/8  analyze_simulation_grid",
     SWEEP_ANALYSIS / "analyze_simulation_grid.py",
-    ["--expected-configurations", expected, "--expected-trials", expected_trials],
+    [
+      "--grid-csv", str(grid_csv),
+      "--status-csv", str(sim_status_csv),
+      "--figures-dir", str(figures_dir),
+      "--output-dir", str(analysis_dir),
+      "--expected-configurations", expected,
+      "--expected-trials", expected_trials,
+    ],
   )
 
   run(
     "5/8  analyze_term_utilization",
     SWEEP_ANALYSIS / "analyze_term_utilization.py",
+    ["--grid-csv", str(grid_csv), "--output-dir", str(analysis_dir)],
   )
 
   run(
     "6/8  analyze_smoothing_variability",
     SWEEP_ANALYSIS / "analyze_smoothing_variability.py",
+    ["--grid-csv", str(grid_csv), "--output-dir", str(analysis_dir)],
   )
 
   run(
     "7/8  analyze_delay_parameters",
     SWEEP_ANALYSIS / "analyze_delay_parameters.py",
+    ["--grid-csv", str(grid_csv), "--status-csv", str(sim_status_csv), "--output-dir", str(analysis_dir)],
   )
 
   run(
     "8/8  compare_lowpass_cutoffs",
     SWEEP_ANALYSIS / "compare_lowpass_cutoffs.py",
+    [
+      "--grid-csv", str(grid_csv),
+      "--status-csv", str(sim_status_csv),
+      "--figures-dir", str(figures_dir),
+      "--output-dir", str(analysis_dir),
+    ],
   )
 
   print("\nAll analysis steps completed.")
-  print(f"Outputs in: {ROOT / 'outputs' / 'pysindy' / 'raw_grid' / 'analysis'}")
+  print(f"Outputs in: {analysis_dir}")
 
 
 if __name__ == "__main__":

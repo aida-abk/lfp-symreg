@@ -1,9 +1,75 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import numpy as np
 from scipy import signal
 
 from load_data.convert import TrialData
+
+
+@dataclass
+class GlobalZScoreStats:
+  """Per-channel (mean, std) computed exclusively from training samples.
+
+  Storing these constants makes the transform invertible: multiply by std and
+  add mean to recover physical (µV) units. Pass the same object to held-out
+  splits to avoid leakage.
+
+  This operates on the state variable fed into the delay-embedding library and
+  is strictly separate from STLSQ's normalize_columns, which acts on the
+  constructed feature-library columns.
+  """
+  channel: int
+  mean: float
+  std: float
+
+
+def compute_global_zscore_stats(
+  traces: list[np.ndarray],
+  channel: int,
+) -> GlobalZScoreStats:
+  """Pool all training samples for one channel and return their (mean, std).
+
+  Args:
+    traces: Preprocessed (filtered, not yet normalized) training traces.
+      Each trace is 1D; lengths may differ across trials.
+    channel: Zero-based channel index stored for identification only.
+
+  Returns:
+    GlobalZScoreStats with mean and std computed over all pooled samples.
+    The std is guaranteed positive (raises ValueError if zero).
+  """
+  if not traces:
+    raise ValueError("At least one trace is required.")
+  all_samples = np.concatenate([np.asarray(t, dtype=float).ravel() for t in traces])
+  std = float(np.std(all_samples))
+  if std == 0:
+    raise ValueError(f"Channel {channel}: pooled training std is zero — cannot z-score.")
+  return GlobalZScoreStats(
+    channel=channel,
+    mean=float(np.mean(all_samples)),
+    std=std,
+  )
+
+
+def apply_global_zscore(
+  traces: list[np.ndarray],
+  stats: GlobalZScoreStats,
+) -> list[np.ndarray]:
+  """Apply a fixed (mean, std) z-score transform to every trace.
+
+  Uses the same constants for every trial, so trial-to-trial amplitude
+  differences are preserved after scaling.
+
+  Args:
+    traces: Traces to transform (any split: train, test, validation).
+    stats: Pre-computed stats from training data only.
+
+  Returns:
+    Transformed traces; same structure as the input.
+  """
+  return [(np.asarray(t, dtype=float) - stats.mean) / stats.std for t in traces]
 
 
 def pooled_trace_rms(traces: list[np.ndarray]) -> float:
