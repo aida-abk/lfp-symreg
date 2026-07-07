@@ -165,6 +165,7 @@ def plot_simulation_grid(
   smooth_window: int,
   dt: float,
   output_path: Path,
+  raw_ref_x0: list[np.ndarray] | None = None,
 ) -> None:
   """Save a 2×2 figure of measured vs simulated x0 for up to 4 held-out trials.
 
@@ -177,6 +178,9 @@ def plot_simulation_grid(
     smooth_window: Derivative smoothing window in samples.
     dt: Sample interval in seconds.
     output_path: Where to save the PNG.
+    raw_ref_x0: Optional lowpass-filtered (not z-scored) x0 reference traces, one
+      per trial, already cropped to align with the delay-embedded x0. Shown in grey
+      on a secondary y-axis to give µV-scale context of what the model is matching.
   """
   fig, axes = plt.subplots(2, 2, figsize=(12, 8))
   n = min(len(trial_results), N_PLOT_TRIALS)
@@ -187,6 +191,22 @@ def plot_simulation_grid(
       continue
     trial_id, measured, simulated, status = trial_results[i]
     t_meas = np.arange(len(measured)) * dt
+
+    # Grey secondary axis: lowpass-filtered signal in µV (not z-scored)
+    ax2 = None
+    if raw_ref_x0 is not None and i < len(raw_ref_x0):
+      ax2 = ax.twinx()
+      raw = raw_ref_x0[i][:len(measured)]
+      ax2.plot(t_meas[:len(raw)], raw, color="grey", linewidth=0.8, alpha=0.45,
+               label="lowpass (µV)")
+      ax2.set_ylabel("µV", fontsize=8, color="grey")
+      ax2.tick_params(axis="y", labelcolor="grey", labelsize=7)
+      ax2.spines["right"].set_color("grey")
+      ax2.spines["right"].set_alpha(0.5)
+      # Keep primary axis on top so blue/orange lines render over the grey trace
+      ax.set_zorder(ax2.get_zorder() + 1)
+      ax.patch.set_visible(False)
+
     ax.plot(t_meas, measured[:, 0], color="steelblue", linewidth=1, label="measured")
     if simulated is not None:
       t_sim = np.arange(len(simulated)) * dt
@@ -195,7 +215,14 @@ def plot_simulation_grid(
     ax.set_title(f"Trial {trial_id}  [{status}]", fontsize=10)
     ax.set_xlabel("Time (s)", fontsize=9)
     ax.set_ylabel("x₀ (z-score)", fontsize=9)
-    ax.legend(fontsize=8)
+
+    # Combine handles so grey reference appears in the single legend
+    lines, labels = ax.get_legend_handles_labels()
+    if ax2 is not None:
+      lines2, labels2 = ax2.get_legend_handles_labels()
+      ax.legend(lines2 + lines, labels2 + labels, fontsize=8)
+    else:
+      ax.legend(lines, labels, fontsize=8)
 
   fig.suptitle(
     f"Config {config_index} — n_delays={n_delays}, delay={delay_samples} smp, "
@@ -272,6 +299,18 @@ def run_configuration(args: argparse.Namespace) -> dict[str, object]:
     lowpass_hz=lowpass_hz,
     normalize="zscore",
   )
+  # Lowpass-filtered reference for the grey overlay: load only the trials that
+  # will be plotted, no z-scoring so the signal stays in µV.
+  test_raw_ref = channel_traces(
+    data,
+    channel=args.channel,
+    trials=test_ids[:N_PLOT_TRIALS],
+    downsample=args.downsample,
+    lowpass_hz=lowpass_hz,
+    normalize="none",
+  )
+  ref_offset = (n_delays - 1) * delay_samples
+  raw_ref_x0 = [tr[ref_offset:] for tr in test_raw_ref]
 
   # Delay embed
   train_embedded = delay_embed_trajectories(train_raw, n_delays=n_delays, delay=delay_samples)
@@ -378,6 +417,7 @@ def run_configuration(args: argparse.Namespace) -> dict[str, object]:
       smooth_window=smooth_window,
       dt=dt,
       output_path=config_dir / "simulation.png",
+      raw_ref_x0=raw_ref_x0,
     )
   except Exception as exc:
     row["simulation_runtime_s"] = time.perf_counter() - sim_started

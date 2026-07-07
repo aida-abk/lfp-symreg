@@ -4,6 +4,10 @@ archive/*
 docs/
 CLAUDE.md
 
+# slurm logs
+slurm/*.out
+slurm/*.err
+
 
 # python/cache
 __pycache__/

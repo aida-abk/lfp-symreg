@@ -20,7 +20,12 @@ for path in (ROOT, SCRIPTS, PYSINDY_SCRIPTS):
 
 from sweep_io import parse_optional_float_list, prepare_lfp_trials
 from load_data.convert import LFP_AMPLITUDE_UNIT, MAT_FILE
-from load_data.preprocessing import channel_traces
+from load_data.preprocessing import (
+  GlobalZScoreStats,
+  apply_global_zscore,
+  channel_traces,
+  compute_global_zscore_stats,
+)
 from models.sindy import (
   SINDyConfig,
   count_terms,
@@ -40,6 +45,8 @@ DEFAULT_METADATA = DEFAULT_OUTPUT_DIR / "run_metadata.json"
 FIELDNAMES = [
   "configuration_index",
   "lowpass_hz",
+  "global_zscore_mean",
+  "global_zscore_std",
   "stlsq_threshold",
   "degree",
   "n_delays",
@@ -131,7 +138,7 @@ def build_metadata(
     "preprocessing": {
       "demean_each_trial": True,
       "lowpass_filter": "fourth-order Butterworth, zero-phase sosfiltfilt",
-      "normalization": "none",
+      "normalization": "global_zscore" if args.global_zscore else "none",
       "software_highpass": "none",
       "full_stored_trial": True,
     },
@@ -179,6 +186,27 @@ def run_raw_grid(args: argparse.Namespace) -> list[dict[str, object]]:
     raise ValueError("Approved smoothing windows are 0, 5, and 9 samples.")
 
   data, train_ids, test_ids = prepare_lfp_trials(args)
+
+  # Precompute training traces; if --global-zscore, pool all samples per lowpass
+  # value and compute (mean, std) from training data only before writing metadata.
+  dt = args.downsample / data.fs
+  train_raw_by_lowpass: dict[float | None, list[np.ndarray]] = {}
+  global_stats: dict[float | None, GlobalZScoreStats] = {}
+  for lowpass_hz in lowpass_values:
+    raw = channel_traces(
+      data,
+      channel=args.channel,
+      trials=train_ids,
+      downsample=args.downsample,
+      lowpass_hz=lowpass_hz,
+      normalize="none",
+    )
+    if args.global_zscore:
+      stats = compute_global_zscore_stats(raw, channel=args.channel)
+      global_stats[lowpass_hz] = stats
+      raw = apply_global_zscore(raw, stats)
+    train_raw_by_lowpass[lowpass_hz] = raw
+
   metadata = build_metadata(
     args,
     data,
@@ -190,6 +218,11 @@ def run_raw_grid(args: argparse.Namespace) -> list[dict[str, object]]:
     delay_values,
     smooth_values,
   )
+  if args.global_zscore:
+    metadata["global_zscore"] = {
+      str(lp if lp is not None else "none"): {"mean": s.mean, "std": s.std}
+      for lp, s in global_stats.items()
+    }
   args.metadata_out.parent.mkdir(parents=True, exist_ok=True)
   args.metadata_out.write_text(json.dumps(metadata, indent=2) + "\n")
   initialize_csv(args.out_csv)
@@ -198,15 +231,8 @@ def run_raw_grid(args: argparse.Namespace) -> list[dict[str, object]]:
   total = int(metadata["expected_configurations"])
   configuration_index = 0
   for lowpass_hz in lowpass_values:
-    train_raw = channel_traces(
-      data,
-      channel=args.channel,
-      trials=train_ids,
-      downsample=args.downsample,
-      lowpass_hz=lowpass_hz,
-      normalize="none",
-    )
-    dt = args.downsample / data.fs
+    train_raw = train_raw_by_lowpass[lowpass_hz]
+    lp_stats = global_stats.get(lowpass_hz)
     for degree, n_delays, delay, smooth_window in itertools.product(
       degree_values,
       n_delay_values,
@@ -219,6 +245,8 @@ def run_raw_grid(args: argparse.Namespace) -> list[dict[str, object]]:
       row: dict[str, object] = {
         "configuration_index": configuration_index,
         "lowpass_hz": lowpass_hz if lowpass_hz is not None else "none",
+        "global_zscore_mean": lp_stats.mean if lp_stats is not None else "",
+        "global_zscore_std": lp_stats.std if lp_stats is not None else "",
         "stlsq_threshold": args.threshold,
         "degree": degree,
         "n_delays": n_delays,
@@ -309,6 +337,16 @@ def main() -> None:
     action=argparse.BooleanOptionalAction,
     default=True,
     help="Whether STLSQ normalizes feature-library columns before thresholding.",
+  )
+  parser.add_argument(
+    "--global-zscore",
+    action=argparse.BooleanOptionalAction,
+    default=False,
+    help=(
+      "Apply global z-score to the state variable before fitting. "
+      "Mean and std are computed from pooled training samples per lowpass value "
+      "and applied identically to every trial. Separate from --normalize-columns."
+    ),
   )
   parser.add_argument("--out-csv", type=Path, default=DEFAULT_RESULTS)
   parser.add_argument("--equations-out", type=Path, default=DEFAULT_EQUATIONS)
