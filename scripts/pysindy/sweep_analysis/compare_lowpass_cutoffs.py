@@ -587,24 +587,9 @@ def run(args: argparse.Namespace) -> dict[str, object]:
   overall = overall_paired_summary(configuration_pairs, trial_pairs)
 
   write_csv(
-    args.output_dir / "lowpass_configuration_pairs.csv",
-    configuration_pairs,
-    PAIR_FIELDS,
-  )
-  write_csv(
-    args.output_dir / "lowpass_trial_pairs.csv",
-    trial_pairs,
-    TRIAL_PAIR_FIELDS,
-  )
-  write_csv(
     args.output_dir / "lowpass_group_summary.csv",
     grouped_rows,
     GROUP_FIELDS,
-  )
-  write_csv(
-    args.output_dir / "lowpass_paired_scope_summary.csv",
-    paired_scope_rows,
-    PAIRED_SCOPE_FIELDS,
   )
   write_csv(
     args.output_dir / "lowpass_coefficient_parameter_summary.csv",

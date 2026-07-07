@@ -6,6 +6,26 @@ from math import comb
 import numpy as np
 
 
+def maximum_fourier_terms(n_states: int, n_frequencies: int) -> int:
+  """Return the total available coefficients in a Fourier SINDy system.
+
+  Args:
+    n_states: Number of state equations and input coordinates. Unitless count.
+    n_frequencies: Number of frequency harmonics in the Fourier library.
+
+  Returns:
+    Total coefficient count across all equations. PySINDy's FourierLibrary
+    produces ``2 * n_frequencies`` features per state variable, giving
+    ``2 * n_frequencies * n_states`` features per equation and
+    ``2 * n_frequencies * n_states ** 2`` total coefficients.
+  """
+  if n_states < 1:
+    raise ValueError("n_states must be at least 1.")
+  if n_frequencies < 1:
+    raise ValueError("n_frequencies must be at least 1.")
+  return n_states * 2 * n_frequencies * n_states
+
+
 def maximum_polynomial_terms(n_states: int, degree: int) -> int:
   """Return the available coefficients in a polynomial SINDy system.
 
@@ -76,6 +96,64 @@ class StoredPolynomialModel:
     Returns:
       Derivative matrix with shape ``(samples, state)`` in signal units per
       second.
+    """
+    values = np.asarray(states, dtype=float)
+    if values.ndim != 2 or values.shape[1] != self.coefficients.shape[0]:
+      raise ValueError(
+        "states must have shape (samples, state) matching the coefficient matrix."
+      )
+    features = np.asarray(self._feature_library.transform(values), dtype=float)
+    return features @ self.coefficients.T
+
+
+@dataclass
+class StoredFourierModel:
+  """Evaluate a Fourier SINDy ODE reconstructed from saved coefficients.
+
+  Attributes:
+    n_frequencies: Number of frequency harmonics in the Fourier library.
+    coefficients: Coefficient matrix with shape ``(state, feature)``.
+    feature_names: Ordered Fourier-library feature names saved at fitting.
+  """
+
+  n_frequencies: int
+  coefficients: np.ndarray
+  feature_names: list[str]
+
+  def __post_init__(self) -> None:
+    """Build and validate the Fourier feature library."""
+    try:
+      import pysindy as ps
+    except ImportError as exc:
+      raise ImportError("PySINDy is required to reconstruct a stored model.") from exc
+
+    self.coefficients = np.asarray(self.coefficients, dtype=float)
+    if self.coefficients.ndim != 2:
+      raise ValueError(
+        f"Expected a 2D coefficient matrix, got {self.coefficients.shape}."
+      )
+    n_states, n_features = self.coefficients.shape
+    if len(self.feature_names) != n_features:
+      raise ValueError(
+        f"Stored {len(self.feature_names)} feature names for {n_features} coefficients."
+      )
+
+    self._feature_library = ps.FourierLibrary(n_frequencies=self.n_frequencies)
+    self._feature_library.fit(np.zeros((2, n_states), dtype=float))
+    reconstructed_names = self._feature_library.get_feature_names()
+    if reconstructed_names != self.feature_names:
+      raise ValueError(
+        "Reconstructed Fourier features do not match the stored feature order."
+      )
+
+  def predict(self, states: np.ndarray) -> np.ndarray:
+    """Evaluate state derivatives for one or more states.
+
+    Args:
+      states: State matrix with shape ``(samples, state)``.
+
+    Returns:
+      Derivative matrix with shape ``(samples, state)``.
     """
     values = np.asarray(states, dtype=float)
     if values.ndim != 2 or values.shape[1] != self.coefficients.shape[0]:
