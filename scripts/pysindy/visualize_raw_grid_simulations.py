@@ -148,6 +148,75 @@ def reconstruct_model(row: dict[str, str]) -> StoredPolynomialModel | StoredFour
   )
 
 
+def _config_suptitle(row: dict[str, str]) -> str:
+  """Return a figure suptitle string from a raw-grid configuration row."""
+  threshold_text = (
+    f", threshold={row['stlsq_threshold']}" if row.get("stlsq_threshold") else ""
+  )
+  return (
+    f"Configuration {row['configuration_index']}: "
+    f"LP={row['lowpass_hz']} Hz, {_model_order_label(row)}, "
+    f"delays={row['n_delays']}, spacing={row['delay_samples']} samples, "
+    f"smoothing={row['smooth_window_samples']} samples{threshold_text}"
+  )
+
+
+def _draw_trial_panel(
+  axis,
+  trial_id: int,
+  measured: np.ndarray,
+  result: SimulationResult,
+  dt: float,
+  raw_unfiltered: np.ndarray | None,
+  signal_units: str,
+  title_fontsize: int = 10,
+  label_fontsize: int = 9,
+) -> None:
+  """Draw one trial's lowpass, simulated, and optional raw traces onto ``axis``."""
+  measured_time = np.arange(measured.shape[0]) * dt
+
+  ax2 = None
+  if raw_unfiltered is not None:
+    ax2 = axis.twinx()
+    raw = raw_unfiltered[: measured.shape[0]]
+    ax2.plot(
+      measured_time[: len(raw)], raw,
+      color="grey", linewidth=0.8, alpha=0.4, label="raw (µV)",
+    )
+    ax2.set_ylabel("µV (raw)", fontsize=label_fontsize - 1, color="grey")
+    ax2.tick_params(axis="y", labelcolor="grey", labelsize=label_fontsize - 2)
+    ax2.spines["right"].set_color("grey")
+    ax2.spines["right"].set_alpha(0.5)
+    axis.set_zorder(ax2.get_zorder() + 1)
+    axis.patch.set_visible(False)
+
+  axis.plot(
+    measured_time, measured[:, 0],
+    color="steelblue", linewidth=1.1, label=f"lowpass ({signal_units})",
+  )
+  if result.trajectory is not None and result.trajectory.size:
+    axis.plot(
+      result.time, result.trajectory[:, 0],
+      color="darkorange", linestyle="--", linewidth=1.1, label="simulated",
+    )
+  status = "complete" if result.completed else "failed"
+  axis.set_title(
+    f"Trial {trial_id}: {status}, reached {result.reached_horizon_s:.2f} s",
+    fontsize=title_fontsize,
+  )
+  axis.set_xlabel("Time from embedded initial state (s)", fontsize=label_fontsize)
+  axis.set_ylabel(f"x0 ({signal_units})", fontsize=label_fontsize)
+  axis.grid(alpha=0.2)
+
+  lines, labels = axis.get_legend_handles_labels()
+  if ax2 is not None:
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    axis.legend(lines2 + lines, labels2 + labels, loc="upper right",
+                fontsize=label_fontsize - 1)
+  else:
+    axis.legend(loc="upper right", fontsize=label_fontsize - 1)
+
+
 def plot_configuration(
   path: Path,
   row: dict[str, str],
@@ -159,103 +228,55 @@ def plot_configuration(
   raw_unfiltered_trials: list[np.ndarray] | None = None,
   signal_units: str = LFP_AMPLITUDE_UNIT,
 ) -> None:
-  """Plot raw, lowpass-filtered, and simulated x0 for every held-out trial.
-
-  Args:
-    path: Destination PNG path.
-    row: Raw-grid configuration row.
-    trial_ids: Original zero-based trial identifiers.
-    measured_trials: Delay-embedded lowpass-filtered trajectories.
-    results: Numerical simulation results corresponding to the trials.
-    dt: Processed sample interval in seconds.
-    title: Optional figure title overriding the raw-grid configuration title.
-    raw_unfiltered_trials: Optional unfiltered (detrended, downsampled) traces, one
-      per trial, cropped to align with the delay-embedded x0. Plotted in grey on a
-      secondary y-axis in µV regardless of signal_units.
-    signal_units: Units label for the primary y-axis. Use ``"z-score"`` when
-      global z-score normalization was applied before fitting.
-  """
+  """Plot all held-out trials in a compact grid; one PNG per configuration."""
   import matplotlib
-
   matplotlib.use("Agg")
   import matplotlib.pyplot as plt
 
   columns = 3
   n_rows = math.ceil(len(trial_ids) / columns)
   figure, axes = plt.subplots(
-    n_rows,
-    columns,
+    n_rows, columns,
     figsize=(5 * columns, 2.7 * n_rows),
-    sharex=False,
-    sharey=False,
-    squeeze=False,
+    sharex=False, sharey=False, squeeze=False,
   )
-  first_ax2 = None
   for i, (axis, trial_id, measured, result) in enumerate(
     zip(axes.ravel(), trial_ids, measured_trials, results)
   ):
-    measured_time = np.arange(measured.shape[0]) * dt
-
-    # Grey secondary axis: raw unfiltered signal in µV
-    ax2 = None
-    if raw_unfiltered_trials is not None and i < len(raw_unfiltered_trials):
-      ax2 = axis.twinx()
-      raw = raw_unfiltered_trials[i][:measured.shape[0]]
-      ax2.plot(
-        measured_time[:len(raw)], raw,
-        color="grey", linewidth=0.7, alpha=0.4, label="raw (µV)",
-      )
-      ax2.set_ylabel("µV (raw)", fontsize=7, color="grey")
-      ax2.tick_params(axis="y", labelcolor="grey", labelsize=6)
-      ax2.spines["right"].set_color("grey")
-      ax2.spines["right"].set_alpha(0.5)
-      if first_ax2 is None:
-        first_ax2 = ax2
-      # Keep primary axis on top so coloured lines render over the grey trace
-      axis.set_zorder(ax2.get_zorder() + 1)
-      axis.patch.set_visible(False)
-
-    axis.plot(measured_time, measured[:, 0], color="steelblue",
-              label="lowpass (µV)", linewidth=0.9)
-    if result.trajectory is not None and result.trajectory.size:
-      axis.plot(
-        result.time,
-        result.trajectory[:, 0],
-        color="darkorange", linestyle="--", label="simulated",
-        linewidth=0.9,
-      )
-    status = "complete" if result.completed else "failed"
-    axis.set_title(
-      f"Trial {trial_id}: {status}, reached {result.reached_horizon_s:.2f} s",
-      fontsize=9,
-    )
-    axis.set_xlabel("Time from embedded initial state (s)")
-    axis.set_ylabel(f"x0 ({signal_units})", fontsize=8)
-
-    lines, labels = axis.get_legend_handles_labels()
-    if ax2 is not None:
-      lines2, labels2 = ax2.get_legend_handles_labels()
-      axis.legend(lines2 + lines, labels2 + labels, loc="upper right", fontsize=7)
-    else:
-      axis.legend(loc="upper right", fontsize=7)
+    raw = (raw_unfiltered_trials[i] if raw_unfiltered_trials is not None
+           and i < len(raw_unfiltered_trials) else None)
+    _draw_trial_panel(axis, trial_id, measured, result, dt, raw, signal_units,
+                      title_fontsize=9, label_fontsize=8)
 
   for axis in axes.ravel()[len(trial_ids):]:
     axis.set_visible(False)
-  threshold_text = (
-    f", threshold={row['stlsq_threshold']}"
-    if row.get("stlsq_threshold")
-    else ""
-  )
-  figure.suptitle(
-    title
-    or (
-      f"Configuration {row['configuration_index']}: "
-      f"LP={row['lowpass_hz']} Hz, {_model_order_label(row)}, "
-      f"delays={row['n_delays']}, spacing={row['delay_samples']} samples, "
-      f"smoothing={row['smooth_window_samples']} samples{threshold_text}"
-    )
-  )
+  figure.suptitle(title or _config_suptitle(row))
   figure.tight_layout(rect=(0, 0, 1, 0.97))
+  path.parent.mkdir(parents=True, exist_ok=True)
+  figure.savefig(path, dpi=160)
+  plt.close(figure)
+
+
+def plot_trial(
+  path: Path,
+  row: dict[str, str],
+  trial_id: int,
+  measured: np.ndarray,
+  result: SimulationResult,
+  dt: float,
+  raw_unfiltered: np.ndarray | None = None,
+  signal_units: str = LFP_AMPLITUDE_UNIT,
+) -> None:
+  """Plot a single held-out trial at full figure size; one PNG per trial."""
+  import matplotlib
+  matplotlib.use("Agg")
+  import matplotlib.pyplot as plt
+
+  figure, axis = plt.subplots(figsize=(11, 4.5))
+  _draw_trial_panel(axis, trial_id, measured, result, dt, raw_unfiltered,
+                    signal_units, title_fontsize=12, label_fontsize=10)
+  figure.suptitle(_config_suptitle(row), fontsize=10)
+  figure.tight_layout(rect=(0, 0, 1, 0.94))
   path.parent.mkdir(parents=True, exist_ok=True)
   figure.savefig(path, dpi=160)
   plt.close(figure)
@@ -270,6 +291,7 @@ def simulate_configuration(
   trial_timeout_s: float | None,
   test_raw_unfiltered: list[np.ndarray] | None = None,
   signal_units: str = LFP_AMPLITUDE_UNIT,
+  per_trial_figures: bool = False,
 ) -> dict[str, object]:
   """Simulate one stored equation from every held-out initial condition.
 
@@ -283,6 +305,8 @@ def simulate_configuration(
     test_raw_unfiltered: Optional unfiltered (detrended, downsampled) µV traces for
       the grey raw-signal overlay.
     signal_units: Units label for the primary axis in simulation plots.
+    per_trial_figures: When True, save one full-size PNG per trial instead of a
+      compact multi-trial grid.
 
   Returns:
     Configuration-level simulation summary.
@@ -373,17 +397,32 @@ def simulate_configuration(
     offset = (int(row["n_delays"]) - 1) * int(row["delay_samples"])
     raw_unfiltered_x0 = [tr[offset:] for tr in test_raw_unfiltered]
 
-  figure_path = output_dir / "figures" / f"{stem}.png"
-  plot_configuration(
-    figure_path,
-    row=row,
-    trial_ids=test_trial_ids,
-    measured_trials=measured_trials,
-    results=results,
-    dt=dt,
-    raw_unfiltered_trials=raw_unfiltered_x0,
-    signal_units=signal_units,
-  )
+  if per_trial_figures:
+    for trial_id, measured, result, raw in zip(
+      test_trial_ids, measured_trials, results,
+      raw_unfiltered_x0 if raw_unfiltered_x0 is not None else [None] * len(results),
+    ):
+      plot_trial(
+        output_dir / "figures" / f"{stem}_trial_{trial_id:04d}.png",
+        row=row,
+        trial_id=trial_id,
+        measured=measured,
+        result=result,
+        dt=dt,
+        raw_unfiltered=raw,
+        signal_units=signal_units,
+      )
+  else:
+    plot_configuration(
+      output_dir / "figures" / f"{stem}.png",
+      row=row,
+      trial_ids=test_trial_ids,
+      measured_trials=measured_trials,
+      results=results,
+      dt=dt,
+      raw_unfiltered_trials=raw_unfiltered_x0,
+      signal_units=signal_units,
+    )
   model_order_key = "n_frequencies" if _is_fourier_row(row) else "degree"
   return {
     "configuration_index": configuration_index,
@@ -472,6 +511,7 @@ def run(args: argparse.Namespace) -> list[dict[str, object]]:
         trial_timeout_s=args.trial_timeout_s,
         test_raw_unfiltered=traces_unfiltered,
         signal_units=signal_units,
+        per_trial_figures=args.per_trial_figures,
       )
     )
 
@@ -508,6 +548,15 @@ def main() -> None:
     type=int,
     default=None,
     help="Optional computational smoke-test limit; default uses every held-out trial.",
+  )
+  parser.add_argument(
+    "--per-trial-figures",
+    action="store_true",
+    default=False,
+    help=(
+      "Save one full-size PNG per trial instead of a compact multi-trial grid. "
+      "Files are named config_NNNN_trial_TTTT.png."
+    ),
   )
   parser.add_argument(
     "--trial-timeout-s",
