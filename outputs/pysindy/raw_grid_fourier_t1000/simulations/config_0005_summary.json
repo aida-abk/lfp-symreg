@@ -1,0 +1,15 @@
+[
+  {
+    "configuration_index": 5,
+    "lowpass_hz": 35.0,
+    "n_frequencies": 1,
+    "n_delays": 2,
+    "delay_samples": 2,
+    "smooth_window_samples": 5,
+    "test_trials": 9,
+    "successful_simulations": 9,
+    "configuration_runtime_s": 101.8815943133086,
+    "figure": "outputs/pysindy/raw_grid_fourier_t1000/simulations/figures/config_0005.png",
+    "status_csv": "outputs/pysindy/raw_grid_fourier_t1000/simulations/status/config_0005.csv"
+  }
+]

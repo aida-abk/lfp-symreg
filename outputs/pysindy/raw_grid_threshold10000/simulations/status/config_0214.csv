@@ -1,0 +1,10 @@
+configuration_index,test_trial_id,simulation_status,failure_reason,requested_duration_s,reached_duration_s,simulation_runtime_s,rhs_evaluations,simulated_samples,simulated_x0_rms_uv,compared_samples,x0_rmse_uv,trajectory_rmse_uv
+214,4,success,,13.948,13.948,629.6994996666908,39422,3488,17.33033547713544,3488,32.39440423475792,39.46815586595633
+214,1088,failed,integration error: model derivative became non-finite,14.06,7.990779482696198,1327.8012110628188,81449,0,,0,,
+214,622,failed,integration error: model derivative became non-finite,14.056000000000001,13.989857720560067,1629.7303226199,99756,0,,0,,
+214,620,success,,14.056000000000001,14.056000000000001,635.9973669368774,38686,3515,17.560978209255694,3515,43.221215214893114,48.39947785547392
+214,2,failed,integration error: model derivative became non-finite,14.056000000000001,5.795267765424776,1285.9103343840688,77169,0,,0,,
+214,3,failed,integration error: model derivative became non-finite,14.056000000000001,10.110269141597945,1767.8795643169433,88380,0,,0,,
+214,1244,failed,integration error: model derivative became non-finite,13.948,1.174807876930404,1307.4570085462183,64463,0,,0,,
+214,778,failed,integration error: model derivative became non-finite,14.056000000000001,8.48993315010746,1792.1805366817862,85187,0,,0,,
+214,312,failed,integration error: model derivative became non-finite,14.056000000000001,1.2136255475679902,1344.4781840909272,63108,0,,0,,

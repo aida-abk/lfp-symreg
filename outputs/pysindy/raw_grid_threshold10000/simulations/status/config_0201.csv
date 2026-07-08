@@ -1,0 +1,10 @@
+configuration_index,test_trial_id,simulation_status,failure_reason,requested_duration_s,reached_duration_s,simulation_runtime_s,rhs_evaluations,simulated_samples,simulated_x0_rms_uv,compared_samples,x0_rmse_uv,trajectory_rmse_uv
+201,4,failed,integration error: simulation exceeded 1800 wall-clock seconds,14.068,0.36043865538406406,1800.0002696271986,220976,0,,0,,
+201,1088,failed,integration error: simulation exceeded 1800 wall-clock seconds,14.18,0.3694749342688604,1800.0002746470273,214376,0,,0,,
+201,622,failed,integration error: simulation exceeded 1800 wall-clock seconds,14.176,0.33866120419625084,1800.0002740994096,212444,0,,0,,
+201,620,failed,integration error: simulation exceeded 1800 wall-clock seconds,14.176,0.3366879695663273,1800.0002844445407,199678,0,,0,,
+201,2,failed,integration error: simulation exceeded 1800 wall-clock seconds,14.176,0.2913384073035636,1800.000213516876,167176,0,,0,,
+201,3,failed,integration error: simulation exceeded 1800 wall-clock seconds,14.176,0.4493336756661025,1800.0002369061112,167511,0,,0,,
+201,1244,failed,integration error: simulation exceeded 1800 wall-clock seconds,14.068,0.24089472393795613,1800.0002156607807,166835,0,,0,,
+201,778,failed,integration error: simulation exceeded 1800 wall-clock seconds,14.176,0.3697694382222375,1800.0002533886582,231525,0,,0,,
+201,312,failed,integration error: simulation exceeded 1800 wall-clock seconds,14.176,0.48511671257280725,1800.0002547260374,215735,0,,0,,
