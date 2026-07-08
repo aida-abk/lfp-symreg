@@ -1,0 +1,3 @@
+configuration_index,test_trial_id,simulation_status,failure_reason,requested_duration_s,reached_duration_s,simulation_runtime_s,rhs_evaluations,simulated_samples,simulated_x0_rms_uv,compared_samples,x0_rmse_uv,trajectory_rmse_uv
+174,4,success,,14.06,14.06,776.2563476804644,181997,3516,599127220.7149389,3516,599127220.6523172,781781505.2426832
+174,1088,success,,14.172,14.172,770.1828146092594,182637,3544,394975714.5790818,3544,394975714.3280174,517048006.9545551
