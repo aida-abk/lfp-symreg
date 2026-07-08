@@ -7,6 +7,8 @@
 #SBATCH --mem=8G
 #SBATCH --cpus-per-task=1
 #SBATCH --export=ALL
+#SBATCH --mail-user=aida_abkenova@brown.edu
+#SBATCH --mail-type=END,FAIL
 #SBATCH --output=slurm/slurm-lfp-sim-deg57-%A_%a.out
 #SBATCH --error=slurm/slurm-lfp-sim-deg57-%A_%a.err
 

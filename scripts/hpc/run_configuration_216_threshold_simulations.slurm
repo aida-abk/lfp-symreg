@@ -6,6 +6,8 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --output=slurm/slurm-lfp-c216-thresholds-%A_%a.out
 #SBATCH --error=slurm/slurm-lfp-c216-thresholds-%A_%a.err
+#SBATCH --mail-user=aida_abkenova@brown.edu
+#SBATCH --mail-type=END,FAIL
 
 set -euo pipefail
 

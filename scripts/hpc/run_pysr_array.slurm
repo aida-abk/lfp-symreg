@@ -7,6 +7,8 @@
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=4
 #SBATCH --export=ALL
+#SBATCH --mail-user=aida_abkenova@brown.edu
+#SBATCH --mail-type=END,FAIL
 #SBATCH --output=slurm/slurm-lfp-pysr-%A_%a.out
 #SBATCH --error=slurm/slurm-lfp-pysr-%A_%a.err
 

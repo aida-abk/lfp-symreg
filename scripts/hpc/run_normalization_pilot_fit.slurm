@@ -5,6 +5,8 @@
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=1
 #SBATCH --export=ALL
+#SBATCH --mail-user=aida_abkenova@brown.edu
+#SBATCH --mail-type=END,FAIL
 #SBATCH --output=slurm/slurm-lfp-norm-pilot-%A_%a.out
 #SBATCH --error=slurm/slurm-lfp-norm-pilot-%A_%a.err
 
