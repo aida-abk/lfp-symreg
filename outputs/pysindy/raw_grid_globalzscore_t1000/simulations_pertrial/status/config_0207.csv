@@ -1,2 +1,5 @@
 configuration_index,test_trial_id,simulation_status,failure_reason,requested_duration_s,reached_duration_s,simulation_runtime_s,rhs_evaluations,simulated_samples,simulated_x0_rms_uv,compared_samples,x0_rmse_uv,trajectory_rmse_uv
 207,4,failed,integration error: model derivative became non-finite,13.988,0.006762739009257671,98.84710988402367,12700,0,,0,,
+207,1088,failed,integration failed: Unexpected istate in LSODA.,14.1,0.864,1444.5601370315999,187428,217,5680819476.528662,217,5680819470.201489,2323898022.797158
+207,622,failed,integration error: simulation exceeded 1800 wall-clock seconds,14.096,0.003715722422438324,1800.0001376532018,231587,0,,0,,
+207,620,failed,integration failed: Unexpected istate in LSODA.,14.096,0.008,127.02779980562627,15889,3,929.3126997996684,3,910.2613384819864,389.13787795904057
