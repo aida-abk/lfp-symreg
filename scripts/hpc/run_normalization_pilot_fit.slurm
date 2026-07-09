@@ -16,7 +16,7 @@ set -euo pipefail
 export SLURM_EXPORT_ENV=ALL
 cd "$SLURM_SUBMIT_DIR"
 
-PYTHON_BIN="${PYTHON_BIN:-python}"
+PYTHON_BIN="${PYTHON_BIN:-/oscar/data/tdesroch/dbuyukya/symreg_env/bin/python}"
 OUTPUT_DIR="${OUTPUT_DIR:-outputs/pysindy/normalization_pilot_nonorm}"
 SELECTION_CSV="${SELECTION_CSV:-scripts/hpc/normalization_pilot_20.csv}"
 NORMALIZE_COLUMNS="${NORMALIZE_COLUMNS:-false}"

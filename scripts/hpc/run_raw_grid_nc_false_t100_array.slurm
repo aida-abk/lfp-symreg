@@ -26,7 +26,7 @@ export SLURM_EXPORT_ENV=ALL
 
 cd "$SLURM_SUBMIT_DIR"
 
-PYTHON_BIN="${PYTHON_BIN:-python}"
+PYTHON_BIN="${PYTHON_BIN:-/oscar/data/tdesroch/dbuyukya/symreg_env/bin/python}"
 OUTPUT_DIR="${OUTPUT_DIR:-outputs/pysindy/raw_grid_nc_false_t100}"
 STLSQ_THRESHOLD="${STLSQ_THRESHOLD:-100}"
 PARTS_DIR="$OUTPUT_DIR/parts"

@@ -18,7 +18,7 @@ export SLURM_EXPORT_ENV=ALL
 
 cd "$SLURM_SUBMIT_DIR"
 
-PYTHON_BIN="${PYTHON_BIN:-python}"
+PYTHON_BIN="${PYTHON_BIN:-/oscar/data/tdesroch/dbuyukya/symreg_env/bin/python}"
 GRID_CSV="${GRID_CSV:-outputs/pysindy/raw_grid_fourier_t1000/raw_grid_merged.csv}"
 METADATA_JSON="${METADATA_JSON:-outputs/pysindy/raw_grid_fourier_t1000/parts/part_lp35_nfreq1_metadata.json}"
 SIMULATION_OUTPUT_DIR="${SIMULATION_OUTPUT_DIR:-outputs/pysindy/raw_grid_fourier_t1000/simulations}"
