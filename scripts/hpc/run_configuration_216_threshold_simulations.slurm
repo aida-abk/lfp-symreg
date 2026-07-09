@@ -14,7 +14,7 @@ set -euo pipefail
 # Run from the repository submitted to Slurm.
 cd "$SLURM_SUBMIT_DIR"
 
-PYTHON_BIN="${PYTHON_BIN:-python}"
+PYTHON_BIN="${PYTHON_BIN:-/oscar/data/tdesroch/dbuyukya/symreg_env/bin/python}"
 THRESHOLDS=(0.1 1000 10000 30000 100000)
 THRESHOLD="${THRESHOLDS[$SLURM_ARRAY_TASK_ID]}"
 REFIT_CSV="outputs/pysindy/dense_threshold_refits/range_pilot_rank90/parts/config_0216.csv"
