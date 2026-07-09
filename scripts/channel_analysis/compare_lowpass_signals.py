@@ -101,6 +101,93 @@ def plot_filter_comparison(
   plt.close(fig)
 
 
+def plot_filter_overlay(
+  trial_ids: list[int],
+  traces_35hz: list[np.ndarray],
+  traces_80hz: list[np.ndarray],
+  sampling_hz: float,
+  channel: int,
+  seed: int,
+  output_path: Path,
+  columns: int = 3,
+) -> None:
+  """Overlay 35 Hz and 80 Hz low-pass traces for selected trials.
+
+  Args:
+    trial_ids: Original MATLAB trial identifiers.
+    traces_35hz: Traces low-pass filtered at 35 Hz, in microvolts.
+    traces_80hz: Traces low-pass filtered at 80 Hz, in microvolts.
+    sampling_hz: Processed sampling frequency in hertz.
+    channel: Zero-based LFP channel index.
+    seed: Random seed used to select the displayed trials.
+    output_path: Destination PNG path.
+    columns: Number of subplot columns.
+  """
+  import matplotlib
+
+  matplotlib.use("Agg")
+  import matplotlib.pyplot as plt
+
+  if not (len(trial_ids) == len(traces_35hz) == len(traces_80hz)):
+    raise ValueError("Trial IDs and filtered trace lists must have equal lengths.")
+  if not trial_ids:
+    raise ValueError("At least one trial is required for plotting.")
+  if columns < 1:
+    raise ValueError("columns must be at least 1.")
+
+  rows = int(np.ceil(len(trial_ids) / columns))
+  fig, axes = plt.subplots(
+    rows,
+    columns,
+    figsize=(5.2 * columns, 2.55 * rows),
+    sharex=True,
+    sharey=True,
+    squeeze=False,
+  )
+
+  for axis in axes.ravel():
+    axis.set_visible(False)
+
+  for axis, trial_id, trace_35hz, trace_80hz in zip(
+    axes.ravel(), trial_ids, traces_35hz, traces_80hz
+  ):
+    n_samples = min(trace_35hz.size, trace_80hz.size)
+    time_s = np.arange(n_samples) / sampling_hz
+    axis.plot(
+      time_s,
+      trace_80hz[:n_samples],
+      color="#174ea6",
+      linewidth=1.0,
+      alpha=0.9,
+      label="80 Hz",
+    )
+    axis.plot(
+      time_s,
+      trace_35hz[:n_samples],
+      color="#d62728",
+      linewidth=1.0,
+      alpha=0.82,
+      label="35 Hz",
+    )
+    axis.set_title(f"Trial {trial_id}", fontsize=9)
+    axis.grid(alpha=0.18, linewidth=0.5)
+    axis.set_visible(True)
+
+  axes[0, 0].legend(loc="upper right", fontsize=8, frameon=False)
+  fig.suptitle(
+    f"Valid Fixation Trials, Channel {channel}: "
+    f"35 Hz and 80 Hz Low-Pass Overlay (seed {seed})",
+    fontsize=14,
+  )
+  fig.supxlabel("Time (s)")
+  fig.supylabel(LFP_AMPLITUDE_UNIT)
+  fig.tight_layout(rect=(0.02, 0.03, 1, 0.97))
+
+  output_path.parent.mkdir(parents=True, exist_ok=True)
+  fig.savefig(output_path, dpi=180)
+  plt.close(fig)
+
+
 def main() -> None:
   """Prepare filtered fixation traces and save their visual comparison."""
   parser = argparse.ArgumentParser(
@@ -111,6 +198,7 @@ def main() -> None:
   parser.add_argument("--downsample", type=int, default=2)
   parser.add_argument("--max-trials", type=int, default=4)
   parser.add_argument("--seed", type=int, default=0)
+  parser.add_argument("--mode", choices=("side-by-side", "overlay"), default="side-by-side")
   parser.add_argument(
     "--output",
     type=Path,
@@ -148,15 +236,26 @@ def main() -> None:
   output_path = args.output or Path(
     f"outputs/channel_analysis/fixation_ch{args.channel}_random_lowpass35_vs80.png"
   )
-  plot_filter_comparison(
-    trial_ids,
-    traces_35hz,
-    traces_80hz,
-    sampling_hz=data.fs / args.downsample,
-    channel=args.channel,
-    seed=args.seed,
-    output_path=output_path,
-  )
+  if args.mode == "overlay":
+    plot_filter_overlay(
+      trial_ids,
+      traces_35hz,
+      traces_80hz,
+      sampling_hz=data.fs / args.downsample,
+      channel=args.channel,
+      seed=args.seed,
+      output_path=output_path,
+    )
+  else:
+    plot_filter_comparison(
+      trial_ids,
+      traces_35hz,
+      traces_80hz,
+      sampling_hz=data.fs / args.downsample,
+      channel=args.channel,
+      seed=args.seed,
+      output_path=output_path,
+    )
   print(f"valid fixation trials plotted: {trial_ids}")
   print(f"processed sampling rate: {data.fs / args.downsample:g} Hz")
   print(f"saved: {output_path}")
