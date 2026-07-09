@@ -1,0 +1,64 @@
+#!/bin/bash
+#SBATCH --job-name=lfp_nc_false_gsz_t1
+#SBATCH --partition=batch
+#SBATCH --nodes=1
+#SBATCH --array=0-5
+#SBATCH --time=24:00:00
+#SBATCH --mem=16G
+#SBATCH --cpus-per-task=1
+#SBATCH --export=ALL
+#SBATCH --mail-user=aida_abkenova@brown.edu
+#SBATCH --mail-type=END,FAIL
+#SBATCH --output=slurm/slurm-lfp-nc-false-gsz-t1-%A_%a.out
+#SBATCH --error=slurm/slurm-lfp-nc-false-gsz-t1-%A_%a.err
+
+# 216-config sweep with normalize_columns=False, global z-score, threshold=1.
+# With z-scored signal, state variables are O(1) so coefficients are naturally
+# O(1); threshold=1 is the principled cutoff for unnormalized columns.
+# Compare directly against gsz sweeps (same signal, normalize_columns=True).
+# Merge after all 6 tasks complete:
+#   merge_raw_grid.py --input-dir outputs/pysindy/raw_grid_nc_false_gsz_t1/parts
+#                     --output-csv outputs/pysindy/raw_grid_nc_false_gsz_t1/raw_grid_merged.csv
+#                     --expected 216
+
+set -euo pipefail
+
+export SLURM_EXPORT_ENV=ALL
+
+cd "$SLURM_SUBMIT_DIR"
+
+PYTHON_BIN="${PYTHON_BIN:-python}"
+OUTPUT_DIR="${OUTPUT_DIR:-outputs/pysindy/raw_grid_nc_false_gsz_t1}"
+STLSQ_THRESHOLD="${STLSQ_THRESHOLD:-1}"
+PARTS_DIR="$OUTPUT_DIR/parts"
+mkdir -p "$PARTS_DIR"
+
+# Six tasks: three degrees (1, 2, 3) × two low-pass cutoffs (35, 80 Hz).
+DEGREES=(1 2 3)
+LOWPASSES=(35 80)
+DEGREE_INDEX=$((SLURM_ARRAY_TASK_ID / 2))
+LOWPASS_INDEX=$((SLURM_ARRAY_TASK_ID % 2))
+DEGREE="${DEGREES[$DEGREE_INDEX]}"
+LOWPASS="${LOWPASSES[$LOWPASS_INDEX]}"
+PART_NAME="part_lp${LOWPASS}_degree${DEGREE}"
+
+export OMP_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+
+"$PYTHON_BIN" scripts/pysindy/raw_grid_sweep.py \
+  --trial-type fixation \
+  --channel 0 \
+  --test-fraction 0.25 \
+  --seed 0 \
+  --downsample 2 \
+  --lowpass-list "$LOWPASS" \
+  --degree-list "$DEGREE" \
+  --n-delays-list 2,4,6,8 \
+  --delay-list 1,2,5 \
+  --smooth-window-list 0,5,9 \
+  --threshold "$STLSQ_THRESHOLD" \
+  --no-normalize-columns \
+  --global-zscore \
+  --out-csv "$PARTS_DIR/$PART_NAME.csv" \
+  --equations-out "$PARTS_DIR/${PART_NAME}_equations.txt" \
+  --metadata-out "$PARTS_DIR/${PART_NAME}_metadata.json"
