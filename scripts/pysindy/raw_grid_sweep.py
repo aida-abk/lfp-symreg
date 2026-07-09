@@ -47,7 +47,10 @@ FIELDNAMES = [
   "lowpass_hz",
   "global_zscore_mean",
   "global_zscore_std",
+  "optimizer",
   "stlsq_threshold",
+  "alpha",
+  "nu",
   "degree",
   "n_delays",
   "delay_samples",
@@ -150,9 +153,10 @@ def build_metadata(
       "test_trial_ids": test_ids,
     },
     "fixed_model_settings": {
-      "optimizer": "STLSQ",
+      "optimizer": args.optimizer,
       "threshold": args.threshold,
-      "alpha": 0.05,
+      "alpha": args.alpha_list if args.optimizer == "stlsq" else None,
+      "nu": args.nu_list if args.optimizer == "sr3" else None,
       "normalize_columns": args.normalize_columns,
       "savgol_polyorder": 3,
       "simulation_performed": False,
@@ -164,6 +168,8 @@ def build_metadata(
       "n_delays": n_delay_values,
       "delay_samples": delay_values,
       "smooth_window_samples": smooth_values,
+      "alpha": args.alpha_list if args.optimizer == "stlsq" else [],
+      "nu": args.nu_list if args.optimizer == "sr3" else [],
     },
     "expected_configurations": (
       len(lowpass_values)
@@ -171,6 +177,7 @@ def build_metadata(
       * len(n_delay_values)
       * len(delay_values)
       * len(smooth_values)
+      * (len(args.alpha_list) if args.optimizer == "stlsq" else len(args.nu_list))
     ),
   }
 
@@ -230,15 +237,19 @@ def run_raw_grid(args: argparse.Namespace) -> list[dict[str, object]]:
   rows = []
   total = int(metadata["expected_configurations"])
   configuration_index = 0
+  optimizer_param_values = args.alpha_list if args.optimizer == "stlsq" else args.nu_list
   for lowpass_hz in lowpass_values:
     train_raw = train_raw_by_lowpass[lowpass_hz]
     lp_stats = global_stats.get(lowpass_hz)
-    for degree, n_delays, delay, smooth_window in itertools.product(
+    for degree, n_delays, delay, smooth_window, opt_param in itertools.product(
       degree_values,
       n_delay_values,
       delay_values,
       smooth_values,
+      optimizer_param_values,
     ):
+      alpha = opt_param if args.optimizer == "stlsq" else 0.05
+      nu = opt_param if args.optimizer == "sr3" else 1.0
       configuration_index += 1
       started = time.perf_counter()
       possible_terms = maximum_polynomial_terms(n_delays, degree)
@@ -247,7 +258,10 @@ def run_raw_grid(args: argparse.Namespace) -> list[dict[str, object]]:
         "lowpass_hz": lowpass_hz if lowpass_hz is not None else "none",
         "global_zscore_mean": lp_stats.mean if lp_stats is not None else "",
         "global_zscore_std": lp_stats.std if lp_stats is not None else "",
+        "optimizer": args.optimizer,
         "stlsq_threshold": args.threshold,
+        "alpha": alpha,
+        "nu": nu,
         "degree": degree,
         "n_delays": n_delays,
         "delay_samples": delay,
@@ -278,10 +292,12 @@ def run_raw_grid(args: argparse.Namespace) -> list[dict[str, object]]:
           config=SINDyConfig(
             degree=degree,
             threshold=args.threshold,
-            alpha=0.05,
+            alpha=alpha,
             normalize_columns=args.normalize_columns,
             smooth_window=smooth_window,
             smoothing_polyorder=3,
+            optimizer=args.optimizer,
+            nu=nu,
           ),
         )
         row["fit_status"] = "success"
@@ -300,8 +316,8 @@ def run_raw_grid(args: argparse.Namespace) -> list[dict[str, object]]:
       print(
         f"[{configuration_index}/{total}] status={row['fit_status']} "
         f"lowpass={row['lowpass_hz']} degree={degree} delays={n_delays} "
-        f"delay={delay} smooth={smooth_window} terms={row['nonzero_terms']} "
-        f"runtime={float(row['fit_runtime_s']):.1f}s",
+        f"delay={delay} smooth={smooth_window} alpha={alpha} nu={nu} "
+        f"terms={row['nonzero_terms']} runtime={float(row['fit_runtime_s']):.1f}s",
         flush=True,
       )
 
@@ -348,12 +364,40 @@ def main() -> None:
       "and applied identically to every trial. Separate from --normalize-columns."
     ),
   )
+  parser.add_argument(
+    "--optimizer",
+    choices=("stlsq", "sr3"),
+    default="stlsq",
+    help="Sparse regression optimizer. 'stlsq' (default) or 'sr3'.",
+  )
+  parser.add_argument(
+    "--alpha-list",
+    default="0.05",
+    help=(
+      "Comma-separated STLSQ ridge regularization values to sweep. "
+      "Ignored when --optimizer=sr3."
+    ),
+  )
+  parser.add_argument(
+    "--nu-list",
+    default="1.0",
+    help=(
+      "Comma-separated SR3 relaxation weights to sweep. "
+      "Ignored when --optimizer=stlsq."
+    ),
+  )
   parser.add_argument("--out-csv", type=Path, default=DEFAULT_RESULTS)
   parser.add_argument("--equations-out", type=Path, default=DEFAULT_EQUATIONS)
   parser.add_argument("--metadata-out", type=Path, default=DEFAULT_METADATA)
   args = parser.parse_args()
+  args.alpha_list = [float(v) for v in args.alpha_list.split(",") if v.strip()]
+  args.nu_list = [float(v) for v in args.nu_list.split(",") if v.strip()]
   if args.threshold < 0:
     parser.error("--threshold must be nonnegative.")
+  if not args.alpha_list:
+    parser.error("--alpha-list must contain at least one value.")
+  if not args.nu_list:
+    parser.error("--nu-list must contain at least one value.")
 
   rows = run_raw_grid(args)
   successful = sum(row["fit_status"] == "success" for row in rows)
