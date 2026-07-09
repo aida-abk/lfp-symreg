@@ -1,5 +1,5 @@
 {
-  "created_utc": "2026-07-09T04:11:25.023815+00:00",
+  "created_utc": "2026-07-09T16:34:09.985652+00:00",
   "command": [
     "scripts/pysindy/raw_grid_sweep.py",
     "--trial-type",
@@ -36,7 +36,7 @@
     "--metadata-out",
     "outputs/pysindy/raw_grid_sr3_sweep/parts/part_lp80_degree1_metadata.json"
   ],
-  "slurm_job_id": "3766628",
+  "slurm_job_id": "3793859",
   "slurm_array_task_id": "1",
   "source": "lfp",
   "mat_file": "/oscar/data/tdesroch/dbuyukya/AidaCarneyProject/raw_data/trialdata_v03_buzz_20231106_pre-0.100_post0.100.mat",
