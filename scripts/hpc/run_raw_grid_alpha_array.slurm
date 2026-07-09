@@ -18,8 +18,8 @@
 # Merge after all 6 tasks complete:
 #   merge_raw_grid.py --input-dir outputs/pysindy/raw_grid_alpha_sweep/parts
 #                     --output-csv outputs/pysindy/raw_grid_alpha_sweep/raw_grid_merged.csv
-#                     --expected 7776
-# (1296 per part × 6 parts)
+#                     --expected 1296
+# (216 per part × 6 parts)
 
 set -euo pipefail
 
