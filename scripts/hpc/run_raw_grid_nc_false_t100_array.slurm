@@ -1,16 +1,24 @@
 #!/bin/bash
-#SBATCH --job-name=lfp_raw_grid_deg57
+#SBATCH --job-name=lfp_nc_false_t100
 #SBATCH --partition=batch
 #SBATCH --nodes=1
-#SBATCH --array=0-3
+#SBATCH --array=0-5
 #SBATCH --time=24:00:00
 #SBATCH --mem=16G
 #SBATCH --cpus-per-task=1
 #SBATCH --export=ALL
 #SBATCH --mail-user=aida_abkenova@brown.edu
 #SBATCH --mail-type=END,FAIL
-#SBATCH --output=slurm/slurm-lfp-raw-grid-deg57-%A_%a.out
-#SBATCH --error=slurm/slurm-lfp-raw-grid-deg57-%A_%a.err
+#SBATCH --output=slurm/slurm-lfp-nc-false-t100-%A_%a.out
+#SBATCH --error=slurm/slurm-lfp-nc-false-t100-%A_%a.err
+
+# 216-config sweep with normalize_columns=False and threshold=100.
+# Signal is NOT z-scored (normalize="none", the raw_grid_sweep.py default).
+# Investigating threshold sensitivity without column normalisation.
+# Merge after all 6 tasks complete:
+#   merge_raw_grid.py --input-dir outputs/pysindy/raw_grid_nc_false_t100/parts
+#                     --output-csv outputs/pysindy/raw_grid_nc_false_t100/raw_grid_merged.csv
+#                     --expected 216
 
 set -euo pipefail
 
@@ -19,14 +27,13 @@ export SLURM_EXPORT_ENV=ALL
 cd "$SLURM_SUBMIT_DIR"
 
 PYTHON_BIN="${PYTHON_BIN:-python}"
-OUTPUT_DIR="${OUTPUT_DIR:-outputs/pysindy/raw_grid_deg57_t1000}"
-STLSQ_THRESHOLD="${STLSQ_THRESHOLD:-1000}"
-NORMALIZE_COLUMNS="${NORMALIZE_COLUMNS:-true}"
+OUTPUT_DIR="${OUTPUT_DIR:-outputs/pysindy/raw_grid_nc_false_t100}"
+STLSQ_THRESHOLD="${STLSQ_THRESHOLD:-100}"
 PARTS_DIR="$OUTPUT_DIR/parts"
 mkdir -p "$PARTS_DIR"
 
-# Four tasks: two degrees (5, 7) crossed with two low-pass cutoffs (35, 80 Hz).
-DEGREES=(5 7)
+# Six tasks: three degrees (1, 2, 3) × two low-pass cutoffs (35, 80 Hz).
+DEGREES=(1 2 3)
 LOWPASSES=(35 80)
 DEGREE_INDEX=$((SLURM_ARRAY_TASK_ID / 2))
 LOWPASS_INDEX=$((SLURM_ARRAY_TASK_ID % 2))
@@ -36,16 +43,6 @@ PART_NAME="part_lp${LOWPASS}_degree${DEGREE}"
 
 export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
-
-EXTRA_ARGS=()
-if [[ "$NORMALIZE_COLUMNS" == "true" ]]; then
-  EXTRA_ARGS+=(--normalize-columns)
-elif [[ "$NORMALIZE_COLUMNS" == "false" ]]; then
-  EXTRA_ARGS+=(--no-normalize-columns)
-else
-  echo "NORMALIZE_COLUMNS must be true or false, got: $NORMALIZE_COLUMNS" >&2
-  exit 2
-fi
 
 "$PYTHON_BIN" scripts/pysindy/raw_grid_sweep.py \
   --trial-type fixation \
@@ -59,7 +56,7 @@ fi
   --delay-list 1,2,5 \
   --smooth-window-list 0,5,9 \
   --threshold "$STLSQ_THRESHOLD" \
-  "${EXTRA_ARGS[@]}" \
+  --no-normalize-columns \
   --out-csv "$PARTS_DIR/$PART_NAME.csv" \
   --equations-out "$PARTS_DIR/${PART_NAME}_equations.txt" \
   --metadata-out "$PARTS_DIR/${PART_NAME}_metadata.json"
