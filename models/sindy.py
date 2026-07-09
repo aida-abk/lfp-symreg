@@ -170,15 +170,17 @@ class SINDyConfig:
 
   Attributes:
     degree: Maximum polynomial degree in the feature library. Unitless.
-    threshold: STLSQ coefficient-removal threshold. Coefficient-scale units;
-      fixed at PySINDy's default of 0.1 in the active exploration pipeline.
-    alpha: STLSQ ridge regularization strength. Its numerical interpretation
-      depends on feature scaling; this records PySINDy's current default of 0.05.
+    threshold: Coefficient-removal threshold applied by the optimizer.
+    alpha: STLSQ ridge regularization strength. Ignored when optimizer="sr3".
     normalize_columns: Whether STLSQ normalizes library columns internally
       before thresholding and rescales final coefficients to original units.
+      Ignored when optimizer="sr3".
     smooth_window: Optional Savitzky-Golay smoothing window in samples. A value
       of zero uses PySINDy's default finite-difference derivative.
     smoothing_polyorder: Polynomial order used by Savitzky-Golay smoothing.
+    optimizer: Sparse regression optimizer. "stlsq" (default) or "sr3".
+    nu: SR3 relaxation weight. Smaller values enforce sparsity more strongly.
+      Ignored when optimizer="stlsq".
   """
 
   degree: int
@@ -187,6 +189,8 @@ class SINDyConfig:
   normalize_columns: bool = False
   smooth_window: int = 0
   smoothing_polyorder: int = 3
+  optimizer: str = "stlsq"
+  nu: float = 1.0
 
 
 def delay_embed_trace(trace: np.ndarray, n_delays: int, delay: int) -> np.ndarray:
@@ -282,12 +286,21 @@ def fit_sindy_model(trajectories: list[np.ndarray], dt: float, config: SINDyConf
       }
     )
 
-  model = ps.SINDy(
-    optimizer=ps.STLSQ(
-      threshold=config.threshold, 
-      alpha=config.alpha, # add ridge regularization strength
+  if config.optimizer == "sr3":
+    opt = ps.SR3(
+      threshold=config.threshold,
+      nu=config.nu,
+      thresholder="l0",
+    )
+  else:
+    opt = ps.STLSQ(
+      threshold=config.threshold,
+      alpha=config.alpha,
       normalize_columns=config.normalize_columns,
-    ),
+    )
+
+  model = ps.SINDy(
+    optimizer=opt,
     feature_library=ps.PolynomialLibrary(degree=config.degree),
     **kwargs,
   )

@@ -21,7 +21,7 @@ DERIVED_FIELDS = ["possible_terms", "term_utilization_percent"]
 
 def configuration_key(
     row: dict[str, str], degree_field: str = "degree"
-) -> tuple[float, int, int, int, int]:
+) -> tuple:
   """Return a sortable identity for one raw-grid configuration."""
   return (
     float(row["lowpass_hz"]),
@@ -29,6 +29,9 @@ def configuration_key(
     int(row["n_delays"]),
     int(row["delay_samples"]),
     int(row["smooth_window_samples"]),
+    row.get("optimizer", "stlsq"),
+    float(row["alpha"]) if row.get("alpha") not in ("", None) else 0.05,
+    float(row["nu"]) if row.get("nu") not in ("", None) else 1.0,
   )
 
 
