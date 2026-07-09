@@ -1,0 +1,107 @@
+Configuration 1: lowpass=80.0 Hz, degree=3, n_delays=2, delay=1 samples, smooth=0 samples
+(x0)' =  197.017 x0 + -206.053 x1 | (x1)' =  206.112 x0 + -197.080 x1
+
+Configuration 2: lowpass=80.0 Hz, degree=3, n_delays=2, delay=1 samples, smooth=5 samples
+(x0)' =  211.940 x0 + -220.047 x1 | (x1)' =  220.119 x0 + -212.016 x1
+
+Configuration 3: lowpass=80.0 Hz, degree=3, n_delays=2, delay=1 samples, smooth=9 samples
+(x0)' =  231.083 x0 + -236.971 x1 | (x1)' =  236.915 x0 + -231.032 x1
+
+Configuration 4: lowpass=80.0 Hz, degree=3, n_delays=2, delay=2 samples, smooth=0 samples
+(x0)' =  0.000 | (x1)' =  0.000
+
+Configuration 5: lowpass=80.0 Hz, degree=3, n_delays=2, delay=2 samples, smooth=5 samples
+(x0)' =  0.000 | (x1)' =  0.000
+
+Configuration 6: lowpass=80.0 Hz, degree=3, n_delays=2, delay=2 samples, smooth=9 samples
+(x0)' =  105.293 x0 + -116.073 x1 | (x1)' =  116.010 x0 + -105.226 x1
+
+Configuration 7: lowpass=80.0 Hz, degree=3, n_delays=2, delay=5 samples, smooth=0 samples
+(x0)' =  0.000 | (x1)' =  0.000
+
+Configuration 8: lowpass=80.0 Hz, degree=3, n_delays=2, delay=5 samples, smooth=5 samples
+(x0)' =  0.000 | (x1)' =  0.000
+
+Configuration 9: lowpass=80.0 Hz, degree=3, n_delays=2, delay=5 samples, smooth=9 samples
+(x0)' =  0.000 | (x1)' =  0.000
+
+Configuration 10: lowpass=80.0 Hz, degree=3, n_delays=4, delay=1 samples, smooth=0 samples
+(x0)' =  197.064 x0 + -206.090 x1 | (x1)' =  125.028 x0 + -125.035 x2 | (x2)' =  125.014 x1 + -125.017 x3 | (x3)' =  206.136 x2 + -197.097 x3
+
+Configuration 11: lowpass=80.0 Hz, degree=3, n_delays=4, delay=1 samples, smooth=5 samples
+(x0)' =  212.008 x0 + -220.104 x1 | (x1)' =  125.035 x0 + -125.043 x2 | (x2)' =  125.017 x1 + -125.019 x3 | (x3)' =  220.138 x2 + -212.026 x3
+
+Configuration 12: lowpass=80.0 Hz, degree=3, n_delays=4, delay=1 samples, smooth=9 samples
+(x0)' =  231.292 x0 + -237.157 x1 | (x1)' =  125.013 x0 + -125.006 x2 | (x2)' =  124.982 x1 + -124.982 x3 | (x3)' =  236.970 x2 + -231.095 x3
+
+Configuration 13: lowpass=80.0 Hz, degree=3, n_delays=4, delay=2 samples, smooth=0 samples
+(x0)' =  0.000 | (x1)' =  0.000 | (x2)' =  0.000 | (x3)' =  0.000
+
+Configuration 14: lowpass=80.0 Hz, degree=3, n_delays=4, delay=2 samples, smooth=5 samples
+(x0)' =  0.000 | (x1)' =  0.000 | (x2)' =  0.000 | (x3)' =  0.000
+
+Configuration 15: lowpass=80.0 Hz, degree=3, n_delays=4, delay=2 samples, smooth=9 samples
+(x0)' =  105.358 x0 + -116.129 x1 | (x1)' =  0.000 | (x2)' =  0.000 | (x3)' =  116.039 x2 + -105.270 x3
+
+Configuration 16: lowpass=80.0 Hz, degree=3, n_delays=4, delay=5 samples, smooth=0 samples
+(x0)' =  0.000 | (x1)' =  0.000 | (x2)' =  0.000 | (x3)' =  0.000
+
+Configuration 17: lowpass=80.0 Hz, degree=3, n_delays=4, delay=5 samples, smooth=5 samples
+(x0)' =  0.000 | (x1)' =  0.000 | (x2)' =  0.000 | (x3)' =  0.000
+
+Configuration 18: lowpass=80.0 Hz, degree=3, n_delays=4, delay=5 samples, smooth=9 samples
+(x0)' =  0.000 | (x1)' =  0.000 | (x2)' =  0.000 | (x3)' =  0.000
+
+Configuration 19: lowpass=80.0 Hz, degree=3, n_delays=6, delay=1 samples, smooth=0 samples
+(x0)' =  197.041 x0 + -206.068 x1 | (x1)' =  125.022 x0 + -125.027 x2 | (x2)' =  125.032 x1 + -125.029 x3 | (x3)' =  125.044 x2 + -125.042 x4 | (x4)' =  125.019 x3 + -125.021 x5 | (x5)' =  206.115 x4 + -197.093 x5
+
+Configuration 20: lowpass=80.0 Hz, degree=3, n_delays=6, delay=1 samples, smooth=5 samples
+(x0)' =  211.980 x0 + -220.075 x1 | (x1)' =  125.028 x0 + -125.034 x2 | (x2)' =  125.040 x1 + -125.037 x3 | (x3)' =  125.055 x2 + -125.050 x4 | (x4)' =  125.018 x3 + -125.022 x5 | (x5)' =  220.106 x4 + -212.011 x5
+
+Configuration 21: lowpass=80.0 Hz, degree=3, n_delays=6, delay=1 samples, smooth=9 samples
+(x0)' =  231.227 x0 + -237.102 x1 | (x1)' =  124.948 x0 + -124.939 x2 | (x2)' =  125.037 x1 + -125.019 x3 | (x3)' =  125.012 x2 + -125.008 x4 | (x4)' =  124.986 x3 + -125.000 x5 | (x5)' =  237.115 x4 + -231.247 x5
+
+Configuration 22: lowpass=80.0 Hz, degree=3, n_delays=6, delay=2 samples, smooth=0 samples
+(x0)' =  0.000 | (x1)' =  0.000 | (x2)' =  0.000 | (x3)' =  0.000 | (x4)' =  0.000 | (x5)' =  0.000
+
+Configuration 23: lowpass=80.0 Hz, degree=3, n_delays=6, delay=2 samples, smooth=5 samples
+(x0)' =  0.000 | (x1)' =  0.000 | (x2)' =  0.000 | (x3)' =  0.000 | (x4)' =  0.000 | (x5)' =  0.000
+
+Configuration 24: lowpass=80.0 Hz, degree=3, n_delays=6, delay=2 samples, smooth=9 samples
+(x0)' =  105.357 x0 + -116.121 x1 | (x1)' =  0.000 | (x2)' =  0.000 | (x3)' =  0.000 | (x4)' =  0.000 | (x5)' =  116.037 x4 + -105.277 x5
+
+Configuration 25: lowpass=80.0 Hz, degree=3, n_delays=6, delay=5 samples, smooth=0 samples
+(x0)' =  0.000 | (x1)' =  0.000 | (x2)' =  0.000 | (x3)' =  0.000 | (x4)' =  0.000 | (x5)' =  0.000
+
+Configuration 26: lowpass=80.0 Hz, degree=3, n_delays=6, delay=5 samples, smooth=5 samples
+(x0)' =  0.000 | (x1)' =  0.000 | (x2)' =  0.000 | (x3)' =  0.000 | (x4)' =  0.000 | (x5)' =  0.000
+
+Configuration 27: lowpass=80.0 Hz, degree=3, n_delays=6, delay=5 samples, smooth=9 samples
+(x0)' =  0.000 | (x1)' =  0.000 | (x2)' =  0.000 | (x3)' =  0.000 | (x4)' =  0.000 | (x5)' =  0.000
+
+Configuration 28: lowpass=80.0 Hz, degree=3, n_delays=8, delay=1 samples, smooth=0 samples
+(x0)' =  197.048 x0 + -206.078 x1 | (x1)' =  125.029 x0 + -125.031 x2 | (x2)' =  125.022 x1 + -125.020 x3 | (x3)' =  125.039 x2 + -125.034 x4 | (x4)' =  125.037 x3 + -125.033 x5 | (x5)' =  125.032 x4 + -125.040 x6 | (x6)' =  125.016 x5 + -125.022 x7 | (x7)' =  206.103 x6 + -197.074 x7
+
+Configuration 29: lowpass=80.0 Hz, degree=3, n_delays=8, delay=1 samples, smooth=5 samples
+(x0)' =  211.986 x0 + -220.086 x1 | (x1)' =  125.037 x0 + -125.040 x2 | (x2)' =  125.025 x1 + -125.022 x3 | (x3)' =  125.048 x2 + -125.041 x4 | (x4)' =  125.041 x3 + -125.039 x5 | (x5)' =  125.037 x4 + -125.045 x6 | (x6)' =  125.021 x5 + -125.028 x7 | (x7)' =  220.098 x6 + -211.995 x7
+
+Configuration 30: lowpass=80.0 Hz, degree=3, n_delays=8, delay=1 samples, smooth=9 samples
+(x0)' =  231.257 x0 + -237.125 x1 | (x1)' =  125.003 x0 + -124.997 x2 | (x2)' =  125.022 x1 + -125.014 x3 | (x3)' =  124.947 x2 + -124.941 x4 | (x4)' =  125.041 x3 + -125.037 x5 | (x5)' =  125.065 x4 + -125.072 x6 | (x6)' =  124.918 x5 + -124.924 x7 | (x7)' =  236.965 x6 + -231.084 x7
+
+Configuration 31: lowpass=80.0 Hz, degree=3, n_delays=8, delay=2 samples, smooth=0 samples
+(x0)' =  0.000 | (x1)' =  0.000 | (x2)' =  0.000 | (x3)' =  0.000 | (x4)' =  0.000 | (x5)' =  0.000 | (x6)' =  0.000 | (x7)' =  0.000
+
+Configuration 32: lowpass=80.0 Hz, degree=3, n_delays=8, delay=2 samples, smooth=5 samples
+(x0)' =  0.000 | (x1)' =  0.000 | (x2)' =  0.000 | (x3)' =  0.000 | (x4)' =  0.000 | (x5)' =  0.000 | (x6)' =  0.000 | (x7)' =  0.000
+
+Configuration 33: lowpass=80.0 Hz, degree=3, n_delays=8, delay=2 samples, smooth=9 samples
+(x0)' =  105.334 x0 + -116.092 x1 | (x1)' =  0.000 | (x2)' =  0.000 | (x3)' =  0.000 | (x4)' =  0.000 | (x5)' =  0.000 | (x6)' =  0.000 | (x7)' =  116.079 x6 + -105.320 x7
+
+Configuration 34: lowpass=80.0 Hz, degree=3, n_delays=8, delay=5 samples, smooth=0 samples
+(x0)' =  0.000 | (x1)' =  0.000 | (x2)' =  0.000 | (x3)' =  0.000 | (x4)' =  0.000 | (x5)' =  0.000 | (x6)' =  0.000 | (x7)' =  0.000
+
+Configuration 35: lowpass=80.0 Hz, degree=3, n_delays=8, delay=5 samples, smooth=5 samples
+(x0)' =  0.000 | (x1)' =  0.000 | (x2)' =  0.000 | (x3)' =  0.000 | (x4)' =  0.000 | (x5)' =  0.000 | (x6)' =  0.000 | (x7)' =  0.000
+
+Configuration 36: lowpass=80.0 Hz, degree=3, n_delays=8, delay=5 samples, smooth=9 samples
+(x0)' =  0.000 | (x1)' =  0.000 | (x2)' =  0.000 | (x3)' =  0.000 | (x4)' =  0.000 | (x5)' =  0.000 | (x6)' =  0.000 | (x7)' =  0.000

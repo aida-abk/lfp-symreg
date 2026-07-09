@@ -1,0 +1,3 @@
+configuration_index,test_trial_id,simulation_status,failure_reason,requested_duration_s,reached_duration_s,simulation_runtime_s,rhs_evaluations,simulated_samples,simulated_x0_rms_uv,compared_samples,x0_rmse_uv,trajectory_rmse_uv
+215,4,failed,integration failed: Unexpected istate in LSODA.,13.948,0.004,200.69320394657552,12667,2,37.72528909793581,2,21.103606224886562,18.786026593785593
+215,1088,failed,integration error: simulation exceeded 1800 wall-clock seconds,14.06,0.00271399252241975,1800.0001751668751,116739,0,,0,,
