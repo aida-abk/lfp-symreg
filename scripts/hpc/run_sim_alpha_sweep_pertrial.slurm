@@ -2,7 +2,7 @@
 #SBATCH --job-name=lfp_sim_alpha
 #SBATCH --partition=batch
 #SBATCH --nodes=1
-#SBATCH --array=1-7776%32
+#SBATCH --array=1-1296%32
 #SBATCH --time=04:00:00
 #SBATCH --mem=4G
 #SBATCH --cpus-per-task=1
