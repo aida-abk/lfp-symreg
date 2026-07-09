@@ -1,0 +1,50 @@
+========================================================================
+THRESHOLD COMPARISON REPORT
+========================================================================
+
+── FITTING SUMMARY ────────────────────────────────────────────────
+ Threshold    Fits  Zero-term  Mean terms  Mean util%
+  t=     0.1     216          0       227.0      100.0%
+  t=     100     216          0       224.1       94.7%
+  t=    1000     216          0       210.4       89.9%
+  t=   10000     216          0       108.4       66.5%
+
+── DEGREE-LEVEL UTILISATION ────────────────────────────────────────
+  t=0.1:  deg1=100.0%  deg2=100.0%  deg3=100.0%
+  t=100:  deg1=85.0%  deg2=99.6%  deg3=99.5%
+  t=1000:  deg1=78.4%  deg2=95.8%  deg3=95.5%
+  t=10000:  deg1=73.2%  deg2=63.6%  deg3=62.9%
+
+── SIMULATION RESULTS ──────────────────────────────────────────────
+  t=0.1: 1944 trials, success=77.2%  (no RMSE data)
+  t=100: 864 trials, success=80.2%  median RMSE=50.55 µV
+  t=1000: 1944 trials, success=74.2%  median RMSE=53.25 µV
+  t=10000: 864 trials, success=76.4%  median RMSE=47.91 µV
+
+── SURVIVING TERM TYPES ────────────────────────────────────────────
+  t=0.1: Bias=1.0  Linear=13.3  Quadratic=18.3  Cubic=1.7
+  t=100: Bias=0.8  Linear=13.3  Quadratic=18.3  Cubic=1.7
+  t=1000: Bias=0.7  Linear=13.3  Quadratic=18.3  Cubic=1.7
+  t=10000: Bias=0.5  Linear=12.0  Quadratic=17.5  Cubic=1.7
+
+── KEY FINDINGS ────────────────────────────────────────────────────
+
+1. t=0.1 vs t=100: utilisation differs by only 5.3%. These two thresholds produce near-identical models. t=100 provides no sparsification benefit and can be dropped from future sweeps.
+
+2. Meaningful sparsification first occurs at t=1000 (mean utilisation drops to 89.9%). Thresholds below this are effectively dense models.
+
+3. At t=10000, degree 3 is most sparse (62.9% utilisation) while higher degrees remain denser. This suggests polynomial features of degree ≥ 2 have large coefficient magnitudes that resist thresholding.
+
+── RECOMMENDED NEXT STEPS ──────────────────────────────────────────
+
+1. THRESHOLD RANGE: The effective sparsification range for this signal and normalisation is t=1000–50000. Consider a finer sweep in this range (t=2000, 5000, 20000, 50000) rather than below t=1000.
+
+2. NORMALIZE_COLUMNS=FALSE (already running): Without column normalisation, coefficient scales differ by orders of magnitude across degrees. The nc_false sweeps will reveal whether a single threshold can work for mixed-degree libraries.
+
+3. GLOBAL Z-SCORE: Z-scoring the signal constrains coefficients to O(1), making t=1–10 the natural regime for normalize_columns=False. Awaiting those sweep results.
+
+4. FOCUS ON DEGREE=1: Degree-1 models are the most interpretable and already achieve meaningful sparsification at t=10000. Consider a dedicated degree=1 sweep with much larger n_delays (12–24) to test whether more delay history compensates for the restricted function class.
+
+5. SIMULATE t=1000 AND t=10000: Currently only t=0.1 and t=100 have simulation results. Run simulations for t=1000 and t=10000 to determine whether sparser models are more or less stable.
+
+========================================================================

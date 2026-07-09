@@ -288,9 +288,9 @@ def fit_sindy_model(trajectories: list[np.ndarray], dt: float, config: SINDyConf
 
   if config.optimizer == "sr3":
     opt = ps.SR3(
-      threshold=config.threshold,
-      nu=config.nu,
-      thresholder="l0",
+      reg_weight_lam=config.threshold,
+      regularizer="L0",
+      relax_coeff_nu=config.nu,
     )
   else:
     opt = ps.STLSQ(
