@@ -6,6 +6,8 @@ import json
 import math
 import sys
 import time
+
+csv.field_size_limit(10 * 1024 * 1024)  # degree=7 coefficient JSON exceeds 128KB default
 from pathlib import Path
 
 import numpy as np
