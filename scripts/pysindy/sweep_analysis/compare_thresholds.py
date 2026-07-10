@@ -67,9 +67,10 @@ def read_grid(path: Path) -> list[dict]:
 def load_sim_status(sweep_dir: Path) -> list[dict]:
     """Load per-trial simulation status rows from a sweep directory.
 
-    Checks both ``simulations/status/`` (old format) and
-    ``simulations_pertrial/status/`` (new per-trial format), preferring
-    whichever has more files. Returns [] if neither exists.
+    Prefers ``simulations/status/`` (aggregate format) over
+    ``simulations_pertrial/status/`` so that all thresholds use the same
+    format when both exist. Falls back to pertrial if aggregate is absent.
+    Returns [] if neither exists.
 
     Args:
         sweep_dir: Root sweep output directory (e.g. outputs/pysindy/raw_grid).
@@ -78,18 +79,17 @@ def load_sim_status(sweep_dir: Path) -> list[dict]:
         List of per-trial status dicts from all config CSVs found.
     """
     candidates = [
-        sweep_dir / "simulations_pertrial" / "status",
         sweep_dir / "simulations" / "status",
+        sweep_dir / "simulations_pertrial" / "status",
     ]
     status_dir = None
-    best_count = 0
     for candidate in candidates:
         if candidate.exists():
             count = sum(1 for _ in candidate.glob("config_*.csv"))
-            if count > best_count:
-                best_count = count
+            if count > 0:
                 status_dir = candidate
-    if status_dir is None or best_count == 0:
+                break
+    if status_dir is None:
         return []
     rows = []
     for csv_path in sorted(status_dir.glob("config_*.csv")):
