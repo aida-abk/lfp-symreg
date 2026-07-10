@@ -4,7 +4,7 @@
 #SBATCH --nodes=1
 #SBATCH --array=0-7
 #SBATCH --time=24:00:00
-#SBATCH --mem=16G
+#SBATCH --mem=32G
 #SBATCH --cpus-per-task=1
 #SBATCH --export=ALL
 #SBATCH --mail-user=aida_abkenova@brown.edu
