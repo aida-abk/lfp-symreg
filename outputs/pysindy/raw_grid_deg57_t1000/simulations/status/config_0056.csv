@@ -2,3 +2,4 @@ configuration_index,test_trial_id,simulation_status,failure_reason,requested_dur
 56,4,failed,integration error: simulation exceeded 1800 wall-clock seconds,14.068,1.5349348456581033,1800.000411491841,10713,0,,0,,
 56,1088,failed,integration error: simulation exceeded 1800 wall-clock seconds,14.18,0.6615320592736321,1800.00027048029,10624,0,,0,,
 56,622,failed,integration error: simulation exceeded 1800 wall-clock seconds,14.176,2.615611692078659,1800.000513350591,10706,0,,0,,
+56,620,failed,integration error: simulation exceeded 1800 wall-clock seconds,14.176,1.730789984478557,1800.0004242248833,10724,0,,0,,
