@@ -17,9 +17,9 @@ THRESHOLD COMPARISON REPORT
 
 ── SIMULATION RESULTS ──────────────────────────────────────────────
   t=0.1: 1944 trials, success=77.2%  (no RMSE data)
-  t=100: 864 trials, success=80.2%  median RMSE=50.55 µV
+  t=100: 1944 trials, success=77.0%  median RMSE=53.44 µV
   t=1000: 1944 trials, success=74.2%  median RMSE=53.25 µV
-  t=10000: 864 trials, success=76.4%  median RMSE=47.91 µV
+  t=10000: 1944 trials, success=74.0%  median RMSE=49.89 µV
 
 ── SURVIVING TERM TYPES ────────────────────────────────────────────
   t=0.1: Bias=1.0  Linear=13.3  Quadratic=18.3  Cubic=1.7

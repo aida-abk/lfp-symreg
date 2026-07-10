@@ -1,0 +1,29 @@
+====================================================================
+NORMALISATION COMPARISON REPORT: raw µV vs global z-score
+====================================================================
+
+── FITTING ──────────────────────────────────────────────────────
+  Matched configurations: 216
+  Mean utilisation — raw: 100.0%  z-score: 99.7%
+  Median Jaccard (term-set agreement): 1.000
+  Identical term sets: 216/216
+  Completely different (J=0): 0/216
+
+  Median |coeff| — raw: 0.0305 µV/s  z-score: 4.09 (z/s)
+  Scale ratio (raw/gsz): 0.0x
+
+── SIMULATION ───────────────────────────────────────────────────
+  Raw µV:        77.2% success  (n=1944 trials)
+  Global z-score: 61.1% success  (n=864 trials)
+  Global z-score median RMSE: 1.6542 z-score units
+  (Raw µV RMSE not available — old simulation format lacks RMSE field)
+
+── KEY FINDINGS ─────────────────────────────────────────────────
+
+1. EQUATIONS ESSENTIALLY IDENTICAL (median Jaccard=1.000): Z-scoring at t=0.1 does not change which terms survive. The threshold is too small relative to both raw and z-score coefficient scales.
+
+2. SIMULATION STABILITY: raw=77.2% vs z-score=61.1% (raw more stable, Δ=16.0%).
+
+3. COEFFICIENT SCALE: z-scoring brings coefficients to O(1) units (z/s) vs O(100)–O(1000) for raw µV. This means a future threshold sweep on z-scored data should use t=0.01–10 rather than t=0.1–10000.
+
+====================================================================
