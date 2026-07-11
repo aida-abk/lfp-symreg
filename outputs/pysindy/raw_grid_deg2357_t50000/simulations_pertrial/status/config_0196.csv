@@ -1,0 +1,5 @@
+configuration_index,test_trial_id,simulation_status,failure_reason,requested_duration_s,reached_duration_s,simulation_runtime_s,rhs_evaluations,simulated_samples,simulated_x0_rms_uv,compared_samples,x0_rmse_uv,trajectory_rmse_uv
+196,4,failed,integration failed: Unexpected istate in LSODA.,14.028,1.6,57.3115846645087,17061,401,604.8280819540403,401,604.3695448575745,10732.213954953195
+196,1088,failed,integration failed: Unexpected istate in LSODA.,14.14,1.048,63.45971222408116,19071,263,359.04570538245287,263,356.56157201655253,2368.13964115449
+196,622,failed,integration failed: Unexpected istate in LSODA.,14.136000000000001,0.608,43.61311897262931,13243,153,392.3328166145721,153,400.18127350034484,1829.3011931194853
+196,620,failed,integration failed: Unexpected istate in LSODA.,14.136000000000001,1.032,66.35356331989169,20399,259,449.7754256593478,259,448.3458985882758,4114.067135083244

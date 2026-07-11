@@ -1,0 +1,5 @@
+configuration_index,test_trial_id,simulation_status,failure_reason,requested_duration_s,reached_duration_s,simulation_runtime_s,rhs_evaluations,simulated_samples,simulated_x0_rms_uv,compared_samples,x0_rmse_uv,trajectory_rmse_uv
+105,4,failed,integration error: simulation exceeded 1800 wall-clock seconds,14.032,3.379560365241333,1800.0006305165589,14652,0,,0,,
+105,1088,failed,integration error: simulation exceeded 1800 wall-clock seconds,14.144,2.8831040828246857,1800.0005280356854,14814,0,,0,,
+105,622,failed,integration error: model derivative became non-finite,14.14,0.9801071307003827,1664.6904526110739,13608,0,,0,,
+105,620,failed,integration error: simulation exceeded 1800 wall-clock seconds,14.14,4.08271405704267,1800.0006620083004,14903,0,,0,,
