@@ -399,13 +399,14 @@ def simulate_configuration(
     offset = (int(row["n_delays"]) - 1) * int(row["delay_samples"])
     raw_unfiltered_x0 = [tr[offset:] for tr in test_raw_unfiltered]
 
+  figures_dir = output_dir / "figures"
   if per_trial_figures:
     for trial_id, measured, result, raw in zip(
       test_trial_ids, measured_trials, results,
       raw_unfiltered_x0 if raw_unfiltered_x0 is not None else [None] * len(results),
     ):
       plot_trial(
-        output_dir / "figures" / f"{stem}_trial_{trial_id:04d}.png",
+        figures_dir / f"{stem}_trial_{trial_id:04d}.png",
         row=row,
         trial_id=trial_id,
         measured=measured,
@@ -414,9 +415,12 @@ def simulate_configuration(
         raw_unfiltered=raw,
         signal_units=signal_units,
       )
+    # Per-trial mode writes one PNG per trial; record the directory holding them.
+    figure_path = figures_dir
   else:
+    figure_path = figures_dir / f"{stem}.png"
     plot_configuration(
-      output_dir / "figures" / f"{stem}.png",
+      figure_path,
       row=row,
       trial_ids=test_trial_ids,
       measured_trials=measured_trials,
