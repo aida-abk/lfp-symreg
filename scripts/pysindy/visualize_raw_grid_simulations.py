@@ -54,6 +54,25 @@ STATUS_FIELDS = [
   "trajectory_rmse_uv",
 ]
 
+# One row per (configuration, trial, window) in windowed re-anchored simulation mode.
+WINDOW_STATUS_FIELDS = [
+  "configuration_index",
+  "test_trial_id",
+  "window_index",
+  "window_start_s",
+  "window_duration_s",
+  "simulation_status",
+  "failure_reason",
+  "reached_duration_s",
+  "simulation_runtime_s",
+  "rhs_evaluations",
+  "simulated_samples",
+  "simulated_x0_rms_uv",
+  "compared_samples",
+  "x0_rmse_uv",
+  "trajectory_rmse_uv",
+]
+
 
 def load_grid(path: Path) -> list[dict[str, str]]:
   """Load successful stored-equation rows from the merged raw-grid CSV."""
@@ -445,6 +464,377 @@ def simulate_configuration(
   }
 
 
+def simulate_trial_windows(
+  model,
+  measured: np.ndarray,
+  dt: float,
+  window_samples: int,
+  step_samples: int,
+  trial_timeout_s: float | None,
+) -> list[dict[str, object]]:
+  """Simulate one trial as a sequence of re-anchored fixed-length windows.
+
+  Each window is an independent free-run: its initial condition is the *measured*
+  delay-embedded state at the window's start sample, and it is integrated forward
+  for the window duration. This isolates short-horizon predictive accuracy across
+  the whole trial instead of letting a single long free-run diverge.
+
+  Args:
+    model: Reconstructed ODE whose ``predict`` returns state derivatives.
+    measured: Delay-embedded held-out trajectory with shape ``(time, state)``.
+    dt: Processed sample interval in seconds.
+    window_samples: Nominal window length in processed samples.
+    step_samples: Spacing between successive window starts in processed samples.
+      Equal to ``window_samples`` for non-overlapping tiling.
+    trial_timeout_s: Optional wall-time limit per window simulation.
+
+  Returns:
+    One dict per window holding status metrics plus the raw ``SimulationResult``
+    and the window's start/length in samples (for plotting). A trailing partial
+    window shorter than the nominal length is kept and integrated to trial end.
+  """
+  total_samples = measured.shape[0]
+  windows: list[dict[str, object]] = []
+  window_index = 0
+  for start in range(0, total_samples - 1, step_samples):
+    this_window_samples = min(window_samples, total_samples - start)
+    if this_window_samples < 2:
+      break
+    window_duration_s = (this_window_samples - 1) * dt
+    started = time.perf_counter()
+    result = simulate_model_detailed(
+      model,
+      initial_state=measured[start],
+      dt=dt,
+      horizon_s=window_duration_s,
+      wall_timeout_s=trial_timeout_s,
+    )
+    runtime_s = time.perf_counter() - started
+
+    measured_window = measured[start : start + this_window_samples]
+    simulated_x0 = (
+      result.trajectory[:, 0]
+      if result.trajectory is not None and result.trajectory.size
+      else None
+    )
+    compared_samples = (
+      0
+      if result.trajectory is None
+      else min(measured_window.shape[0], result.trajectory.shape[0])
+    )
+    if compared_samples:
+      measured_segment = measured_window[:compared_samples]
+      simulated_segment = result.trajectory[:compared_samples]
+      with np.errstate(over="ignore", invalid="ignore"):
+        x0_rmse_uv = float(
+          np.sqrt(np.mean((simulated_segment[:, 0] - measured_segment[:, 0]) ** 2))
+        )
+        trajectory_rmse_uv = float(
+          np.sqrt(np.mean((simulated_segment - measured_segment) ** 2))
+        )
+    else:
+      x0_rmse_uv = ""
+      trajectory_rmse_uv = ""
+
+    windows.append(
+      {
+        "window_index": window_index,
+        "window_start_s": start * dt,
+        "window_duration_s": window_duration_s,
+        "simulation_status": "success" if result.completed else "failed",
+        "failure_reason": result.failure_reason,
+        "reached_duration_s": result.reached_horizon_s,
+        "simulation_runtime_s": runtime_s,
+        "rhs_evaluations": result.rhs_evaluations,
+        "simulated_samples": 0 if simulated_x0 is None else simulated_x0.size,
+        "simulated_x0_rms_uv": (
+          "" if simulated_x0 is None else pooled_trace_rms([simulated_x0])
+        ),
+        "compared_samples": compared_samples,
+        "x0_rmse_uv": x0_rmse_uv,
+        "trajectory_rmse_uv": trajectory_rmse_uv,
+        "_result": result,
+        "_start_sample": start,
+      }
+    )
+    window_index += 1
+  return windows
+
+
+def _draw_windowed_trial_panel(
+  axis,
+  trial_id: int,
+  measured: np.ndarray,
+  windows: list[dict[str, object]],
+  dt: float,
+  raw_unfiltered: np.ndarray | None,
+  signal_units: str,
+  title_fontsize: int = 10,
+  label_fontsize: int = 9,
+) -> None:
+  """Draw one trial: measured x0 plus each window's re-anchored simulated x0."""
+  measured_time = np.arange(measured.shape[0]) * dt
+
+  ax2 = None
+  if raw_unfiltered is not None:
+    ax2 = axis.twinx()
+    raw = raw_unfiltered[: measured.shape[0]]
+    ax2.plot(
+      measured_time[: len(raw)], raw,
+      color="grey", linewidth=0.8, alpha=0.4, label="raw (µV)",
+    )
+    ax2.set_ylabel("µV (raw)", fontsize=label_fontsize - 1, color="grey")
+    ax2.tick_params(axis="y", labelcolor="grey", labelsize=label_fontsize - 2)
+    ax2.spines["right"].set_color("grey")
+    ax2.spines["right"].set_alpha(0.5)
+    axis.set_zorder(ax2.get_zorder() + 1)
+    axis.patch.set_visible(False)
+
+  axis.plot(
+    measured_time, measured[:, 0],
+    color="steelblue", linewidth=1.1, label=f"lowpass ({signal_units})",
+  )
+
+  finite_rmse = []
+  for i, window in enumerate(windows):
+    result: SimulationResult = window["_result"]  # type: ignore[assignment]
+    start = int(window["_start_sample"])
+    axis.axvline(start * dt, color="grey", linestyle=":", linewidth=0.6, alpha=0.5)
+    if result.trajectory is not None and result.trajectory.size:
+      segment_time = start * dt + np.arange(result.trajectory.shape[0]) * dt
+      axis.plot(
+        segment_time, result.trajectory[:, 0],
+        color="darkorange", linestyle="--", linewidth=1.1,
+        label="simulated (windows)" if i == 0 else None,
+      )
+    if isinstance(window["x0_rmse_uv"], float) and math.isfinite(window["x0_rmse_uv"]):
+      finite_rmse.append(window["x0_rmse_uv"])
+
+  successful = sum(w["simulation_status"] == "success" for w in windows)
+  mean_rmse_text = (
+    f"mean x0 RMSE {np.mean(finite_rmse):.1f}" if finite_rmse else "no finite RMSE"
+  )
+  axis.set_title(
+    f"Trial {trial_id}: {successful}/{len(windows)} windows complete, {mean_rmse_text}",
+    fontsize=title_fontsize,
+  )
+  axis.set_xlabel("Time from embedded initial state (s)", fontsize=label_fontsize)
+  axis.set_ylabel(f"x0 ({signal_units})", fontsize=label_fontsize)
+  axis.grid(alpha=0.2)
+
+  lines, labels = axis.get_legend_handles_labels()
+  if ax2 is not None:
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    axis.legend(lines2 + lines, labels2 + labels, loc="upper right",
+                fontsize=label_fontsize - 1)
+  else:
+    axis.legend(loc="upper right", fontsize=label_fontsize - 1)
+
+
+def plot_windowed_trial(
+  path: Path,
+  row: dict[str, str],
+  trial_id: int,
+  measured: np.ndarray,
+  windows: list[dict[str, object]],
+  dt: float,
+  raw_unfiltered: np.ndarray | None = None,
+  signal_units: str = LFP_AMPLITUDE_UNIT,
+) -> None:
+  """Plot a single held-out trial's windowed simulation at full figure size."""
+  import matplotlib
+  matplotlib.use("Agg")
+  import matplotlib.pyplot as plt
+
+  figure, axis = plt.subplots(figsize=(11, 4.5))
+  _draw_windowed_trial_panel(axis, trial_id, measured, windows, dt, raw_unfiltered,
+                             signal_units, title_fontsize=12, label_fontsize=10)
+  figure.suptitle(_config_suptitle(row), fontsize=10)
+  figure.tight_layout(rect=(0, 0, 1, 0.94))
+  path.parent.mkdir(parents=True, exist_ok=True)
+  figure.savefig(path, dpi=160)
+  plt.close(figure)
+
+
+def plot_windowed_configuration(
+  path: Path,
+  row: dict[str, str],
+  trial_ids: list[int],
+  measured_trials: list[np.ndarray],
+  windows_per_trial: list[list[dict[str, object]]],
+  dt: float,
+  raw_unfiltered_trials: list[np.ndarray] | None = None,
+  signal_units: str = LFP_AMPLITUDE_UNIT,
+) -> None:
+  """Plot all held-out trials' windowed simulations in a compact grid."""
+  import matplotlib
+  matplotlib.use("Agg")
+  import matplotlib.pyplot as plt
+
+  columns = 3
+  n_rows = math.ceil(len(trial_ids) / columns)
+  figure, axes = plt.subplots(
+    n_rows, columns,
+    figsize=(5 * columns, 2.7 * n_rows),
+    sharex=False, sharey=False, squeeze=False,
+  )
+  for i, (axis, trial_id, measured, windows) in enumerate(
+    zip(axes.ravel(), trial_ids, measured_trials, windows_per_trial)
+  ):
+    raw = (raw_unfiltered_trials[i] if raw_unfiltered_trials is not None
+           and i < len(raw_unfiltered_trials) else None)
+    _draw_windowed_trial_panel(axis, trial_id, measured, windows, dt, raw,
+                               signal_units, title_fontsize=9, label_fontsize=8)
+  for axis in axes.ravel()[len(trial_ids):]:
+    axis.set_visible(False)
+  figure.suptitle(_config_suptitle(row))
+  figure.tight_layout(rect=(0, 0, 1, 0.97))
+  path.parent.mkdir(parents=True, exist_ok=True)
+  figure.savefig(path, dpi=160)
+  plt.close(figure)
+
+
+def simulate_windowed_configuration(
+  row: dict[str, str],
+  test_raw: list[np.ndarray],
+  test_trial_ids: list[int],
+  dt: float,
+  output_dir: Path,
+  window_s: float,
+  window_step_s: float,
+  trial_timeout_s: float | None,
+  test_raw_unfiltered: list[np.ndarray] | None = None,
+  signal_units: str = LFP_AMPLITUDE_UNIT,
+  per_trial_figures: bool = False,
+) -> dict[str, object]:
+  """Simulate one stored equation as re-anchored windows over every held-out trial.
+
+  Mirrors ``simulate_configuration`` but replaces the single full-trial free-run
+  with a sequence of fixed-length windows re-initialized from measured data. Writes
+  one status row per (trial, window) and one figure per trial (or a compact grid).
+
+  Args:
+    row: Stored raw-grid configuration.
+    test_raw: Lowpass-filtered held-out traces in model input units.
+    test_trial_ids: Original zero-based held-out trial identifiers.
+    dt: Processed sample interval in seconds.
+    output_dir: Destination for per-window status checkpoints and figures.
+    window_s: Window length in seconds.
+    window_step_s: Spacing between window starts in seconds (== window_s to tile).
+    trial_timeout_s: Optional wall-time limit per window simulation.
+    test_raw_unfiltered: Optional unfiltered µV traces for the grey overlay.
+    signal_units: Units label for the primary axis.
+    per_trial_figures: When True, one PNG per trial; otherwise a compact grid.
+
+  Returns:
+    Configuration-level windowed-simulation summary.
+  """
+  configuration_index = int(row["configuration_index"])
+  measured_trials = delay_embed_trajectories(
+    test_raw,
+    n_delays=int(row["n_delays"]),
+    delay=int(row["delay_samples"]),
+  )
+  model = reconstruct_model(row)
+  window_samples = int(round(window_s / dt))
+  step_samples = max(1, int(round(window_step_s / dt)))
+  if window_samples < 2:
+    raise ValueError(
+      f"window_s={window_s} yields fewer than two samples at dt={dt}."
+    )
+
+  configuration_started = time.perf_counter()
+  stem = f"config_{configuration_index:04d}"
+  status_path = output_dir / "status" / f"{stem}.csv"
+  status_rows: list[dict[str, object]] = []
+  windows_per_trial: list[list[dict[str, object]]] = []
+  total_windows = 0
+  successful_windows = 0
+
+  for trial_id, measured in zip(test_trial_ids, measured_trials):
+    windows = simulate_trial_windows(
+      model,
+      measured=measured,
+      dt=dt,
+      window_samples=window_samples,
+      step_samples=step_samples,
+      trial_timeout_s=trial_timeout_s,
+    )
+    windows_per_trial.append(windows)
+    for window in windows:
+      total_windows += 1
+      successful_windows += window["simulation_status"] == "success"
+      status_rows.append(
+        {
+          "configuration_index": configuration_index,
+          "test_trial_id": trial_id,
+          **{key: value for key, value in window.items() if not key.startswith("_")},
+        }
+      )
+    write_csv_checkpoint(status_path, WINDOW_STATUS_FIELDS, status_rows)
+    print(
+      f"config={configuration_index} trial={trial_id} "
+      f"windows={len(windows)} "
+      f"success={sum(w['simulation_status'] == 'success' for w in windows)} "
+      f"elapsed={time.perf_counter() - configuration_started:.1f}s",
+      flush=True,
+    )
+
+  raw_unfiltered_x0: list[np.ndarray] | None = None
+  if test_raw_unfiltered is not None:
+    offset = (int(row["n_delays"]) - 1) * int(row["delay_samples"])
+    raw_unfiltered_x0 = [tr[offset:] for tr in test_raw_unfiltered]
+
+  figures_dir = output_dir / "figures"
+  if per_trial_figures:
+    for trial_id, measured, windows, raw in zip(
+      test_trial_ids, measured_trials, windows_per_trial,
+      raw_unfiltered_x0 if raw_unfiltered_x0 is not None
+      else [None] * len(measured_trials),
+    ):
+      plot_windowed_trial(
+        figures_dir / f"{stem}_trial_{trial_id:04d}.png",
+        row=row,
+        trial_id=trial_id,
+        measured=measured,
+        windows=windows,
+        dt=dt,
+        raw_unfiltered=raw,
+        signal_units=signal_units,
+      )
+    figure_path = figures_dir
+  else:
+    figure_path = figures_dir / f"{stem}.png"
+    plot_windowed_configuration(
+      figure_path,
+      row=row,
+      trial_ids=test_trial_ids,
+      measured_trials=measured_trials,
+      windows_per_trial=windows_per_trial,
+      dt=dt,
+      raw_unfiltered_trials=raw_unfiltered_x0,
+      signal_units=signal_units,
+    )
+
+  model_order_key = "n_frequencies" if _is_fourier_row(row) else "degree"
+  return {
+    "configuration_index": configuration_index,
+    "lowpass_hz": float(row["lowpass_hz"]),
+    model_order_key: int(row[model_order_key]),
+    "n_delays": int(row["n_delays"]),
+    "delay_samples": int(row["delay_samples"]),
+    "smooth_window_samples": int(row["smooth_window_samples"]),
+    "window_s": window_s,
+    "window_step_s": window_step_s,
+    "test_trials": len(test_trial_ids),
+    "total_windows": total_windows,
+    "successful_windows": successful_windows,
+    "configuration_runtime_s": time.perf_counter() - configuration_started,
+    "figure": str(figure_path),
+    "status_csv": str(status_path),
+  }
+
+
 def run(args: argparse.Namespace) -> list[dict[str, object]]:
   """Run the selected stored-equation simulations and visualizations."""
   rows = select_rows(
@@ -507,19 +897,38 @@ def run(args: argparse.Namespace) -> list[dict[str, object]]:
       f"{_model_order_label(row)} lowpass={row['lowpass_hz']}",
       flush=True,
     )
-    summaries.append(
-      simulate_configuration(
-        row,
-        test_raw=traces_by_lowpass[lowpass_hz],
-        test_trial_ids=test_trial_ids,
-        dt=dt,
-        output_dir=args.output_dir,
-        trial_timeout_s=args.trial_timeout_s,
-        test_raw_unfiltered=traces_unfiltered,
-        signal_units=signal_units,
-        per_trial_figures=args.per_trial_figures,
+    if args.window_s is not None:
+      summaries.append(
+        simulate_windowed_configuration(
+          row,
+          test_raw=traces_by_lowpass[lowpass_hz],
+          test_trial_ids=test_trial_ids,
+          dt=dt,
+          output_dir=args.output_dir,
+          window_s=args.window_s,
+          window_step_s=(
+            args.window_step_s if args.window_step_s is not None else args.window_s
+          ),
+          trial_timeout_s=args.trial_timeout_s,
+          test_raw_unfiltered=traces_unfiltered,
+          signal_units=signal_units,
+          per_trial_figures=args.per_trial_figures,
+        )
       )
-    )
+    else:
+      summaries.append(
+        simulate_configuration(
+          row,
+          test_raw=traces_by_lowpass[lowpass_hz],
+          test_trial_ids=test_trial_ids,
+          dt=dt,
+          output_dir=args.output_dir,
+          trial_timeout_s=args.trial_timeout_s,
+          test_raw_unfiltered=traces_unfiltered,
+          signal_units=signal_units,
+          per_trial_figures=args.per_trial_figures,
+        )
+      )
 
   summary_name = (
     "benchmark_summary.json"
@@ -573,11 +982,37 @@ def main() -> None:
       "timeouts are saved as failed simulations."
     ),
   )
+  parser.add_argument(
+    "--window-s",
+    type=float,
+    default=None,
+    help=(
+      "Enable re-anchored windowed simulation: tile each trial into windows of "
+      "this length (seconds), each free-run from the measured state at its start. "
+      "Omit to keep the default single full-trial free-run."
+    ),
+  )
+  parser.add_argument(
+    "--window-step-s",
+    type=float,
+    default=None,
+    help=(
+      "Spacing between window starts in seconds; defaults to --window-s "
+      "(non-overlapping tiling). Smaller values give overlapping windows."
+    ),
+  )
   args = parser.parse_args()
   if args.max_test_trials is not None and args.max_test_trials < 1:
     parser.error("--max-test-trials must be at least 1.")
   if args.trial_timeout_s is not None and args.trial_timeout_s <= 0:
     parser.error("--trial-timeout-s must be positive.")
+  if args.window_s is not None and args.window_s <= 0:
+    parser.error("--window-s must be positive.")
+  if args.window_step_s is not None:
+    if args.window_s is None:
+      parser.error("--window-step-s requires --window-s.")
+    if args.window_step_s <= 0:
+      parser.error("--window-step-s must be positive.")
   run(args)
 
 
