@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PySINDy Sweep Consolidation</title>
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --panel-2: #f0f2f5; --border: #d9dee5;
+  --text: #1a1d21; --muted: #5b6470; --accent: #2b6cb0; --accent-soft: #e3edf7;
+  --ok: #2f855a; --ok-bg: #e6f4ec; --warn: #b7791f; --warn-bg: #faf1de;
+  --bad: #c53030; --bad-bg: #fbe8e8; --neutral: #4a5568; --neutral-bg: #edf0f4;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 14px rgba(0,0,0,.06);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171c; --panel: #1c2027; --panel-2: #22272f; --border: #333b45;
+    --text: #e6e9ee; --muted: #98a2b0; --accent: #63a4e0; --accent-soft: #23303e;
+    --ok: #68d391; --ok-bg: #1b3227; --warn: #e0b662; --warn-bg: #332a15;
+    --bad: #fc8181; --bad-bg: #3a1e1e; --neutral: #a0aab8; --neutral-bg: #262c34;
+    --shadow: 0 1px 3px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f6f7f9; --panel: #ffffff; --panel-2: #f0f2f5; --border: #d9dee5;
+  --text: #1a1d21; --muted: #5b6470; --accent: #2b6cb0; --accent-soft: #e3edf7;
+  --ok: #2f855a; --ok-bg: #e6f4ec; --warn: #b7791f; --warn-bg: #faf1de;
+  --bad: #c53030; --bad-bg: #fbe8e8; --neutral: #4a5568; --neutral-bg: #edf0f4;
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 14px rgba(0,0,0,.06);
+}
+:root[data-theme="dark"] {
+  --bg: #14171c; --panel: #1c2027; --panel-2: #22272f; --border: #333b45;
+  --text: #e6e9ee; --muted: #98a2b0; --accent: #63a4e0; --accent-soft: #23303e;
+  --ok: #68d391; --ok-bg: #1b3227; --warn: #e0b662; --warn-bg: #332a15;
+  --bad: #fc8181; --bad-bg: #3a1e1e; --neutral: #a0aab8; --neutral-bg: #262c34;
+  --shadow: 0 1px 3px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35);
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+header {
+  padding: 14px 20px; background: var(--panel); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 18px; flex-wrap: wrap; position: sticky;
+  top: 0; z-index: 20;
+}
+header h1 { font-size: 16px; margin: 0; font-weight: 650; }
+header .meta { color: var(--muted); font-size: 12.5px; }
+header .spacer { flex: 1; }
+.counts { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px;
+  border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap;
+  border: 1px solid transparent;
+}
+.chip.ok { background: var(--ok-bg); color: var(--ok); }
+.chip.warn { background: var(--warn-bg); color: var(--warn); }
+.chip.bad { background: var(--bad-bg); color: var(--bad); }
+.chip.neutral { background: var(--neutral-bg); color: var(--neutral); }
+.chip.count { background: var(--panel-2); color: var(--text); border-color: var(--border); }
+.layout { display: flex; align-items: stretch; min-height: calc(100vh - 56px); }
+aside {
+  width: 250px; flex: 0 0 250px; background: var(--panel);
+  border-right: 1px solid var(--border); padding: 14px 14px 40px; overflow-y: auto;
+  max-height: calc(100vh - 56px); position: sticky; top: 56px;
+}
+aside h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--muted); margin: 18px 0 7px; }
+aside h3:first-child { margin-top: 0; }
+.facet label { display: flex; align-items: center; gap: 7px; padding: 2px 0;
+  font-size: 13px; cursor: pointer; }
+.facet .cnt { margin-left: auto; color: var(--muted); font-size: 11.5px; }
+input[type="search"], select {
+  width: 100%; padding: 7px 9px; border: 1px solid var(--border); border-radius: 7px;
+  background: var(--bg); color: var(--text); font-size: 13px;
+}
+button {
+  border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+  padding: 6px 11px; border-radius: 7px; cursor: pointer; font-size: 13px; font-weight: 550;
+}
+button:hover { border-color: var(--accent); }
+button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+main { flex: 1; min-width: 0; padding: 16px 20px 60px; }
+.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.toolbar .grow { flex: 1; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--panel); box-shadow: var(--shadow); }
+table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--border);
+  white-space: nowrap; }
+th { position: sticky; top: 0; background: var(--panel-2); cursor: pointer;
+  user-select: none; font-weight: 620; z-index: 1; }
+th .arrow { color: var(--accent); font-size: 10px; }
+tbody tr:hover { background: var(--accent-soft); cursor: pointer; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.badge { padding: 1px 7px; border-radius: 5px; font-size: 11px; font-weight: 600; }
+.b-sim_ok { background: var(--ok-bg); color: var(--ok); }
+.b-sim_partial { background: var(--warn-bg); color: var(--warn); }
+.b-sim_all_failed { background: var(--bad-bg); color: var(--bad); }
+.b-fit_failed { background: var(--bad-bg); color: var(--bad); }
+.b-not_simulated { background: var(--neutral-bg); color: var(--neutral); }
+.flags { display: flex; gap: 4px; flex-wrap: wrap; }
+.flag { font-size: 10.5px; padding: 1px 6px; border-radius: 4px;
+  background: var(--warn-bg); color: var(--warn); }
+.anno-dot { color: var(--accent); font-weight: 700; }
+.groupby { display: flex; align-items: center; gap: 6px; font-size: 12.5px;
+  color: var(--muted); white-space: nowrap; }
+.groupby select { width: auto; padding: 5px 7px; }
+/* Common-features panel */
+#commonFeatures { margin-bottom: 12px; }
+.cf { border: 1px solid var(--border); border-radius: 10px; background: var(--panel);
+  box-shadow: var(--shadow); padding: 10px 13px; font-size: 12.5px; }
+.cf .cf-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px;
+  margin: 3px 0; }
+.cf .cf-lab { color: var(--muted); text-transform: uppercase; letter-spacing: .4px;
+  font-size: 10.5px; flex: 0 0 78px; }
+.cf-chip { display: inline-flex; align-items: baseline; gap: 5px; padding: 2px 8px;
+  border-radius: 6px; font-size: 12px; border: 1px solid var(--border);
+  background: var(--panel-2); }
+.cf-chip.const { background: var(--ok-bg); color: var(--ok); border-color: transparent;
+  font-weight: 600; }
+.cf-chip .pct { color: var(--muted); font-size: 11px; }
+.cf-chip.const .pct { color: var(--ok); }
+.statusbar { display: inline-flex; height: 12px; border-radius: 4px; overflow: hidden;
+  vertical-align: middle; min-width: 90px; border: 1px solid var(--border); }
+.statusbar span { display: block; height: 100%; }
+.sb-sim_ok { background: var(--ok); } .sb-sim_partial { background: var(--warn); }
+.sb-sim_all_failed { background: var(--bad); } .sb-fit_failed { background: var(--bad); }
+.sb-not_simulated { background: var(--neutral); }
+/* Group headers */
+tr.grouphdr td { background: var(--panel-2); font-weight: 600; cursor: pointer;
+  border-top: 2px solid var(--border); position: sticky; top: 33px; z-index: 1; }
+.ghdr-inner { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ghdr-inner .tri { color: var(--muted); font-size: 10px; width: 10px; }
+.ghdr-inner .gcount { color: var(--muted); font-weight: 500; }
+.ghdr-inner .grange { color: var(--muted); font-weight: 500; font-size: 11.5px; }
+.gallery-group { grid-column: 1 / -1; margin: 6px 0 -4px; padding: 8px 12px;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; cursor: pointer;
+  font-weight: 600; font-size: 13px; }
+/* Gallery */
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px; }
+.card { border: 1px solid var(--border); border-radius: 10px; background: var(--panel);
+  overflow: hidden; box-shadow: var(--shadow); cursor: pointer; display: flex;
+  flex-direction: column; }
+.card:hover { border-color: var(--accent); }
+.card .thumb { width: 100%; aspect-ratio: 4/3; object-fit: contain; background: #fff;
+  border-bottom: 1px solid var(--border); }
+.card .cap { padding: 7px 9px; font-size: 11.5px; }
+.card .cap .t { font-weight: 600; margin-bottom: 3px; display: flex;
+  justify-content: space-between; gap: 6px; align-items: center; }
+.card .cap .s { color: var(--muted); }
+.nofig { display: flex; align-items: center; justify-content: center; aspect-ratio: 4/3;
+  color: var(--muted); font-size: 12px; background: var(--panel-2);
+  border-bottom: 1px solid var(--border); }
+/* Drawer */
+.drawer-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 40;
+  display: none; }
+.drawer-bg.open { display: block; }
+.drawer { position: fixed; top: 0; right: 0; height: 100vh; width: min(760px, 96vw);
+  background: var(--panel); border-left: 1px solid var(--border); z-index: 41;
+  transform: translateX(100%); transition: transform .18s ease; overflow-y: auto;
+  box-shadow: var(--shadow); }
+.drawer.open { transform: translateX(0); }
+.drawer .dhead { padding: 14px 18px; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--panel); display: flex; gap: 10px;
+  align-items: center; }
+.drawer .dhead h2 { font-size: 15px; margin: 0; }
+.drawer .body { padding: 16px 18px 60px; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px;
+  font-size: 12.5px; margin-bottom: 16px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; font-variant-numeric: tabular-nums; }
+.eqbox { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px; white-space: pre-wrap; word-break: break-word; margin-bottom: 16px; }
+.figgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 10px; }
+.figgrid figure { margin: 0; border: 1px solid var(--border); border-radius: 8px;
+  overflow: hidden; background: #fff; }
+.figgrid img { width: 100%; display: block; }
+.figgrid figcaption { font-size: 11px; color: var(--muted); padding: 5px 8px;
+  background: var(--panel); }
+.section-title { font-size: 12px; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--muted); margin: 4px 0 8px; }
+.anno-box { border: 1px dashed var(--accent); border-radius: 8px; padding: 10px 12px;
+  margin-bottom: 16px; font-size: 12.5px; background: var(--accent-soft); }
+.anno-empty { color: var(--muted); font-style: italic; }
+.close-x { margin-left: auto; }
+.hint { color: var(--muted); font-size: 12px; }
+code.k { background: var(--panel-2); padding: 1px 5px; border-radius: 4px;
+  font-size: 11.5px; }
+a.link { color: var(--accent); }
+.disclaimer { font-size: 11.5px; color: var(--muted); margin-top: 10px;
+  border-top: 1px solid var(--border); padding-top: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>PySINDy Sweep Consolidation</h1>
+  <span class="meta" id="hmeta"></span>
+  <div class="counts" id="hcounts"></div>
+  <span class="spacer"></span>
+  <button id="themeBtn" title="Toggle light/dark">◐ Theme</button>
+</header>
+
+<div class="layout">
+  <aside id="facets"></aside>
+  <main>
+    <div class="toolbar">
+      <input type="search" id="q" class="grow" placeholder="Search equations, sweep, flags, failure reasons…">
+      <label class="groupby">Group by
+        <select id="groupBy">
+          <option value="auto" selected>Auto</option>
+          <option value="none">None</option>
+          <option value="sweep_id">Sweep</option>
+          <option value="lowpass_hz">Lowpass</option>
+          <option value="degree">Degree</option>
+          <option value="threshold">Threshold</option>
+          <option value="n_delays">n_delays</option>
+          <option value="delay_samples">Delay spacing</option>
+          <option value="smooth_window_samples">Smoothing</option>
+          <option value="status_label">Status</option>
+        </select>
+      </label>
+      <button id="viewTable" class="active">Table</button>
+      <button id="viewGallery">Gallery</button>
+      <button id="resetBtn">Reset filters</button>
+      <span class="hint" id="shown"></span>
+    </div>
+    <div id="commonFeatures"></div>
+    <div id="tableView" class="tablewrap"></div>
+    <div id="galleryView" class="gallery" style="display:none"></div>
+    <p class="disclaimer">
+      Status labels describe <b>computational</b> outcomes only
+      (<code class="k">sim_ok</code> = every held-out trial reached the requested horizon).
+      They make no claim about scientific validity — that judgment is yours.
+      Failed configurations are never hidden. See <code class="k">_build/associations.md</code>
+      for observed (non-causal) associations.
+    </p>
+  </main>
+</div>
+
+<div class="drawer-bg" id="drawerBg"></div>
+<div class="drawer" id="drawer">
+  <div class="dhead">
+    <h2 id="drawerTitle"></h2>
+    <button class="close-x" id="drawerClose">✕ Close</button>
+  </div>
+  <div class="body" id="drawerBody"></div>
+</div>
+
+<script src="_build/dashboard_data.js"></script>
+<script>
+const DATA = window.DASHBOARD_DATA || [];
+const META = window.DASHBOARD_META || {};
+
+// ----- Facet configuration -----
+const FACETS = [
+  ["status_label", "Status"],
+  ["sweep_id", "Sweep"],
+  ["lowpass_hz", "Lowpass (Hz)"],
+  ["degree", "Degree"],
+  ["threshold", "STLSQ threshold"],
+  ["n_delays", "Number of delays"],
+  ["delay_samples", "Delay spacing (samples)"],
+  ["smooth_window_samples", "Smoothing window"],
+  ["derivative_method", "Derivative method"],
+];
+// diagnostic_flags handled separately (array field).
+
+const state = {
+  selected: {},           // facet -> Set of selected values
+  flags: new Set(),       // selected diagnostic flags
+  q: "",
+  sort: { col: "sim_success_fraction", dir: -1 },
+  view: "table",
+  groupBy: "auto",        // "auto" | "none" | a dimension key
+  collapsed: new Set(),   // collapsed group ids ("dim:value")
+};
+FACETS.forEach(([k]) => state.selected[k] = new Set());
+
+// Candidate dimensions for grouping / common-features (label + numeric flag).
+const GROUP_DIMS = [
+  ["sweep_id", "Sweep", false],
+  ["lowpass_hz", "Lowpass", true],
+  ["degree", "Degree", true],
+  ["threshold", "Threshold", true],
+  ["n_delays", "n_delays", true],
+  ["delay_samples", "Delay spacing", true],
+  ["smooth_window_samples", "Smoothing", true],
+  ["derivative_method", "Derivative", false],
+  ["status_label", "Status", false],
+];
+const DIM_LABEL = Object.fromEntries(GROUP_DIMS.map(([k, l]) => [k, l]));
+
+/** Return distinct non-null values of a dimension across rows, sorted. */
+function dimValues(rows, key) {
+  const s = new Set();
+  rows.forEach(r => { if (r[key] !== null && r[key] !== undefined) s.add(String(r[key])); });
+  return sortKeys([...s]);
+}
+
+/** Pick the dimension that varies most in the current set (self-organizing). */
+function chooseAutoDim(rows) {
+  let best = null, bestN = 1;
+  for (const [k] of GROUP_DIMS) {
+    const n = dimValues(rows, k).length;
+    if (n > bestN) { bestN = n; best = k; }        // most distinct values wins
+  }
+  return best;  // null when nothing varies
+}
+
+/** Resolve the active grouping dimension (honoring Auto), or null for flat. */
+function activeGroupDim(rows) {
+  if (state.groupBy === "none") return null;
+  if (state.groupBy === "auto") return chooseAutoDim(rows);
+  return dimValues(rows, state.groupBy).length ? state.groupBy : null;
+}
+
+/** Partition rows by a dimension into [value, rows] pairs, sorted by value. */
+function partition(rows, key) {
+  const m = new Map();
+  rows.forEach(r => {
+    const v = (r[key] === null || r[key] === undefined) ? "—" : String(r[key]);
+    if (!m.has(v)) m.set(v, []);
+    m.get(v).push(r);
+  });
+  return sortKeys([...m.keys()]).map(v => [v, m.get(v)]);
+}
+
+/** Inline status-mix bar (ok/partial/failed proportions) for a set of rows. */
+function statusBar(rows) {
+  const order = ["sim_ok", "sim_partial", "sim_all_failed", "fit_failed", "not_simulated"];
+  const c = {}; rows.forEach(r => c[r.status_label] = (c[r.status_label] || 0) + 1);
+  const n = rows.length || 1;
+  const segs = order.filter(k => c[k]).map(k =>
+    `<span class="sb-${k}" style="width:${(100 * c[k] / n).toFixed(1)}%" title="${k}: ${c[k]}"></span>`).join("");
+  return `<span class="statusbar">${segs}</span>`;
+}
+
+/** Compact numeric range "min–max" over a metric, or "—" when absent. */
+function rangeOf(rows, key, d = 2) {
+  const vals = rows.map(r => r[key]).filter(v => typeof v === "number");
+  if (!vals.length) return "—";
+  const lo = Math.min(...vals), hi = Math.max(...vals);
+  const f = x => Number.isInteger(x) ? x : x.toFixed(d);
+  return lo === hi ? `${f(lo)}` : `${f(lo)}–${f(hi)}`;
+}
+
+const fmt = (v, d=3) => (v === null || v === undefined || v === "") ? "—"
+  : (typeof v === "number" ? (Number.isInteger(v) ? v : v.toFixed(d)) : v);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// ----- Filtering -----
+function passes(row) {
+  for (const [k] of FACETS) {
+    const sel = state.selected[k];
+    if (sel.size && !sel.has(String(row[k]))) return false;
+  }
+  if (state.flags.size) {
+    const rf = new Set(row.diagnostic_flags || []);
+    for (const f of state.flags) if (!rf.has(f)) return false;
+  }
+  if (state.q) {
+    const hay = (row.sweep_id + " " + row.equations + " " +
+      (row.diagnostic_flags||[]).join(" ") + " " + row.sim_failure_reasons + " " +
+      row.status_label + " " + row.fit_failure_reason).toLowerCase();
+    if (!hay.includes(state.q)) return false;
+  }
+  return true;
+}
+function filtered() { return DATA.filter(passes); }
+
+// ----- Facets UI -----
+function distinctCounts(rows, key) {
+  const m = new Map();
+  rows.forEach(r => {
+    const v = String(r[key]);
+    m.set(v, (m.get(v) || 0) + 1);
+  });
+  return m;
+}
+function flagCounts(rows) {
+  const m = new Map();
+  rows.forEach(r => (r.diagnostic_flags||[]).forEach(f => m.set(f, (m.get(f)||0)+1)));
+  return m;
+}
+function sortKeys(keys) {
+  return keys.sort((a,b) => {
+    const na = parseFloat(a), nb = parseFloat(b);
+    const aNum = !isNaN(na) && a.trim() !== "", bNum = !isNaN(nb) && b.trim() !== "";
+    if (aNum && bNum) return na - nb;
+    return String(a).localeCompare(String(b));
+  });
+}
+function renderFacets() {
+  const rows = DATA;
+  let html = "";
+  for (const [key, label] of FACETS) {
+    const counts = distinctCounts(rows, key);
+    const keys = sortKeys([...counts.keys()]);
+    if (keys.length <= 1 && keys[0] === "null") continue;
+    html += `<h3>${esc(label)}</h3><div class="facet" data-facet="${key}">`;
+    for (const v of keys) {
+      const checked = state.selected[key].has(v) ? "checked" : "";
+      const disp = v === "null" ? "—" : v;
+      html += `<label><input type="checkbox" value="${esc(v)}" ${checked}>
+        <span>${esc(disp)}</span><span class="cnt">${counts.get(v)}</span></label>`;
+    }
+    html += `</div>`;
+  }
+  // Diagnostic flags
+  const fc = flagCounts(rows);
+  if (fc.size) {
+    html += `<h3>Diagnostic flags</h3><div class="facet" data-facet="__flags">`;
+    for (const f of sortKeys([...fc.keys()])) {
+      const checked = state.flags.has(f) ? "checked" : "";
+      html += `<label><input type="checkbox" value="${esc(f)}" ${checked}>
+        <span>${esc(f)}</span><span class="cnt">${fc.get(f)}</span></label>`;
+    }
+    html += `</div>`;
+  }
+  const el = document.getElementById("facets");
+  el.innerHTML = html;
+  el.querySelectorAll(".facet").forEach(box => {
+    const facet = box.dataset.facet;
+    box.addEventListener("change", e => {
+      const v = e.target.value;
+      if (facet === "__flags") {
+        e.target.checked ? state.flags.add(v) : state.flags.delete(v);
+      } else {
+        e.target.checked ? state.selected[facet].add(v) : state.selected[facet].delete(v);
+      }
+      render();
+    });
+  });
+}
+
+// ----- Table -----
+const COLS = [
+  ["sweep_id", "sweep", false],
+  ["configuration_index", "idx", true],
+  ["lowpass_hz", "lp", true],
+  ["degree", "deg", true],
+  ["n_delays", "nd", true],
+  ["delay_samples", "τ", true],
+  ["smooth_window_samples", "smooth", true],
+  ["threshold", "thresh", true],
+  ["status_label", "status", false],
+  ["nonzero_terms", "terms", true],
+  ["term_utilization_percent", "util%", true],
+  ["sim_n_success", "sim ok", true],
+  ["sim_n_trials", "sim n", true],
+  ["sim_success_fraction", "succ frac", true],
+  ["sim_reached_fraction_mean", "reach", true],
+  ["sim_x0_rmse_median", "x0 rmse", true],
+  ["sim_trajectory_rmse_median", "traj rmse", true],
+];
+function sortRows(rows) {
+  const { col, dir } = state.sort;
+  return rows.slice().sort((a,b) => {
+    let va = a[col], vb = b[col];
+    const na = (va===null||va===undefined||va==="") ? Infinity*dir*-1 : va;
+    const nb = (vb===null||vb===undefined||vb==="") ? Infinity*dir*-1 : vb;
+    if (typeof na === "number" && typeof nb === "number") return (na-nb)*dir;
+    return String(va).localeCompare(String(vb))*dir;
+  });
+}
+function statusBadge(s) { return `<span class="badge b-${s}">${s}</span>`; }
+
+/** Render one data <tr> for a config. */
+function rowHTML(r) {
+  let h = `<tr data-key="${r.config_key}">`;
+  for (const [key, , num] of COLS) {
+    let v = r[key];
+    if (key === "status_label") v = statusBadge(v);
+    else if (key === "sim_success_fraction" || key === "sim_reached_fraction_mean")
+      v = v===null ? "—" : v.toFixed(2);
+    else v = fmt(v);
+    h += `<td class="${num?"num":""}">${v}</td>`;
+  }
+  const flags = (r.diagnostic_flags||[]).map(f=>`<span class="flag">${esc(f)}</span>`).join("");
+  h += `<td><div class="flags">${flags}</div></td>`;
+  h += `<td>${r.annotation && r.annotation.verdict ? '<span class="anno-dot">●</span>' : ''}</td>`;
+  return h + `</tr>`;
+}
+
+/** Group header row for the table, spanning all columns. */
+function groupHeaderRow(dim, value, groupRows) {
+  const gid = `${dim}:${value}`;
+  const collapsed = state.collapsed.has(gid);
+  const range = `succ frac ${rangeOf(groupRows, "sim_success_fraction")}` +
+    ` · terms ${rangeOf(groupRows, "nonzero_terms")}`;
+  return `<tr class="grouphdr" data-group="${esc(gid)}"><td colspan="${COLS.length + 2}">
+    <div class="ghdr-inner"><span class="tri">${collapsed ? "▶" : "▼"}</span>
+    <b>${esc(DIM_LABEL[dim])}: ${esc(value)}</b>
+    <span class="gcount">${groupRows.length} configs</span>
+    ${statusBar(groupRows)}<span class="grange">${range}</span></div></td></tr>`;
+}
+
+function renderTable(rows) {
+  const sorted = sortRows(rows);
+  const groupDim = activeGroupDim(rows);
+  let h = "<table><thead><tr>";
+  for (const [key, label] of COLS) {
+    const arrow = state.sort.col === key ? (state.sort.dir<0?" ▼":" ▲") : "";
+    h += `<th data-col="${key}">${esc(label)}<span class="arrow">${arrow}</span></th>`;
+  }
+  h += `<th>flags</th><th>✎</th></tr></thead><tbody>`;
+  if (!sorted.length) {
+    h += `<tr><td colspan="${COLS.length + 2}" class="hint" style="padding:16px">
+      No configurations match the current filters.</td></tr>`;
+  } else if (groupDim) {
+    for (const [value, groupRows] of partition(sorted, groupDim)) {
+      h += groupHeaderRow(groupDim, value, groupRows);
+      if (!state.collapsed.has(`${groupDim}:${value}`))
+        for (const r of groupRows) h += rowHTML(r);
+    }
+  } else {
+    for (const r of sorted) h += rowHTML(r);
+  }
+  h += "</tbody></table>";
+  const wrap = document.getElementById("tableView");
+  wrap.innerHTML = h;
+  wrap.querySelectorAll("th").forEach(th => th.addEventListener("click", () => {
+    const c = th.dataset.col; if (!c) return;
+    if (state.sort.col === c) state.sort.dir *= -1;
+    else state.sort = { col: c, dir: -1 };
+    render();
+  }));
+  wrap.querySelectorAll("tr.grouphdr").forEach(tr => tr.addEventListener("click", () => {
+    const gid = tr.dataset.group;
+    state.collapsed.has(gid) ? state.collapsed.delete(gid) : state.collapsed.add(gid);
+    render();
+  }));
+  wrap.querySelectorAll("tr[data-key]").forEach(tr =>
+    tr.addEventListener("click", () => openDrawer(tr.dataset.key)));
+}
+
+// ----- Gallery -----
+function cardHTML(r) {
+  const fig = (r.figures && r.figures[0]) || null;
+  const thumb = fig
+    ? `<img class="thumb" loading="lazy" src="${esc(fig)}" alt="config ${r.configuration_index}">`
+    : `<div class="nofig">no figure</div>`;
+  return `<div class="card" data-key="${r.config_key}">${thumb}
+    <div class="cap"><div class="t"><span>${esc(r.sweep_id)} · #${r.configuration_index}</span>
+    ${statusBadge(r.status_label)}</div>
+    <div class="s">deg ${fmt(r.degree)} · nd ${fmt(r.n_delays)} · τ ${fmt(r.delay_samples)}
+    · thr ${fmt(r.threshold)} · ${r.sim_n_success}/${r.sim_n_trials} reached</div></div></div>`;
+}
+function renderGallery(rows) {
+  const sorted = sortRows(rows).slice(0, 600);
+  const groupDim = activeGroupDim(rows);
+  const g = document.getElementById("galleryView");
+  let h = "";
+  if (!sorted.length) {
+    h = `<p class="hint">No configurations match the current filters.</p>`;
+  } else if (groupDim) {
+    for (const [value, groupRows] of partition(sorted, groupDim)) {
+      const gid = `${groupDim}:${value}`;
+      const collapsed = state.collapsed.has(gid);
+      h += `<div class="gallery-group" data-group="${esc(gid)}">
+        <span class="tri">${collapsed ? "▶" : "▼"}</span>
+        <span>${esc(DIM_LABEL[groupDim])}: ${esc(value)}</span>
+        <span class="gcount">${groupRows.length} configs</span>${statusBar(groupRows)}</div>`;
+      if (!collapsed) for (const r of groupRows) h += cardHTML(r);
+    }
+  } else {
+    for (const r of sorted) h += cardHTML(r);
+  }
+  g.innerHTML = h;
+  if (sorted.length === 600) g.insertAdjacentHTML("beforeend",
+    `<p class="hint" style="grid-column:1/-1">Showing first 600; narrow filters to see more.</p>`);
+  g.querySelectorAll(".gallery-group").forEach(el => el.addEventListener("click", () => {
+    const gid = el.dataset.group;
+    state.collapsed.has(gid) ? state.collapsed.delete(gid) : state.collapsed.add(gid);
+    render();
+  }));
+  g.querySelectorAll(".card").forEach(c =>
+    c.addEventListener("click", () => openDrawer(c.dataset.key)));
+}
+
+// ----- Common-features panel -----
+function valueCounts(rows, key) {
+  const m = new Map();
+  rows.forEach(r => {
+    const v = (r[key] === null || r[key] === undefined) ? "—" : String(r[key]);
+    m.set(v, (m.get(v) || 0) + 1);
+  });
+  return m;
+}
+function renderCommonFeatures(rows) {
+  const box = document.getElementById("commonFeatures");
+  if (!rows.length) { box.innerHTML = ""; return; }
+  const n = rows.length;
+  const shared = [], varies = [];
+  for (const [key, label, numeric] of GROUP_DIMS) {
+    if (key === "status_label") continue;   // status shown as its own bar
+    const counts = valueCounts(rows, key);
+    const entries = [...counts.entries()];
+    if (entries.length === 1) {
+      shared.push(`<span class="cf-chip const">${esc(label)} = ${esc(entries[0][0])}</span>`);
+    } else if (numeric && entries.length > 4) {
+      varies.push(`<span class="cf-chip">${esc(label)}: ${rangeOf(rows, key)}
+        <span class="pct">${entries.length} values</span></span>`);
+    } else {
+      const top = sortKeys(entries.map(e => e[0]))
+        .map(v => [v, counts.get(v)])
+        .sort((a, b) => b[1] - a[1]).slice(0, 3)
+        .map(([v, c]) => `${esc(v)} <span class="pct">${Math.round(100 * c / n)}%</span>`)
+        .join(" · ");
+      const more = entries.length > 3 ? ` <span class="pct">+${entries.length - 3}</span>` : "";
+      varies.push(`<span class="cf-chip">${esc(label)}: ${top}${more}</span>`);
+    }
+  }
+  const sc = valueCounts(rows, "status_label");
+  const statusText = [...sc.entries()].sort((a, b) => b[1] - a[1])
+    .map(([k, c]) => `${k} ${c}`).join(" · ");
+  box.innerHTML = `<div class="cf">
+    <div class="cf-row"><span class="cf-lab">Showing</span>
+      <b>${n}</b> configs ${statusBar(rows)}
+      <span class="pct" style="color:var(--muted)">${esc(statusText)}</span></div>
+    <div class="cf-row"><span class="cf-lab">Shared</span>
+      ${shared.length ? shared.join(" ") : '<span class="pct">— nothing constant across all —</span>'}</div>
+    <div class="cf-row"><span class="cf-lab">Varies</span>
+      ${varies.length ? varies.join(" ") : '<span class="pct">—</span>'}</div>
+  </div>`;
+}
+
+// ----- Drawer -----
+function openDrawer(key) {
+  const r = DATA.find(d => d.config_key === key);
+  if (!r) return;
+  document.getElementById("drawerTitle").innerHTML =
+    `${esc(r.sweep_id)} · config #${r.configuration_index} ${statusBadge(r.status_label)}`;
+  const kv = (dt, dd) => `<dt>${esc(dt)}</dt><dd>${dd}</dd>`;
+  let body = `<dl class="kv">
+    ${kv("config_key", `<code class="k">${esc(r.config_key)}</code>`)}
+    ${kv("degree", fmt(r.degree))}
+    ${kv("n_delays", fmt(r.n_delays))}
+    ${kv("delay_samples", fmt(r.delay_samples))}
+    ${kv("smooth_window_samples", fmt(r.smooth_window_samples))}
+    ${kv("derivative_method", esc(r.derivative_method))}
+    ${kv("lowpass_hz", fmt(r.lowpass_hz))}
+    ${kv("threshold", fmt(r.threshold))}
+    ${kv("optimizer", esc(r.optimizer))}
+    ${kv("alpha", fmt(r.alpha))}
+    ${kv("signal_normalization", esc(r.signal_normalization))}
+    ${kv("normalize_columns", esc(r.normalize_columns))}
+    ${kv("nonzero_terms / possible", `${fmt(r.nonzero_terms)} / ${fmt(r.possible_terms)} (${fmt(r.term_utilization_percent,1)}%)`)}
+    ${kv("simulation reached", `${r.sim_n_success}/${r.sim_n_trials} trials`)}
+    ${kv("reached fraction (mean)", fmt(r.sim_reached_fraction_mean,3))}
+    ${kv("x0 rmse (median)", fmt(r.sim_x0_rmse_median,4))}
+    ${kv("trajectory rmse (median)", fmt(r.sim_trajectory_rmse_median,4))}
+  </dl>`;
+
+  if (r.diagnostic_flags && r.diagnostic_flags.length)
+    body += `<div class="flags" style="margin-bottom:14px">` +
+      r.diagnostic_flags.map(f=>`<span class="flag">${esc(f)}</span>`).join("") + `</div>`;
+  if (r.sim_failure_reasons)
+    body += `<div class="section-title">Simulation failure reasons</div>
+      <div class="eqbox">${esc(r.sim_failure_reasons)}</div>`;
+  if (r.fit_failure_reason)
+    body += `<div class="section-title">Fit failure reason</div>
+      <div class="eqbox">${esc(r.fit_failure_reason)}</div>`;
+
+  // Annotation
+  const a = r.annotation || {};
+  if (a.verdict || a.tags || a.notes) {
+    body += `<div class="section-title">Manual annotation</div><div class="anno-box">
+      ${a.verdict?`<b>${esc(a.verdict)}</b><br>`:""}
+      ${a.tags?`<i>${esc(a.tags)}</i><br>`:""}
+      ${a.notes?esc(a.notes):""}</div>`;
+  } else {
+    body += `<div class="section-title">Manual annotation</div>
+      <div class="anno-box anno-empty">None. Add a row to
+      <code class="k">annotations.csv</code> with config_key
+      <code class="k">${esc(r.config_key)}</code>, then re-run the build.</div>`;
+  }
+
+  body += `<div class="section-title">Equations</div>
+    <div class="eqbox">${esc((r.equations||"").replace(/ \| /g, "\n"))}</div>`;
+
+  const figs = r.figures || [];
+  body += `<div class="section-title">Simulation figures (${figs.length})</div>`;
+  if (figs.length) {
+    body += `<div class="figgrid">` + figs.map(f =>
+      `<figure><img loading="lazy" src="${esc(f)}" alt="">
+       <figcaption>${esc(f.split("/").pop())}</figcaption></figure>`).join("") + `</div>`;
+  } else {
+    body += `<p class="hint">No figures for this configuration.</p>`;
+  }
+
+  document.getElementById("drawerBody").innerHTML = body;
+  document.getElementById("drawer").classList.add("open");
+  document.getElementById("drawerBg").classList.add("open");
+}
+function closeDrawer() {
+  document.getElementById("drawer").classList.remove("open");
+  document.getElementById("drawerBg").classList.remove("open");
+}
+
+// ----- Header counts -----
+function renderCounts(rows) {
+  const c = {};
+  rows.forEach(r => c[r.status_label] = (c[r.status_label]||0)+1);
+  const order = [["sim_ok","ok"],["sim_partial","warn"],["sim_all_failed","bad"],
+    ["fit_failed","bad"],["not_simulated","neutral"]];
+  let h = `<span class="chip count">${rows.length} configs</span>`;
+  for (const [k, cls] of order) if (c[k])
+    h += `<span class="chip ${cls}">${k}: ${c[k]}</span>`;
+  document.getElementById("hcounts").innerHTML = h;
+}
+
+// ----- Render orchestration -----
+function render() {
+  const rows = filtered();
+  renderCounts(rows);
+  renderCommonFeatures(rows);
+  const gd = activeGroupDim(rows);
+  const gtxt = gd ? ` · grouped by ${DIM_LABEL[gd]}${state.groupBy === "auto" ? " (auto)" : ""}` : "";
+  document.getElementById("shown").textContent =
+    `${rows.length} of ${DATA.length} shown${gtxt}`;
+  if (state.view === "table") { renderTable(rows); }
+  else { renderGallery(rows); }
+  renderFacets();
+}
+
+// ----- Wiring -----
+document.getElementById("q").addEventListener("input", e => {
+  state.q = e.target.value.trim().toLowerCase(); render();
+});
+document.getElementById("groupBy").addEventListener("change", e => {
+  state.groupBy = e.target.value; state.collapsed.clear(); render();
+});
+document.getElementById("viewTable").addEventListener("click", () => {
+  state.view = "table";
+  document.getElementById("viewTable").classList.add("active");
+  document.getElementById("viewGallery").classList.remove("active");
+  document.getElementById("tableView").style.display = "";
+  document.getElementById("galleryView").style.display = "none";
+  render();
+});
+document.getElementById("viewGallery").addEventListener("click", () => {
+  state.view = "gallery";
+  document.getElementById("viewGallery").classList.add("active");
+  document.getElementById("viewTable").classList.remove("active");
+  document.getElementById("tableView").style.display = "none";
+  document.getElementById("galleryView").style.display = "";
+  render();
+});
+document.getElementById("resetBtn").addEventListener("click", () => {
+  FACETS.forEach(([k]) => state.selected[k].clear());
+  state.flags.clear(); state.q = ""; document.getElementById("q").value = "";
+  render();
+});
+document.getElementById("drawerClose").addEventListener("click", closeDrawer);
+document.getElementById("drawerBg").addEventListener("click", closeDrawer);
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const next = cur === "dark" ? "light" : (cur === "light" ? "dark"
+    : (matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "dark"));
+  document.documentElement.setAttribute("data-theme", next);
+});
+
+document.getElementById("hmeta").textContent =
+  `${META.n_configs ?? DATA.length} configurations · ${(META.sweeps||[]).length} sweeps`;
+
+if (!DATA.length) {
+  document.getElementById("tableView").innerHTML =
+    `<p style="padding:20px" class="hint">No data loaded. Run
+     <code class="k">_build/build_index.py</code> to generate
+     <code class="k">_build/dashboard_data.js</code>.</p>`;
+} else {
+  render();
+}
+</script>
+</body>
+</html>

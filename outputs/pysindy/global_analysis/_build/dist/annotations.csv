@@ -1,0 +1,6 @@
+# Manual review annotations. Safe to edit by hand or in a spreadsheet.
+# Join key is config_key (stable content hash from build_index.py).
+# This file is READ-ONLY to the build and is never regenerated.
+# Columns: config_key, verdict (free text), tags (space or comma
+# separated), notes (free text). Add one row per annotated config.
+config_key,verdict,tags,notes
