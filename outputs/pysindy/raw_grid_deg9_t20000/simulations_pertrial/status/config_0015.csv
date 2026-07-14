@@ -1,0 +1,5 @@
+configuration_index,test_trial_id,simulation_status,failure_reason,requested_duration_s,reached_duration_s,simulation_runtime_s,rhs_evaluations,simulated_samples,simulated_x0_rms_uv,compared_samples,x0_rmse_uv,trajectory_rmse_uv
+15,4,failed,integration error: simulation exceeded 300 wall-clock seconds,14.064,1.1780942271131203,300.00030701607466,4169,0,,0,,
+15,1088,failed,integration error: simulation exceeded 300 wall-clock seconds,14.176,2.0830761166679435,300.00042437948287,4146,0,,0,,
+15,622,failed,integration error: simulation exceeded 300 wall-clock seconds,14.172,1.6827248592626354,300.00041897781193,4015,0,,0,,
+15,620,failed,integration error: simulation exceeded 300 wall-clock seconds,14.172,1.2427991254393913,300.00039114803076,3997,0,,0,,
