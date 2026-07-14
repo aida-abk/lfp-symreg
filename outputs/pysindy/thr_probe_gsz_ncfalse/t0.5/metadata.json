@@ -1,0 +1,142 @@
+{
+  "created_utc": "2026-07-14T16:33:25.438547+00:00",
+  "command": [
+    "scripts/pysindy/raw_grid_sweep.py",
+    "--trial-type",
+    "fixation",
+    "--channel",
+    "0",
+    "--test-fraction",
+    "0.25",
+    "--seed",
+    "0",
+    "--downsample",
+    "2",
+    "--lowpass-list",
+    "35",
+    "--degree-list",
+    "2,5",
+    "--n-delays-list",
+    "4",
+    "--delay-list",
+    "2",
+    "--smooth-window-list",
+    "5",
+    "--threshold",
+    "0.5",
+    "--no-normalize-columns",
+    "--global-zscore",
+    "--out-csv",
+    "outputs/pysindy/thr_probe_gsz_ncfalse/t0.5/raw_grid_merged.csv",
+    "--equations-out",
+    "outputs/pysindy/thr_probe_gsz_ncfalse/t0.5/equations.txt",
+    "--metadata-out",
+    "outputs/pysindy/thr_probe_gsz_ncfalse/t0.5/metadata.json"
+  ],
+  "slurm_job_id": "3971034",
+  "slurm_array_task_id": "6",
+  "source": "lfp",
+  "mat_file": "/oscar/data/tdesroch/dbuyukya/AidaCarneyProject/raw_data/trialdata_v03_buzz_20231106_pre-0.100_post0.100.mat",
+  "session": "buzz_20231106",
+  "trial_type": "fixation",
+  "validity_rule": "is_fixation_trial & goodFix",
+  "channel": 0,
+  "signal_units": "microvolts (uV)",
+  "raw_sampling_hz": 500.0,
+  "downsample_factor": 2,
+  "processed_sampling_hz": 250.0,
+  "preprocessing": {
+    "demean_each_trial": true,
+    "lowpass_filter": "fourth-order Butterworth, zero-phase sosfiltfilt",
+    "normalization": "global_zscore",
+    "software_highpass": "none",
+    "full_stored_trial": true
+  },
+  "split": {
+    "method": "random whole-trial split",
+    "test_fraction": 0.25,
+    "seed": 0,
+    "train_trial_ids": [
+      1398,
+      1,
+      0,
+      776,
+      934,
+      775,
+      311,
+      1086,
+      310,
+      156,
+      930,
+      621,
+      777,
+      158,
+      467,
+      931,
+      313,
+      932,
+      314,
+      157,
+      155,
+      469,
+      779,
+      465,
+      933,
+      1087,
+      466,
+      1085
+    ],
+    "test_trial_ids": [
+      4,
+      1088,
+      622,
+      620,
+      2,
+      3,
+      1244,
+      778,
+      312
+    ]
+  },
+  "fixed_model_settings": {
+    "optimizer": "stlsq",
+    "threshold": 0.5,
+    "alpha": [
+      0.05
+    ],
+    "nu": null,
+    "normalize_columns": false,
+    "savgol_polyorder": 3,
+    "simulation_performed": false,
+    "diagnostics_calculated": false
+  },
+  "grid": {
+    "lowpass_hz": [
+      35.0
+    ],
+    "degree": [
+      2,
+      5
+    ],
+    "n_delays": [
+      4
+    ],
+    "delay_samples": [
+      2
+    ],
+    "smooth_window_samples": [
+      5
+    ],
+    "alpha": [
+      0.05
+    ],
+    "nu": []
+  },
+  "expected_configurations": 2,
+  "global_zscore": {
+    "35.0": {
+      "mean": -0.0007537510658310451,
+      "std": 36.85636440218341
+    }
+  }
+}
