@@ -52,8 +52,11 @@ NDELAYS="${NDELAYS:-4}"
 DELAY="${DELAY:-2}"
 SMOOTH="${SMOOTH:-5}"
 
-# One threshold per array task.
-THRESHOLDS=(0.001 0.005 0.01 0.05 0.1 0.2 0.5)
+# One threshold per array task. Range chosen from the coefficient-magnitude
+# probe: with global z-score + normalize_columns=False the fitted coefficients
+# are ~10^0-10^2 (median ~8-18, max ~270), so thresholding only bites between
+# ~2 and ~100; the term-count knee sits around 10-20.
+THRESHOLDS=(1 2 5 10 20 50 100)
 THRESHOLD="${THRESHOLDS[$SLURM_ARRAY_TASK_ID]}"
 
 OUTPUT_DIR="$OUTPUT_ROOT/t${THRESHOLD}"
