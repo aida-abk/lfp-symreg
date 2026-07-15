@@ -656,6 +656,98 @@ def plot_windowed_trial(
   plt.close(figure)
 
 
+def plot_windowed_trial_stacked(
+  path: Path,
+  row: dict[str, str],
+  trial_id: int,
+  measured: np.ndarray,
+  windows: list[dict[str, object]],
+  dt: float,
+  raw_unfiltered: np.ndarray | None = None,
+  signal_units: str = LFP_AMPLITUDE_UNIT,
+) -> None:
+  """Plot one trial as separate zoomed panels, one per re-anchored window.
+
+  Each window gets its own vertically-stacked subplot on a shared "time from
+  window start" x-axis (so recurring features line up across windows). Every
+  panel overlays the measured lowpass x0 with that window's simulated forecast,
+  each free-run from the measured state at the window's start.
+
+  Args:
+    path: Destination PNG path.
+    row: Stored raw-grid configuration.
+    trial_id: Held-out trial identifier.
+    measured: Delay-embedded measured trajectory, shape ``(time, state)``.
+    windows: Per-window dicts from ``simulate_trial_windows``.
+    dt: Processed sample interval in seconds.
+    raw_unfiltered: Optional offset-aligned unfiltered µV trace for a grey overlay.
+    signal_units: Units label for the primary axis.
+  """
+  import matplotlib
+  matplotlib.use("Agg")
+  import matplotlib.pyplot as plt
+
+  n = len(windows)
+  if n == 0:
+    return
+  figure, axes = plt.subplots(
+    n, 1, figsize=(9, max(2.2, 1.5 * n)), sharex=True, squeeze=False,
+  )
+  axes = axes.ravel()
+  for axis, window in zip(axes, windows):
+    result: SimulationResult = window["_result"]  # type: ignore[assignment]
+    start = int(window["_start_sample"])
+    window_samples = int(round(float(window["window_duration_s"]) / dt)) + 1
+    measured_segment = measured[start : start + window_samples, 0]
+    measured_time = np.arange(measured_segment.shape[0]) * dt
+
+    if raw_unfiltered is not None:
+      ax2 = axis.twinx()
+      raw_segment = raw_unfiltered[start : start + window_samples]
+      ax2.plot(
+        measured_time[: len(raw_segment)], raw_segment,
+        color="grey", linewidth=0.7, alpha=0.35,
+      )
+      ax2.tick_params(axis="y", labelcolor="grey", labelsize=6)
+      axis.set_zorder(ax2.get_zorder() + 1)
+      axis.patch.set_visible(False)
+
+    axis.plot(
+      measured_time, measured_segment,
+      color="steelblue", linewidth=1.1, label=f"lowpass ({signal_units})",
+    )
+    if result.trajectory is not None and result.trajectory.size:
+      simulated = result.trajectory[:, 0]
+      axis.plot(
+        np.arange(simulated.shape[0]) * dt, simulated,
+        color="darkorange", linestyle="--", linewidth=1.1, label="simulated",
+      )
+
+    rmse = window["x0_rmse_uv"]
+    rmse_text = (
+      f"RMSE {rmse:.1f}" if isinstance(rmse, float) and math.isfinite(rmse)
+      else "RMSE n/a"
+    )
+    start_s = float(window["window_start_s"])
+    end_s = start_s + float(window["window_duration_s"])
+    axis.set_title(
+      f"window {window['window_index']}: {start_s:.1f}–{end_s:.1f}s  |  "
+      f"{window['simulation_status']}  |  {rmse_text}",
+      fontsize=8, loc="left",
+    )
+    axis.set_ylabel(f"x0 ({signal_units})", fontsize=8)
+    axis.tick_params(labelsize=7)
+    axis.grid(alpha=0.2)
+
+  axes[-1].set_xlabel("Time from window start (s)", fontsize=9)
+  axes[0].legend(loc="upper right", fontsize=7)
+  figure.suptitle(f"Trial {trial_id} — {_config_suptitle(row)}", fontsize=9)
+  figure.tight_layout(rect=(0, 0, 1, 0.98))
+  path.parent.mkdir(parents=True, exist_ok=True)
+  figure.savefig(path, dpi=160)
+  plt.close(figure)
+
+
 def plot_windowed_configuration(
   path: Path,
   row: dict[str, str],
@@ -706,6 +798,7 @@ def simulate_windowed_configuration(
   test_raw_unfiltered: list[np.ndarray] | None = None,
   signal_units: str = LFP_AMPLITUDE_UNIT,
   per_trial_figures: bool = False,
+  stacked: bool = False,
 ) -> dict[str, object]:
   """Simulate one stored equation as re-anchored windows over every held-out trial.
 
@@ -786,13 +879,14 @@ def simulate_windowed_configuration(
     raw_unfiltered_x0 = [tr[offset:] for tr in test_raw_unfiltered]
 
   figures_dir = output_dir / "figures"
-  if per_trial_figures:
+  if stacked or per_trial_figures:
+    plot_fn = plot_windowed_trial_stacked if stacked else plot_windowed_trial
     for trial_id, measured, windows, raw in zip(
       test_trial_ids, measured_trials, windows_per_trial,
       raw_unfiltered_x0 if raw_unfiltered_x0 is not None
       else [None] * len(measured_trials),
     ):
-      plot_windowed_trial(
+      plot_fn(
         figures_dir / f"{stem}_trial_{trial_id:04d}.png",
         row=row,
         trial_id=trial_id,
@@ -913,6 +1007,7 @@ def run(args: argparse.Namespace) -> list[dict[str, object]]:
           test_raw_unfiltered=traces_unfiltered,
           signal_units=signal_units,
           per_trial_figures=args.per_trial_figures,
+          stacked=args.stacked_windows,
         )
       )
     else:
@@ -1001,6 +1096,16 @@ def main() -> None:
       "(non-overlapping tiling). Smaller values give overlapping windows."
     ),
   )
+  parser.add_argument(
+    "--stacked-windows",
+    action="store_true",
+    default=False,
+    help=(
+      "With --window-s, save one PNG per trial containing each window as its own "
+      "vertically-stacked zoomed panel (shared time-from-window-start x-axis) "
+      "instead of overlaying all windows on a single full-trial axis."
+    ),
+  )
   args = parser.parse_args()
   if args.max_test_trials is not None and args.max_test_trials < 1:
     parser.error("--max-test-trials must be at least 1.")
@@ -1013,6 +1118,8 @@ def main() -> None:
       parser.error("--window-step-s requires --window-s.")
     if args.window_step_s <= 0:
       parser.error("--window-step-s must be positive.")
+  if args.stacked_windows and args.window_s is None:
+    parser.error("--stacked-windows requires --window-s.")
   run(args)
 
 
