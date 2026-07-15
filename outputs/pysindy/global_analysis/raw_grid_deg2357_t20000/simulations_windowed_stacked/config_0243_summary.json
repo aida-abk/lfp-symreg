@@ -1,0 +1,18 @@
+[
+  {
+    "configuration_index": 243,
+    "lowpass_hz": 80.0,
+    "degree": 5,
+    "n_delays": 6,
+    "delay_samples": 5,
+    "smooth_window_samples": 9,
+    "window_s": 2.0,
+    "window_step_s": 2.0,
+    "test_trials": 4,
+    "total_windows": 31,
+    "successful_windows": 3,
+    "configuration_runtime_s": 3393.9918381925672,
+    "figure": "outputs/pysindy/global_analysis/raw_grid_deg2357_t20000/simulations_windowed_stacked/figures",
+    "status_csv": "outputs/pysindy/global_analysis/raw_grid_deg2357_t20000/simulations_windowed_stacked/status/config_0243.csv"
+  }
+]

@@ -1,0 +1,33 @@
+configuration_index,test_trial_id,window_index,window_start_s,window_duration_s,simulation_status,failure_reason,reached_duration_s,simulation_runtime_s,rhs_evaluations,simulated_samples,simulated_x0_rms_uv,compared_samples,x0_rmse_uv,trajectory_rmse_uv
+130,4,0,0.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.13360313271219668,120.00017877668142,712,0,,0,,
+130,4,1,2.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.14819242739878427,120.0001680124551,702,0,,0,,
+130,4,2,4.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.26588435865557536,120.00020232237875,705,0,,0,,
+130,4,3,6.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.14990282209944497,120.00017515011132,713,0,,0,,
+130,4,4,8.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.21825447376760168,120.00017652101815,714,0,,0,,
+130,4,5,10.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.1962152828307185,120.00018037855625,715,0,,0,,
+130,4,6,12.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.21816467414265528,120.000179708004,713,0,,0,,
+130,4,7,14.0,0.048,success,,0.048,37.70054609142244,223,13,12.500639477190532,13,15.104140239820374,8.568502101292742
+130,1088,0,0.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.14228253756590592,120.00015896745026,707,0,,0,,
+130,1088,1,2.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.2511299536865746,120.00017760321498,704,0,,0,,
+130,1088,2,4.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.14406009290508287,120.00016042403877,703,0,,0,,
+130,1088,3,6.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.1930943849053884,120.00018327124417,712,0,,0,,
+130,1088,4,8.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.21017956723021494,120.00019680708647,709,0,,0,,
+130,1088,5,10.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.24829610514224842,120.00018092244864,708,0,,0,,
+130,1088,6,12.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.16458704993782294,120.00016133859754,711,0,,0,,
+130,1088,7,14.0,0.16,success,,0.16,77.0121240913868,454,41,33.858938839202644,41,23.913408778801266,22.107394673885718
+130,622,0,0.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.23408670918932994,120.00020925700665,707,0,,0,,
+130,622,1,2.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.2250217235462153,120.00018993020058,703,0,,0,,
+130,622,2,4.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.16923405579321438,120.00017846375704,705,0,,0,,
+130,622,3,6.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.2034907488398936,120.00016657076776,712,0,,0,,
+130,622,4,8.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.19034068100678167,120.00016154907644,726,0,,0,,
+130,622,5,10.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.16310962072109889,120.00016170926392,714,0,,0,,
+130,622,6,12.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.17597182615033144,120.00016305968165,711,0,,0,,
+130,622,7,14.0,0.156,success,,0.156,76.94550389051437,455,40,40.78015430530173,40,64.12571955386862,62.50240957654588
+130,620,0,0.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.13479596596184465,120.00016205944121,715,0,,0,,
+130,620,1,2.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.2914912642930015,120.00017466023564,712,0,,0,,
+130,620,2,4.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.24309859678079132,120.00017813034356,703,0,,0,,
+130,620,3,6.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.15284572656489048,120.00015696883202,716,0,,0,,
+130,620,4,8.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.1418438929819075,120.00014556758106,710,0,,0,,
+130,620,5,10.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.15322071563976095,120.00016471929848,716,0,,0,,
+130,620,6,12.0,1.996,failed,integration error: simulation exceeded 120 wall-clock seconds,0.1930676669313427,120.00016404315829,721,0,,0,,
+130,620,7,14.0,0.156,success,,0.156,79.04670857824385,471,40,37.91436047428642,40,36.91207120308319,34.977864412773116
