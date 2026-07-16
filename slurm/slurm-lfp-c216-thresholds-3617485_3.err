@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "/oscar/data/tdesroch/dbuyukya/AidaCarneyProject/scripts/pysindy/sweep_analysis/simulate_threshold_comparison.py", line 21, in <module>
-    from plot_threshold_path import (
-ModuleNotFoundError: No module named 'plot_threshold_path'
