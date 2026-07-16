@@ -72,29 +72,6 @@ def apply_global_zscore(
   return [(np.asarray(t, dtype=float) - stats.mean) / stats.std for t in traces]
 
 
-def pooled_trace_rms(traces: list[np.ndarray]) -> float:
-  """Return RMS across every sample in a collection of unequal-length traces.
-
-  Args:
-    traces: One-dimensional traces with a shared amplitude unit. Trials may
-      contain different numbers of samples.
-
-  Returns:
-    Root mean square in the input amplitude unit. Each sample has equal weight.
-  """
-  if not traces:
-    raise ValueError("At least one trace is required to calculate RMS.")
-  squared_sum = 0.0
-  sample_count = 0
-  for trace in traces:
-    values = np.asarray(trace, dtype=float).squeeze()
-    if values.ndim != 1:
-      raise ValueError(f"Expected a 1D trace, got shape {values.shape}.")
-    squared_sum += float(np.sum(values**2))
-    sample_count += values.size
-  if sample_count == 0:
-    raise ValueError("Cannot calculate RMS from empty traces.")
-  return float(np.sqrt(squared_sum / sample_count))
 
 
 def preprocess_trace(
@@ -114,7 +91,7 @@ def preprocess_trace(
     fs: Sampling frequency in hertz.
     downsample: Keep every Nth sample after filtering.
     lowpass_hz: Optional low-pass cutoff frequency in hertz.
-    normalize: One of ``zscore``, ``center``, or ``none``.
+    normalize: One of ``zscore`` or ``none``.
     window_start: Optional crop start in seconds.
     window_end: Optional crop end in seconds.
 
@@ -155,8 +132,6 @@ def preprocess_trace(
   if normalize == "zscore":
     std = np.std(x)
     x = (x - np.mean(x)) / std if std > 0 else x - np.mean(x)
-  elif normalize == "center":
-    x = x - np.mean(x)
   elif normalize != "none":
     raise ValueError(f"Unknown normalize mode: {normalize}")
   return x
@@ -180,7 +155,7 @@ def channel_traces(
     trials: Original zero-based trial identifiers.
     downsample: Integer factor applied after filtering.
     lowpass_hz: Optional low-pass cutoff in hertz.
-    normalize: ``none``, ``center``, or ``zscore``.
+    normalize: ``none`` or ``zscore``.
     window_start: Optional crop start in seconds.
     window_end: Optional crop end in seconds.
 
@@ -200,3 +175,29 @@ def channel_traces(
     )
     for trial in trials
   ]
+
+
+# RMS
+def pooled_trace_rms(traces: list[np.ndarray]) -> float:
+  """Return RMS across every sample in a collection of unequal-length traces.
+
+  Args:
+    traces: One-dimensional traces with a shared amplitude unit. Trials may
+      contain different numbers of samples.
+
+  Returns:
+    Root mean square in the input amplitude unit. Each sample has equal weight.
+  """
+  if not traces:
+    raise ValueError("At least one trace is required to calculate RMS.")
+  squared_sum = 0.0
+  sample_count = 0
+  for trace in traces:
+    values = np.asarray(trace, dtype=float).squeeze()
+    if values.ndim != 1:
+      raise ValueError(f"Expected a 1D trace, got shape {values.shape}.")
+    squared_sum += float(np.sum(values**2))
+    sample_count += values.size
+  if sample_count == 0:
+    raise ValueError("Cannot calculate RMS from empty traces.")
+  return float(np.sqrt(squared_sum / sample_count))
