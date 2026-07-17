@@ -313,6 +313,7 @@ def simulate_configuration(
   test_raw_unfiltered: list[np.ndarray] | None = None,
   signal_units: str = LFP_AMPLITUDE_UNIT,
   per_trial_figures: bool = False,
+  figure_format: str = "png",
 ) -> dict[str, object]:
   """Simulate one stored equation from every held-out initial condition.
 
@@ -425,7 +426,7 @@ def simulate_configuration(
       raw_unfiltered_x0 if raw_unfiltered_x0 is not None else [None] * len(results),
     ):
       plot_trial(
-        figures_dir / f"{stem}_trial_{trial_id:04d}.png",
+        figures_dir / f"{stem}_trial_{trial_id:04d}.{figure_format}",
         row=row,
         trial_id=trial_id,
         measured=measured,
@@ -434,10 +435,10 @@ def simulate_configuration(
         raw_unfiltered=raw,
         signal_units=signal_units,
       )
-    # Per-trial mode writes one PNG per trial; record the directory holding them.
+    # Per-trial mode writes one figure per trial; record the directory holding them.
     figure_path = figures_dir
   else:
-    figure_path = figures_dir / f"{stem}.png"
+    figure_path = figures_dir / f"{stem}.{figure_format}"
     plot_configuration(
       figure_path,
       row=row,
@@ -799,6 +800,7 @@ def simulate_windowed_configuration(
   signal_units: str = LFP_AMPLITUDE_UNIT,
   per_trial_figures: bool = False,
   stacked: bool = False,
+  figure_format: str = "png",
 ) -> dict[str, object]:
   """Simulate one stored equation as re-anchored windows over every held-out trial.
 
@@ -887,7 +889,7 @@ def simulate_windowed_configuration(
       else [None] * len(measured_trials),
     ):
       plot_fn(
-        figures_dir / f"{stem}_trial_{trial_id:04d}.png",
+        figures_dir / f"{stem}_trial_{trial_id:04d}.{figure_format}",
         row=row,
         trial_id=trial_id,
         measured=measured,
@@ -898,7 +900,7 @@ def simulate_windowed_configuration(
       )
     figure_path = figures_dir
   else:
-    figure_path = figures_dir / f"{stem}.png"
+    figure_path = figures_dir / f"{stem}.{figure_format}"
     plot_windowed_configuration(
       figure_path,
       row=row,
@@ -931,6 +933,11 @@ def simulate_windowed_configuration(
 
 def run(args: argparse.Namespace) -> list[dict[str, object]]:
   """Run the selected stored-equation simulations and visualizations."""
+  if args.figure_format == "svg":
+    # Keep text as editable text objects (not outlined paths) for vector editing.
+    import matplotlib
+    matplotlib.rcParams["svg.fonttype"] = "none"
+    matplotlib.rcParams["pdf.fonttype"] = 42
   rows = select_rows(
     load_grid(args.grid_csv),
     configuration_index=args.configuration_index,
@@ -1008,6 +1015,7 @@ def run(args: argparse.Namespace) -> list[dict[str, object]]:
           signal_units=signal_units,
           per_trial_figures=args.per_trial_figures,
           stacked=args.stacked_windows,
+          figure_format=args.figure_format,
         )
       )
     else:
@@ -1022,6 +1030,7 @@ def run(args: argparse.Namespace) -> list[dict[str, object]]:
           test_raw_unfiltered=traces_unfiltered,
           signal_units=signal_units,
           per_trial_figures=args.per_trial_figures,
+          figure_format=args.figure_format,
         )
       )
 
@@ -1094,6 +1103,15 @@ def main() -> None:
     help=(
       "Spacing between window starts in seconds; defaults to --window-s "
       "(non-overlapping tiling). Smaller values give overlapping windows."
+    ),
+  )
+  parser.add_argument(
+    "--figure-format",
+    choices=("png", "svg"),
+    default="png",
+    help=(
+      "Output image format for saved figures. 'svg' produces vector files with "
+      "editable text (svg.fonttype=none) for Illustrator; 'png' is the default raster."
     ),
   )
   parser.add_argument(
