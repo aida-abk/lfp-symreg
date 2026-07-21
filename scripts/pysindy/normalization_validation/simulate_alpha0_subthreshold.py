@@ -57,7 +57,7 @@ CHANNEL = 0
 DOWNSAMPLE = 2
 HORIZON_S = 2.0
 SIGNAL_UNITS = "z-score"
-FIGURE_FORMAT = "svg"
+FIGURE_FORMAT = "png"
 
 METRIC_KEYS = [
   "trajectory_rmse",
@@ -96,6 +96,10 @@ def mean_finite(values: list[float]) -> float:
   return float(np.mean(finite)) if finite else float("nan")
 
 
+YLIM_MEASURED_MULTIPLE = 4.0
+YLIM_FLOOR = 0.5
+
+
 def _draw_comparison_panel(
   axis,
   trial_id: int,
@@ -104,22 +108,37 @@ def _draw_comparison_panel(
   sim_a0,
   dt: float,
 ) -> None:
-  """Draw one trial's measured trace plus both alpha simulations onto ``axis``."""
+  """Draw one trial's measured trace plus both alpha simulations onto ``axis``.
+
+  The y-axis is capped at a multiple of the measured signal's own amplitude so
+  that a diverging simulation (which can run 10-40x larger) does not squash
+  the measured-vs-alpha=0 comparison into a flat line. A trace whose peak
+  exceeds that cap is still drawn (matplotlib clips it at the axis edge) and
+  its true peak is reported in the legend instead of the shape of the blowup.
+  """
   measured_time = np.arange(measured.shape[0]) * dt
+  measured_peak = float(np.max(np.abs(measured[:, 0]))) if measured.size else 0.0
+  margin = max(YLIM_MEASURED_MULTIPLE * measured_peak, YLIM_FLOOR)
+
   axis.plot(
     measured_time, measured[:, 0],
     color="steelblue", linewidth=1.1, label=f"measured ({SIGNAL_UNITS})",
   )
-  if sim_a05.trajectory is not None and sim_a05.trajectory.size:
-    axis.plot(
-      sim_a05.time, sim_a05.trajectory[:, 0],
-      color="darkorange", linestyle="--", linewidth=1.1, label="simulated (alpha=0.05)",
-    )
-  if sim_a0.trajectory is not None and sim_a0.trajectory.size:
-    axis.plot(
-      sim_a0.time, sim_a0.trajectory[:, 0],
-      color="seagreen", linestyle="-.", linewidth=1.1, label="simulated (alpha=0.0)",
-    )
+
+  for sim, color, linestyle, alpha_label in (
+    (sim_a05, "darkorange", "--", "0.05"),
+    (sim_a0, "seagreen", "-.", "0.0"),
+  ):
+    if sim.trajectory is None or not sim.trajectory.size:
+      continue
+    trace = sim.trajectory[:, 0]
+    peak = float(np.max(np.abs(trace)))
+    label = f"simulated (alpha={alpha_label})"
+    if peak > margin:
+      label += f" [peak {peak:.1f}, off-scale]"
+    axis.plot(sim.time, trace, color=color, linestyle=linestyle, linewidth=1.1, label=label)
+
+  axis.set_ylim(-margin, margin)
   status_a05 = "complete" if sim_a05.completed else "failed"
   status_a0 = "complete" if sim_a0.completed else "failed"
   axis.set_title(
