@@ -960,6 +960,15 @@ def run(args: argparse.Namespace) -> list[dict[str, object]]:
   if float(metadata["raw_sampling_hz"]) != float(data.fs):
     raise ValueError("Local data sampling frequency does not match the sweep metadata.")
   test_trial_ids = [int(value) for value in metadata["split"]["test_trial_ids"]]
+  if args.only_trials is not None:
+    requested = set(args.only_trials)
+    missing = requested - set(test_trial_ids)
+    if missing:
+      raise ValueError(
+        f"Requested --only-trials {sorted(missing)} are not in the held-out split "
+        f"{test_trial_ids}."
+      )
+    test_trial_ids = [tid for tid in test_trial_ids if tid in requested]
   if args.max_test_trials is not None:
     test_trial_ids = test_trial_ids[: args.max_test_trials]
   downsample = int(metadata["downsample_factor"])

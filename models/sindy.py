@@ -181,6 +181,8 @@ class SINDyConfig:
     optimizer: Sparse regression optimizer. "stlsq" (default) or "sr3".
     nu: SR3 relaxation weight. Smaller values enforce sparsity more strongly.
       Ignored when optimizer="stlsq".
+    verbose: Whether STLSQ prints its per-iteration objective and support
+      size. Ignored when optimizer="sr3".
   """
 
   degree: int
@@ -191,6 +193,7 @@ class SINDyConfig:
   smoothing_polyorder: int = 3
   optimizer: str = "stlsq"
   nu: float = 1.0
+  verbose: bool = False
 
 
 def delay_embed_trace(trace: np.ndarray, n_delays: int, delay: int) -> np.ndarray:
@@ -297,6 +300,7 @@ def fit_sindy_model(trajectories: list[np.ndarray], dt: float, config: SINDyConf
       threshold=config.threshold,
       alpha=config.alpha,
       normalize_columns=config.normalize_columns,
+      verbose=config.verbose,
     )
 
   model = ps.SINDy(
