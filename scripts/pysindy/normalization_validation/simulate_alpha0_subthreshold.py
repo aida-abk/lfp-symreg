@@ -23,6 +23,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -55,6 +56,8 @@ THRESHOLD = 1.0
 CHANNEL = 0
 DOWNSAMPLE = 2
 HORIZON_S = 2.0
+SIGNAL_UNITS = "z-score"
+FIGURE_FORMAT = "svg"
 
 METRIC_KEYS = [
   "trajectory_rmse",
@@ -91,6 +94,90 @@ def mean_finite(values: list[float]) -> float:
   """Average the finite entries of ``values``, or NaN if none are finite."""
   finite = [v for v in values if np.isfinite(v)]
   return float(np.mean(finite)) if finite else float("nan")
+
+
+def _draw_comparison_panel(
+  axis,
+  trial_id: int,
+  measured: np.ndarray,
+  sim_a05,
+  sim_a0,
+  dt: float,
+) -> None:
+  """Draw one trial's measured trace plus both alpha simulations onto ``axis``."""
+  measured_time = np.arange(measured.shape[0]) * dt
+  axis.plot(
+    measured_time, measured[:, 0],
+    color="steelblue", linewidth=1.1, label=f"measured ({SIGNAL_UNITS})",
+  )
+  if sim_a05.trajectory is not None and sim_a05.trajectory.size:
+    axis.plot(
+      sim_a05.time, sim_a05.trajectory[:, 0],
+      color="darkorange", linestyle="--", linewidth=1.1, label="simulated (alpha=0.05)",
+    )
+  if sim_a0.trajectory is not None and sim_a0.trajectory.size:
+    axis.plot(
+      sim_a0.time, sim_a0.trajectory[:, 0],
+      color="seagreen", linestyle="-.", linewidth=1.1, label="simulated (alpha=0.0)",
+    )
+  status_a05 = "complete" if sim_a05.completed else "failed"
+  status_a0 = "complete" if sim_a0.completed else "failed"
+  axis.set_title(
+    f"Trial {trial_id}: alpha=0.05 {status_a05} @{sim_a05.reached_horizon_s:.2f}s, "
+    f"alpha=0.0 {status_a0} @{sim_a0.reached_horizon_s:.2f}s",
+    fontsize=9,
+  )
+  axis.set_xlabel("Time from embedded initial state (s)", fontsize=8)
+  axis.set_ylabel(f"x0 ({SIGNAL_UNITS})", fontsize=8)
+  axis.grid(alpha=0.2)
+  axis.legend(loc="upper right", fontsize=7)
+
+
+def plot_configuration_comparison(
+  path: Path,
+  row: dict[str, str],
+  trial_ids: list[int],
+  measured_trials: list[np.ndarray],
+  results_a05: list,
+  results_a0: list,
+  dt: float,
+) -> None:
+  """Plot every held-out trial in a compact grid; one figure per configuration.
+
+  Each panel overlays the measured trace with both the alpha=0.05 and the
+  alpha=0 simulations so a qualitative difference (divergence, collapse to a
+  constant, phase drift) is visible directly, not just in the metrics CSV.
+  """
+  import matplotlib
+  matplotlib.use("Agg")
+  import matplotlib.pyplot as plt
+
+  columns = 3
+  n_rows = math.ceil(len(trial_ids) / columns)
+  figure, axes = plt.subplots(
+    n_rows, columns,
+    figsize=(5 * columns, 2.7 * n_rows),
+    sharex=False, sharey=False, squeeze=False,
+  )
+  for axis, trial_id, measured, sim_a05, sim_a0 in zip(
+    axes.ravel(), trial_ids, measured_trials, results_a05, results_a0
+  ):
+    _draw_comparison_panel(axis, trial_id, measured, sim_a05, sim_a0, dt)
+
+  for axis in axes.ravel()[len(trial_ids):]:
+    axis.set_visible(False)
+
+  threshold_text = f", threshold={THRESHOLD:g}"
+  figure.suptitle(
+    f"Configuration {row['configuration_index']}: LP={row['lowpass_hz']} Hz, "
+    f"degree={row['degree']}, delays={row['n_delays']}, "
+    f"spacing={row['delay_samples']} samples, "
+    f"smoothing={row['smooth_window_samples']} samples{threshold_text}"
+  )
+  figure.tight_layout(rect=(0, 0, 1, 0.95))
+  path.parent.mkdir(parents=True, exist_ok=True)
+  figure.savefig(path, dpi=160)
+  plt.close(figure)
 
 
 def parse_args() -> argparse.Namespace:
@@ -165,13 +252,19 @@ def main() -> None:
     embedded_test = delay_embed_trajectories(test_z[lp], n_delays=n_delays, delay=delay)
 
     metrics_by_alpha: dict[str, list[dict]] = {"0.05": [], "0.0": []}
+    plotted_trial_ids: list[int] = []
+    plotted_measured: list[np.ndarray] = []
+    plotted_results_a05: list = []
+    plotted_results_a0: list = []
     for trial_id, measured in zip(test_ids, embedded_test):
       if measured.shape[0] < 2:
         continue
       x0 = measured[0]
+      sims: dict[str, object] = {}
       for alpha_label, model in (("0.05", model_a05), ("0.0", model_a0)):
         sim = simulate_model_detailed(model, initial_state=x0, dt=dt, horizon_s=HORIZON_S,
                                        wall_timeout_s=args.trial_timeout_s)
+        sims[alpha_label] = sim
         metric = (
           empty_metrics() if sim.trajectory is None
           else evaluate_simulation(measured, sim.trajectory, fs=fs_processed, config=sim_config)
@@ -185,6 +278,16 @@ def main() -> None:
           **{key: metric[key] for key in METRIC_KEYS},
         })
         metrics_by_alpha[alpha_label].append(metric)
+      plotted_trial_ids.append(trial_id)
+      plotted_measured.append(measured)
+      plotted_results_a05.append(sims["0.05"])
+      plotted_results_a0.append(sims["0.0"])
+
+    plot_path = OUTPUT_DIR / "simulation_plots" / f"cfg{r['configuration_index']}.{FIGURE_FORMAT}"
+    plot_configuration_comparison(
+      plot_path, r, plotted_trial_ids, plotted_measured,
+      plotted_results_a05, plotted_results_a0, dt,
+    )
 
     summary = {
       "configuration_index": r["configuration_index"], "degree": degree, "lowpass_hz": lp,
@@ -200,7 +303,8 @@ def main() -> None:
     summary_rows.append(summary)
     print(f"  cfg {r['configuration_index']:>4} deg={degree} lp={lp:>4.0f}  "
           f"collapse_std_ratio delta={summary['collapse_std_ratio_delta']:+.3f}  "
-          f"psd_similarity delta={summary['psd_similarity_delta']:+.3f}")
+          f"psd_similarity delta={summary['psd_similarity_delta']:+.3f}  "
+          f"plot={plot_path.relative_to(_PROJECT_ROOT)}")
 
   if args.configuration_index is not None:
     parts_dir = OUTPUT_DIR / "simulation_parts"
