@@ -10,17 +10,6 @@ coefficient, but the reported value comes from the unbiased *plain OLS* refit on
 the surviving support. Ridge and OLS differ, so a term that passed selection at
 >=1 can be printed below 1.
 
-Setting alpha=0 makes the selection regression itself plain OLS, so the
-thresholded quantity and the reported quantity become the same fit. This script
-picks configurations from the existing run that show sub-threshold survivors,
-refits *only those* with alpha=0.0 (everything else identical), and reports
-whether the sub-threshold coefficients disappear.
-
-Nothing in the scientific pipeline is modified and the original run is not
-overwritten; results are written to a fresh folder and printed.
-
-Run:
-    .venv/bin/python scripts/pysindy/normalization_validation/probe_alpha0_subthreshold.py
 """
 from __future__ import annotations
 
