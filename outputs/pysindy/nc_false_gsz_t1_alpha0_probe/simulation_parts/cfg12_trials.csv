@@ -9,7 +9,7 @@ configuration_index,degree,lowpass_hz,n_delays,delay_samples,smooth_window_sampl
 102,3,35.0,8,1,9,0.0,620,False,integration error: simulation exceeded 60 wall-clock seconds,0.09576064098832726,nan,nan,nan,nan,nan,nan
 102,3,35.0,8,1,9,0.05,2,False,integration error: simulation exceeded 60 wall-clock seconds,0.018010060654309476,nan,nan,nan,nan,nan,nan
 102,3,35.0,8,1,9,0.0,2,False,integration error: simulation exceeded 60 wall-clock seconds,0.05524602008593837,nan,nan,nan,nan,nan,nan
-102,3,35.0,8,1,9,0.05,3,False,integration error: simulation exceeded 60 wall-clock seconds,0.009012099425948994,nan,nan,nan,nan,nan,nan
+102,3,35.0,8,1,9,0.05,3,False,integration error: simulation exceeded 60 wall-clock seconds,0.009012099425946446,nan,nan,nan,nan,nan,nan
 102,3,35.0,8,1,9,0.0,3,False,integration error: simulation exceeded 60 wall-clock seconds,0.07335252275339359,nan,nan,nan,nan,nan,nan
 102,3,35.0,8,1,9,0.05,1244,False,integration error: simulation exceeded 60 wall-clock seconds,0.0032950057022441666,nan,nan,nan,nan,nan,nan
 102,3,35.0,8,1,9,0.0,1244,False,integration error: simulation exceeded 60 wall-clock seconds,0.024108533933515322,nan,nan,nan,nan,nan,nan
