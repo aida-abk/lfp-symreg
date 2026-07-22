@@ -183,6 +183,9 @@ class SINDyConfig:
       Ignored when optimizer="stlsq".
     verbose: Whether STLSQ prints its per-iteration objective and support
       size. Ignored when optimizer="sr3".
+    max_iter: Maximum STLSQ fit/threshold/refit cycles before giving up and
+      returning the last iterate with a ConvergenceWarning. Ignored when
+      optimizer="sr3".
   """
 
   degree: int
@@ -193,7 +196,8 @@ class SINDyConfig:
   smoothing_polyorder: int = 3
   optimizer: str = "stlsq"
   nu: float = 1.0
-  verbose: bool = False
+  verbose: bool = True
+  max_iter: int = 20
 
 
 def delay_embed_trace(trace: np.ndarray, n_delays: int, delay: int) -> np.ndarray:
@@ -301,6 +305,7 @@ def fit_sindy_model(trajectories: list[np.ndarray], dt: float, config: SINDyConf
       alpha=config.alpha,
       normalize_columns=config.normalize_columns,
       verbose=config.verbose,
+      max_iter=config.max_iter,
     )
 
   model = ps.SINDy(
