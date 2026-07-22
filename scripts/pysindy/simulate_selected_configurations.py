@@ -25,7 +25,6 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -216,49 +215,41 @@ def _draw_comparison_panel(
     axis.plot(sim.time, trace, color=color, linestyle=linestyle, linewidth=1.1, label=label)
 
   axis.set_ylim(-margin, margin)
-  axis.set_title(f"Trial {trial_id}\n" + "  ".join(status_bits), fontsize=7)
-  axis.set_xlabel("Time from embedded initial state (s)", fontsize=8)
-  axis.set_ylabel(f"x0 ({signal_units})", fontsize=8)
+  axis.set_title(f"Trial {trial_id}\n" + "   ".join(status_bits), fontsize=10)
+  axis.set_xlabel("Time from embedded initial state (s)", fontsize=10)
+  axis.set_ylabel(f"x0 ({signal_units})", fontsize=10)
   axis.grid(alpha=0.2)
-  axis.legend(loc="upper right", fontsize=6)
+  axis.legend(loc="upper right", fontsize=9)
 
 
-def plot_configuration_comparison(
+def plot_trial_comparison(
   path: Path,
   row: dict[str, str],
-  trial_ids: list[int],
-  measured_trials: list[np.ndarray],
-  sims_by_trial: list[list[tuple[Variant, object]]],
+  trial_id: int,
+  measured: np.ndarray,
+  sims: list[tuple[Variant, object]],
   dt: float,
   signal_units: str,
 ) -> None:
-  """Plot every selected trial in a compact grid; one figure per configuration."""
+  """Plot one trial at full size; one figure per (configuration, trial).
+
+  Separate files instead of a compact multi-trial grid, so overlaid variant
+  traces stay legible instead of competing for space in a small panel.
+  """
   import matplotlib
   matplotlib.use("Agg")
   import matplotlib.pyplot as plt
 
-  columns = 3
-  n_rows = math.ceil(len(trial_ids) / columns)
-  figure, axes = plt.subplots(
-    n_rows, columns,
-    figsize=(5 * columns, 2.7 * n_rows),
-    sharex=False, sharey=False, squeeze=False,
-  )
-  for axis, trial_id, measured, sims in zip(
-    axes.ravel(), trial_ids, measured_trials, sims_by_trial
-  ):
-    _draw_comparison_panel(axis, trial_id, measured, sims, dt, signal_units)
-
-  for axis in axes.ravel()[len(trial_ids):]:
-    axis.set_visible(False)
-
+  figure, axis = plt.subplots(figsize=(11, 4.5))
+  _draw_comparison_panel(axis, trial_id, measured, sims, dt, signal_units)
   figure.suptitle(
     f"Configuration {row['configuration_index']}: LP={row['lowpass_hz']} Hz, "
     f"degree={row['degree']}, delays={row['n_delays']}, "
     f"spacing={row['delay_samples']} samples, "
-    f"smoothing={row['smooth_window_samples']} samples"
+    f"smoothing={row['smooth_window_samples']} samples",
+    fontsize=10,
   )
-  figure.tight_layout(rect=(0, 0, 1, 0.95))
+  figure.tight_layout(rect=(0, 0, 1, 0.93))
   path.parent.mkdir(parents=True, exist_ok=True)
   figure.savefig(path, dpi=160)
   plt.close(figure)
@@ -310,9 +301,7 @@ def process_configuration(
   trial_rows = []
   metrics_by_variant: dict[Variant, list[dict]] = {v: [] for v in variants}
   completed_by_variant: dict[Variant, int] = {v: 0 for v in variants}
-  plotted_trial_ids: list[int] = []
-  plotted_measured: list[np.ndarray] = []
-  plotted_sims: list[list[tuple[Variant, object]]] = []
+  plot_paths: list[Path] = []
 
   for trial_id in trial_ids:
     measured = embedded_test_by_trial[trial_id]
@@ -339,14 +328,13 @@ def process_configuration(
       if sim.completed:
         completed_by_variant[variant] += 1
       trial_sims.append((variant, sim))
-    plotted_trial_ids.append(trial_id)
-    plotted_measured.append(measured)
-    plotted_sims.append(trial_sims)
 
-  plot_path = output_dir / "plots" / f"cfg{row['configuration_index']}.{figure_format}"
-  plot_configuration_comparison(
-    plot_path, row, plotted_trial_ids, plotted_measured, plotted_sims, dt, signal_units,
-  )
+    plot_path = (
+      output_dir / "plots"
+      / f"cfg{row['configuration_index']}_trial_{trial_id:04d}.{figure_format}"
+    )
+    plot_trial_comparison(plot_path, row, trial_id, measured, trial_sims, dt, signal_units)
+    plot_paths.append(plot_path)
 
   summary_rows = []
   for variant in variants:
@@ -365,7 +353,8 @@ def process_configuration(
     summary_rows.append(summary)
 
   print(f"  cfg {row['configuration_index']:>4} deg={degree} lp={lp:>4.0f}  "
-        f"variants={len(variants)}  plot={display_path(plot_path)}")
+        f"variants={len(variants)}  {len(plot_paths)} plots in "
+        f"{display_path(plot_paths[0].parent) if plot_paths else '(none)'}")
   return trial_rows, summary_rows
 
 
