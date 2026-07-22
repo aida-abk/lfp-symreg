@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 import sys
 import warnings
 from dataclasses import dataclass
@@ -43,7 +44,7 @@ from load_data.preprocessing import (
   channel_traces,
   compute_global_zscore_stats,
 )
-from models.sindy import SINDyConfig, delay_embed_trajectories, fit_sindy_model
+from models.sindy import SINDyConfig, delay_embed_trajectories, equation_text, fit_sindy_model
 from models.validation import SimulationConfig, evaluate_simulation, simulate_model_detailed
 
 csv.field_size_limit(10 * 1024 * 1024)
@@ -52,8 +53,6 @@ CHANNEL = 0
 DOWNSAMPLE = 2
 YLIM_MEASURED_MULTIPLE = 4.0
 YLIM_FLOOR = 0.5
-VARIANT_COLORS = ["darkorange", "seagreen", "purple", "crimson", "teal", "slategray"]
-VARIANT_LINESTYLES = ["--", "-.", ":", "--", "-.", ":"]
 
 METRIC_KEYS = [
   "trajectory_rmse",
@@ -204,21 +203,21 @@ def load_grid_rows(grid_csv: Path, configuration_indices: list[int]) -> list[dic
   return rows
 
 
-def _draw_comparison_panel(
+def _draw_variant_panel(
   axis,
-  trial_id: int,
   measured: np.ndarray,
-  sims: list[tuple[Variant, object]],
+  variant: Variant,
+  sim,
   dt: float,
   signal_units: str,
 ) -> None:
-  """Draw one trial's measured trace plus every variant's simulation onto ``axis``.
+  """Draw measured vs. exactly one variant's simulation onto ``axis``.
 
-  The y-axis is capped at a multiple of the measured signal's own amplitude so
-  a diverging variant (which can run 10-40x larger) does not squash the
-  measured-vs-stable comparison into a flat line. A trace whose peak exceeds
-  the cap is still drawn (matplotlib clips it at the axis edge); its true peak
-  is reported in the legend instead of the shape of the blowup.
+  One variant per panel -- no overlapping traces to disentangle. The y-axis
+  is capped at a multiple of the measured signal's own amplitude so a
+  diverging variant does not squash the measured-vs-simulated comparison into
+  a flat line; if the trace exceeds the cap it is still drawn (matplotlib
+  clips it at the axis edge) and its true peak is reported in the title.
   """
   measured_time = np.arange(measured.shape[0]) * dt
   measured_peak = float(np.max(np.abs(measured[:, 0]))) if measured.size else 0.0
@@ -229,27 +228,21 @@ def _draw_comparison_panel(
     color="steelblue", linewidth=1.1, label=f"measured ({signal_units})",
   )
 
-  status_bits = []
-  for i, (variant, sim) in enumerate(sims):
-    status = "ok" if sim.completed else "failed"
-    status_bits.append(f"{variant.short_label}: {status}@{sim.reached_horizon_s:.2f}s")
-    if sim.trajectory is None or not sim.trajectory.size:
-      continue
+  status = "ok" if sim.completed else "failed"
+  title = f"{variant.short_label}: {status}@{sim.reached_horizon_s:.2f}s"
+  if sim.trajectory is not None and sim.trajectory.size:
     trace = sim.trajectory[:, 0]
     peak = float(np.max(np.abs(trace)))
-    label = f"simulated ({variant.label})"
     if peak > margin:
-      label += f" [peak {peak:.1f}, off-scale]"
-    color = VARIANT_COLORS[i % len(VARIANT_COLORS)]
-    linestyle = VARIANT_LINESTYLES[i % len(VARIANT_LINESTYLES)]
-    axis.plot(sim.time, trace, color=color, linestyle=linestyle, linewidth=1.1, label=label)
+      title += f"  [peak {peak:.1f}, off-scale]"
+    axis.plot(sim.time, trace, color="darkorange", linestyle="--", linewidth=1.1, label="simulated")
 
   axis.set_ylim(-margin, margin)
-  axis.set_title(f"Trial {trial_id}\n" + "   ".join(status_bits), fontsize=10)
-  axis.set_xlabel("Time from embedded initial state (s)", fontsize=10)
-  axis.set_ylabel(f"x0 ({signal_units})", fontsize=10)
+  axis.set_title(title, fontsize=9)
+  axis.set_xlabel("Time (s)", fontsize=9)
+  axis.set_ylabel(f"x0 ({signal_units})", fontsize=9)
   axis.grid(alpha=0.2)
-  axis.legend(loc="upper right", fontsize=9)
+  axis.legend(loc="upper right", fontsize=8)
 
 
 def plot_trial_comparison(
@@ -261,20 +254,32 @@ def plot_trial_comparison(
   dt: float,
   signal_units: str,
 ) -> None:
-  """Plot one trial at full size; one figure per (configuration, trial).
+  """Plot one trial; one figure per (configuration, trial), one sub-panel per variant.
 
-  Separate files instead of a compact multi-trial grid, so overlaid variant
-  traces stay legible instead of competing for space in a small panel.
+  Small multiples instead of overlaid traces -- every variant gets its own
+  axis against the same measured trace, so variants that draw identically
+  (e.g. max_iter values that converged to the same fit) are still visibly
+  separate panels rather than indistinguishable stacked lines.
   """
   import matplotlib
   matplotlib.use("Agg")
   import matplotlib.pyplot as plt
 
-  figure, axis = plt.subplots(figsize=(11, 4.5))
-  _draw_comparison_panel(axis, trial_id, measured, sims, dt, signal_units)
+  columns = min(3, len(sims)) or 1
+  n_rows = math.ceil(len(sims) / columns)
+  figure, axes = plt.subplots(
+    n_rows, columns,
+    figsize=(4.5 * columns, 3.2 * n_rows),
+    sharex=False, sharey=False, squeeze=False,
+  )
+  for axis, (variant, sim) in zip(axes.ravel(), sims):
+    _draw_variant_panel(axis, measured, variant, sim, dt, signal_units)
+  for axis in axes.ravel()[len(sims):]:
+    axis.set_visible(False)
+
   figure.suptitle(
-    f"Configuration {row['configuration_index']}: LP={row['lowpass_hz']} Hz, "
-    f"degree={row['degree']}, delays={row['n_delays']}, "
+    f"Configuration {row['configuration_index']}, Trial {trial_id}: "
+    f"LP={row['lowpass_hz']} Hz, degree={row['degree']}, delays={row['n_delays']}, "
     f"spacing={row['delay_samples']} samples, "
     f"smoothing={row['smooth_window_samples']} samples",
     fontsize=10,
@@ -381,6 +386,7 @@ def process_configuration(
       "alpha": variant.alpha, "threshold": variant.threshold, "max_iter": variant.max_iter,
       "nonzero_terms": nonzero_terms, "subthreshold_count": subthreshold_count,
       "fit_n_iterations": fit_iterations[variant], "fit_converged": fit_converged[variant],
+      "equations": equation_text(models[variant]),
       "n_trials": len(metrics), "n_completed": n_completed, "n_failed": len(metrics) - n_completed,
     }
     for key in METRIC_KEYS:
