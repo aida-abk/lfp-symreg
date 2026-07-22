@@ -26,10 +26,12 @@ import argparse
 import csv
 import json
 import sys
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
+from sklearn.exceptions import ConvergenceWarning
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(_PROJECT_ROOT) not in sys.path:
@@ -161,6 +163,34 @@ def count_terms(model, threshold: float) -> tuple[int, int]:
   return nonzero_terms, subthreshold_count
 
 
+def fit_with_iteration_count(trajectories, dt: float, config: SINDyConfig):
+  """Fit a SINDy model and report how many STLSQ outer iterations it took.
+
+  STLSQ appends one entry to its optimizer's ``history_`` per fit/threshold/
+  refit cycle (fit/threshold/refit until the surviving support stops
+  changing, or ``max_iter`` is reached -- see
+  ``.venv/.../pysindy/optimizers/stlsq.py:_reduce``). ``history_`` is absent
+  for non-STLSQ optimizers (e.g. SR3), in which case iteration count is
+  ``None``. PySINDy raises ``ConvergenceWarning`` exactly when the support
+  never stabilized within ``max_iter`` iterations; that warning is captured
+  here rather than re-derived, since "reached max_iter" and "the support
+  happened to stabilize on the very last allowed iteration" are otherwise
+  indistinguishable from the history length alone.
+
+  Returns:
+    ``(model, n_iterations, converged)``. ``n_iterations`` and ``converged``
+    are ``None`` when the optimizer exposes no ``history_``.
+  """
+  with warnings.catch_warnings(record=True) as caught:
+    warnings.simplefilter("always")
+    model = fit_sindy_model(trajectories, dt=dt, config=config)
+  history = getattr(getattr(model, "optimizer", None), "history_", None)
+  if history is None:
+    return model, None, None
+  converged = not any(issubclass(w.category, ConvergenceWarning) for w in caught)
+  return model, len(history), converged
+
+
 def load_grid_rows(grid_csv: Path, configuration_indices: list[int]) -> list[dict]:
   """Load the requested configuration rows from a raw-grid CSV, in request order."""
   with open(grid_csv) as f:
@@ -287,15 +317,19 @@ def process_configuration(
   ))
   trial_ids = [t for t in selected_trial_ids if t in embedded_test_by_trial]
 
-  models = {
-    variant: fit_sindy_model(
+  models: dict[Variant, object] = {}
+  fit_iterations: dict[Variant, int | None] = {}
+  fit_converged: dict[Variant, bool | None] = {}
+  for variant in variants:
+    model, n_iterations, converged = fit_with_iteration_count(
       embedded_train, dt=dt,
       config=SINDyConfig(degree=degree, threshold=variant.threshold, alpha=variant.alpha,
                          normalize_columns=normalize_columns, smooth_window=smooth, smoothing_polyorder=3,
                          max_iter=variant.max_iter),
     )
-    for variant in variants
-  }
+    models[variant] = model
+    fit_iterations[variant] = n_iterations
+    fit_converged[variant] = converged
 
   sim_config = SimulationConfig(simulation_horizon_s=horizon_s)
   trial_rows = []
@@ -346,15 +380,21 @@ def process_configuration(
       "n_delays": n_delays, "delay_samples": delay, "smooth_window_samples": smooth,
       "alpha": variant.alpha, "threshold": variant.threshold, "max_iter": variant.max_iter,
       "nonzero_terms": nonzero_terms, "subthreshold_count": subthreshold_count,
+      "fit_n_iterations": fit_iterations[variant], "fit_converged": fit_converged[variant],
       "n_trials": len(metrics), "n_completed": n_completed, "n_failed": len(metrics) - n_completed,
     }
     for key in METRIC_KEYS:
       summary[f"mean_{key}"] = mean_finite([m[key] for m in metrics])
     summary_rows.append(summary)
 
+  non_converged = [v.short_label for v in variants if fit_converged[v] is False]
+  iteration_note = (
+    f"  NOT CONVERGED: {', '.join(non_converged)}" if non_converged else ""
+  )
   print(f"  cfg {row['configuration_index']:>4} deg={degree} lp={lp:>4.0f}  "
         f"variants={len(variants)}  {len(plot_paths)} plots in "
-        f"{display_path(plot_paths[0].parent) if plot_paths else '(none)'}")
+        f"{display_path(plot_paths[0].parent) if plot_paths else '(none)'}"
+        f"{iteration_note}")
   return trial_rows, summary_rows
 
 
