@@ -1,5 +1,0 @@
-configuration_index,degree,lowpass_hz,n_delays,delay_samples,smooth_window_samples,alpha,threshold,max_iter,nonzero_terms,subthreshold_count,n_trials,n_completed,n_failed,mean_trajectory_rmse,mean_x0_correlation,mean_max_amplitude_ratio,mean_collapse_std_ratio,mean_psd_similarity,mean_distribution_ks
-82,5,35.0,4,1,0,0.05,1.0,20,202,7,9,0,9,nan,nan,nan,nan,nan,nan
-82,5,35.0,4,1,0,0.05,1.0,150,202,7,9,0,9,nan,nan,nan,nan,nan,nan
-82,5,35.0,4,1,0,0.0,1.0,20,484,198,9,0,9,nan,nan,nan,nan,nan,nan
-82,5,35.0,4,1,0,0.0,1.0,150,484,198,9,0,9,nan,nan,nan,nan,nan,nan
