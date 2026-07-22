@@ -1,0 +1,37 @@
+configuration_index,degree,lowpass_hz,n_delays,delay_samples,smooth_window_samples,alpha,threshold,max_iter,trial_id,completed,failure_reason,reached_horizon_s,trajectory_rmse,x0_correlation,max_amplitude_ratio,collapse_std_ratio,psd_similarity,distribution_ks
+118,7,35.0,4,1,0,0.05,1.0,20,4,False,integration error: simulation exceeded 120 wall-clock seconds,1.4160321755696903,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.05,1.0,150,4,False,integration error: simulation exceeded 120 wall-clock seconds,1.4172072741655255,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.0,1.0,20,4,False,integration error: simulation exceeded 120 wall-clock seconds,1.3828665463829464,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.0,1.0,150,4,False,integration error: simulation exceeded 120 wall-clock seconds,1.3868255933506655,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.05,1.0,20,1088,False,integration error: simulation exceeded 120 wall-clock seconds,0.49883773543942445,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.05,1.0,150,1088,False,integration error: simulation exceeded 120 wall-clock seconds,0.49567835910441105,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.0,1.0,20,1088,False,integration error: simulation exceeded 120 wall-clock seconds,0.10849136849692187,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.0,1.0,150,1088,False,integration error: simulation exceeded 120 wall-clock seconds,0.10849136849692187,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.05,1.0,20,622,False,integration error: simulation exceeded 120 wall-clock seconds,0.29116849614254176,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.05,1.0,150,622,False,integration error: simulation exceeded 120 wall-clock seconds,0.29102410612154733,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.0,1.0,20,622,False,integration error: simulation exceeded 120 wall-clock seconds,0.19390915767935857,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.0,1.0,150,622,False,integration error: simulation exceeded 120 wall-clock seconds,0.1939091576705268,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.05,1.0,20,620,False,integration error: simulation exceeded 120 wall-clock seconds,1.338941278325052,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.05,1.0,150,620,False,integration error: simulation exceeded 120 wall-clock seconds,1.345305848642945,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.0,1.0,20,620,False,integration error: simulation exceeded 120 wall-clock seconds,1.2929436524007016,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.0,1.0,150,620,False,integration error: simulation exceeded 120 wall-clock seconds,1.3036145179782352,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.05,1.0,20,2,False,integration error: Input X contains infinity or a value too large for dtype('float64').,0.5238254859517987,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.05,1.0,150,2,False,integration error: Input X contains infinity or a value too large for dtype('float64').,0.5238254859517987,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.0,1.0,20,2,False,integration error: simulation exceeded 120 wall-clock seconds,0.1297687329030813,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.0,1.0,150,2,False,integration error: simulation exceeded 120 wall-clock seconds,0.12976873292303673,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.05,1.0,20,3,False,integration error: simulation exceeded 120 wall-clock seconds,0.9237862931918825,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.05,1.0,150,3,False,integration error: simulation exceeded 120 wall-clock seconds,0.927388479933172,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.0,1.0,20,3,False,integration error: simulation exceeded 120 wall-clock seconds,0.16214991872169837,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.0,1.0,150,3,False,integration error: simulation exceeded 120 wall-clock seconds,0.1621499187217114,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.05,1.0,20,1244,False,integration error: simulation exceeded 120 wall-clock seconds,0.842513273706896,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.05,1.0,150,1244,False,integration error: simulation exceeded 120 wall-clock seconds,0.8421488942205805,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.0,1.0,20,1244,False,integration error: simulation exceeded 120 wall-clock seconds,0.16818969149657303,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.0,1.0,150,1244,False,integration error: simulation exceeded 120 wall-clock seconds,0.1681896914965724,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.05,1.0,20,778,False,integration error: simulation exceeded 120 wall-clock seconds,0.5826376329142863,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.05,1.0,150,778,False,integration error: simulation exceeded 120 wall-clock seconds,0.5790414412201286,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.0,1.0,20,778,False,integration error: simulation exceeded 120 wall-clock seconds,0.5889587129565832,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.0,1.0,150,778,False,integration error: simulation exceeded 120 wall-clock seconds,0.5889594885138725,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.05,1.0,20,312,False,integration error: Input X contains infinity or a value too large for dtype('float64').,0.6628878416345907,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.05,1.0,150,312,False,integration error: Input X contains infinity or a value too large for dtype('float64').,0.6628878416345907,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.0,1.0,20,312,False,integration error: simulation exceeded 120 wall-clock seconds,0.2549912164691344,nan,nan,nan,nan,nan,nan
+118,7,35.0,4,1,0,0.0,1.0,150,312,False,integration error: simulation exceeded 120 wall-clock seconds,0.25499121231110633,nan,nan,nan,nan,nan,nan
