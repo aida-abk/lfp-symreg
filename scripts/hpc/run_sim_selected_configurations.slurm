@@ -25,18 +25,31 @@
 # what the source grid-csv's own metadata says), set SIGNAL_NORMALIZATION and
 # NORMALIZE_COLUMNS explicitly:
 #
-#   sbatch --array=1-16 \
-#     --export=ALL,GRID_CSV="outputs/pysindy/global_analysis/raw_grid_deg2357_t20000/raw_grid_merged.csv",\
-#CONFIGURATION_INDICES="46,47,49,50,55,56,58,59,82,83,85,86,118,119,121,122",\
-#ALPHA_OVERRIDES="0.05,0.0",MAX_ITER_OVERRIDES="20,150",\
-#SIGNAL_NORMALIZATION=global_zscore,NORMALIZE_COLUMNS=false \
-#     scripts/hpc/run_sim_selected_configurations.slurm
+#   export GRID_CSV="outputs/pysindy/global_analysis/raw_grid_deg2357_t20000/raw_grid_merged.csv"
+#   export CONFIGURATION_INDICES="46,47,49,50,55,56,58,59,82,83,85,86,118,119,121,122"
+#   export ALPHA_OVERRIDES="0.05,0.0"
+#   export MAX_ITER_OVERRIDES="20,150"
+#   export SIGNAL_NORMALIZATION=global_zscore
+#   export NORMALIZE_COLUMNS=false
+#   sbatch --array=1-16 scripts/hpc/run_sim_selected_configurations.slurm
+#
+# (values containing commas, like CONFIGURATION_INDICES, must be exported as
+# real shell variables first -- sbatch's --export flag is itself comma
+# separated and will silently mis-split any value containing a comma)
 #
 # Each task writes to <grid-csv's parent>/configuration_probes/parts/ and
-# .../configuration_probes/plots/. Merge the parts afterward, e.g.:
+# .../configuration_probes/plots/ by default. IMPORTANT: filenames are keyed
+# only by configuration_index (cfgNN_*), not by normalization scheme -- if you
+# run more than one scheme against the same --grid-csv (e.g. z-scored vs not),
+# set OUTPUT_DIR explicitly to a distinct directory per scheme, or a later run
+# will silently overwrite an earlier run's parts/plots for matching configs:
+#
+#   export OUTPUT_DIR="outputs/pysindy/global_analysis/raw_grid_deg2357_t20000/configuration_probes_zscored"
+#
+# Merge the parts afterward, e.g.:
 #   python - <<'PY'
 #   import pandas as pd, glob
-#   base = "outputs/pysindy/raw_grid_nc_false_gsz_t1/configuration_probes"
+#   base = "outputs/pysindy/global_analysis/raw_grid_deg2357_t20000/configuration_probes_zscored"
 #   for kind in ("trials", "summary"):
 #     pd.concat([pd.read_csv(f) for f in sorted(glob.glob(f"{base}/parts/*_{kind}.csv"))]
 #     ).to_csv(f"{base}/simulation_{kind}.csv", index=False)
@@ -56,6 +69,7 @@ THRESHOLD_OVERRIDES="${THRESHOLD_OVERRIDES:-}"
 MAX_ITER_OVERRIDES="${MAX_ITER_OVERRIDES:-}"
 SIGNAL_NORMALIZATION="${SIGNAL_NORMALIZATION:-}"
 NORMALIZE_COLUMNS="${NORMALIZE_COLUMNS:-}"
+OUTPUT_DIR="${OUTPUT_DIR:-}"
 TRIAL_TIMEOUT_S="${TRIAL_TIMEOUT_S:-60}"
 HORIZON_S="${HORIZON_S:-2.0}"
 
@@ -84,6 +98,9 @@ if [[ -n "$NORMALIZE_COLUMNS" ]]; then
   else
     EXTRA_ARGS+=(--no-normalize-columns)
   fi
+fi
+if [[ -n "$OUTPUT_DIR" ]]; then
+  EXTRA_ARGS+=(--output-dir "$OUTPUT_DIR")
 fi
 
 "$PYTHON_BIN" scripts/pysindy/simulate_selected_configurations.py \
