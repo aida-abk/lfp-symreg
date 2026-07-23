@@ -1,37 +1,37 @@
-configuration_index,degree,lowpass_hz,n_delays,delay_samples,smooth_window_samples,alpha,threshold,max_iter,trial_id,completed,failure_reason,reached_horizon_s,trajectory_rmse,x0_correlation,max_amplitude_ratio,collapse_std_ratio,psd_similarity,distribution_ks
-119,7,35.0,4,1,5,0.05,20000.0,20,4,False,integration error: simulation exceeded 120 wall-clock seconds,1.1366005068183265,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.05,20000.0,150,4,False,integration error: simulation exceeded 120 wall-clock seconds,1.114571936219813,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.0,20000.0,20,4,False,integration error: simulation exceeded 120 wall-clock seconds,0.9371831340763432,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.0,20000.0,150,4,False,integration error: simulation exceeded 120 wall-clock seconds,0.9435409640545082,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.05,20000.0,20,1088,False,integration error: simulation exceeded 120 wall-clock seconds,1.1948769794429697,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.05,20000.0,150,1088,False,integration error: simulation exceeded 120 wall-clock seconds,1.188831438919408,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.0,20000.0,20,1088,False,integration error: simulation exceeded 120 wall-clock seconds,1.130234805231941,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.0,20000.0,150,1088,False,integration error: simulation exceeded 120 wall-clock seconds,1.1331422090057326,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.05,20000.0,20,622,False,integration error: simulation exceeded 120 wall-clock seconds,1.483871591423651,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.05,20000.0,150,622,False,integration error: simulation exceeded 120 wall-clock seconds,1.4887465009405068,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.0,20000.0,20,622,False,integration error: simulation exceeded 120 wall-clock seconds,1.3086008876658282,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.0,20000.0,150,622,False,integration error: simulation exceeded 120 wall-clock seconds,1.3028651384464405,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.05,20000.0,20,620,False,integration error: simulation exceeded 120 wall-clock seconds,0.7064600141348729,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.05,20000.0,150,620,False,integration error: simulation exceeded 120 wall-clock seconds,0.7064600141348729,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.0,20000.0,20,620,False,integration error: simulation exceeded 120 wall-clock seconds,0.7595999462723139,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.0,20000.0,150,620,False,integration error: simulation exceeded 120 wall-clock seconds,0.7717823917395661,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.05,20000.0,20,2,False,integration error: simulation exceeded 120 wall-clock seconds,1.220958170748382,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.05,20000.0,150,2,False,integration error: simulation exceeded 120 wall-clock seconds,1.2165694762887311,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.0,20000.0,20,2,False,integration error: simulation exceeded 120 wall-clock seconds,1.2154049162571214,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.0,20000.0,150,2,False,integration error: simulation exceeded 120 wall-clock seconds,1.2147887095921333,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.05,20000.0,20,3,False,integration error: simulation exceeded 120 wall-clock seconds,1.4880632382868848,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.05,20000.0,150,3,False,integration error: simulation exceeded 120 wall-clock seconds,1.4969602031087452,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.0,20000.0,20,3,False,integration error: simulation exceeded 120 wall-clock seconds,1.2870099161602704,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.0,20000.0,150,3,False,integration error: simulation exceeded 120 wall-clock seconds,1.2817494586135585,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.05,20000.0,20,1244,False,integration error: simulation exceeded 120 wall-clock seconds,1.4133392665342566,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.05,20000.0,150,1244,False,integration error: simulation exceeded 120 wall-clock seconds,1.4331862804147733,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.0,20000.0,20,1244,False,integration error: simulation exceeded 120 wall-clock seconds,1.1105309023547867,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.0,20000.0,150,1244,False,integration error: simulation exceeded 120 wall-clock seconds,1.1073379923033018,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.05,20000.0,20,778,False,integration error: simulation exceeded 120 wall-clock seconds,1.2525127254848116,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.05,20000.0,150,778,False,integration error: simulation exceeded 120 wall-clock seconds,1.2467521312438616,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.0,20000.0,20,778,False,integration error: simulation exceeded 120 wall-clock seconds,1.1410008963894724,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.0,20000.0,150,778,False,integration error: simulation exceeded 120 wall-clock seconds,1.1335375538545016,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.05,20000.0,20,312,False,integration error: simulation exceeded 120 wall-clock seconds,1.3126030006300295,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.05,20000.0,150,312,False,integration error: simulation exceeded 120 wall-clock seconds,1.3126030006300295,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.0,20000.0,20,312,False,integration error: simulation exceeded 120 wall-clock seconds,1.2425436356813375,nan,nan,nan,nan,nan,nan
-119,7,35.0,4,1,5,0.0,20000.0,150,312,False,integration error: simulation exceeded 120 wall-clock seconds,1.2403805020858243,nan,nan,nan,nan,nan,nan
+configuration_index,degree,lowpass_hz,n_delays,delay_samples,smooth_window_samples,alpha,threshold,max_iter,trial_id,requested_horizon_s,completed,failure_reason,reached_horizon_s,trajectory_rmse,x0_correlation,max_amplitude_ratio,collapse_std_ratio,psd_similarity,distribution_ks
+119,7,35.0,4,1,5,0.05,20000.0,20,4,14.076,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.05,20000.0,150,4,14.076,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.0,20000.0,20,4,14.076,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.0,20000.0,150,4,14.076,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.05,20000.0,20,1088,14.188,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.05,20000.0,150,1088,14.188,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.0,20000.0,20,1088,14.188,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.0,20000.0,150,1088,14.188,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.05,20000.0,20,622,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.05,20000.0,150,622,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.0,20000.0,20,622,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.0,20000.0,150,622,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.05,20000.0,20,620,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.05,20000.0,150,620,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.0,20000.0,20,620,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.0,20000.0,150,620,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.05,20000.0,20,2,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.05,20000.0,150,2,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.0,20000.0,20,2,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.0,20000.0,150,2,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.05,20000.0,20,3,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.05,20000.0,150,3,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.0,20000.0,20,3,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.0,20000.0,150,3,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.05,20000.0,20,1244,14.076,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.05,20000.0,150,1244,14.076,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.0,20000.0,20,1244,14.076,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.0,20000.0,150,1244,14.076,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.05,20000.0,20,778,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.05,20000.0,150,778,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.0,20000.0,20,778,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.0,20000.0,150,778,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.05,20000.0,20,312,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.05,20000.0,150,312,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.0,20000.0,20,312,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
+119,7,35.0,4,1,5,0.0,20000.0,150,312,14.184000000000001,False,simulation exceeded 90 wall-clock seconds (hard subprocess kill),0.0,nan,nan,nan,nan,nan,nan
