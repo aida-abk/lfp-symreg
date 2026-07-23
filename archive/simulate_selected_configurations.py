@@ -27,12 +27,10 @@ import csv
 import json
 import math
 import sys
-import warnings
 from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
-from sklearn.exceptions import ConvergenceWarning
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(_PROJECT_ROOT) not in sys.path:
@@ -44,7 +42,13 @@ from load_data.preprocessing import (
   channel_traces,
   compute_global_zscore_stats,
 )
-from models.sindy import SINDyConfig, delay_embed_trajectories, equation_text, fit_sindy_model
+from models.sindy import (
+  SINDyConfig,
+  count_subthreshold_terms,
+  delay_embed_trajectories,
+  equation_text,
+  fit_with_iteration_count,
+)
 from models.validation import (
   SimulationConfig,
   evaluate_simulation,
@@ -147,51 +151,6 @@ def display_path(path: Path) -> str:
     return str(path)
 
 
-def count_terms(model, threshold: float) -> tuple[int, int]:
-  """Count nonzero and sub-threshold-surviving coefficients in a fitted model.
-
-  A "sub-threshold survivor" is a coefficient STLSQ kept (nonzero) whose final
-  reported magnitude is nonetheless below the threshold it fit at -- possible
-  because STLSQ selects support with the (possibly ridge) regression during
-  fitting but reports the last refit's coefficients, which can differ. See
-  ``normalization_validation/probe_alpha0_subthreshold.py`` for the original
-  discovery.
-
-  Returns:
-    ``(nonzero_terms, subthreshold_count)``.
-  """
-  coefs = np.abs(np.asarray(model.coefficients(), dtype=float))
-  nonzero_terms = int(np.sum(coefs > 1e-9))
-  subthreshold_count = int(np.sum((coefs > 1e-9) & (coefs < threshold)))
-  return nonzero_terms, subthreshold_count
-
-
-def fit_with_iteration_count(trajectories, dt: float, config: SINDyConfig):
-  """Fit a SINDy model and report how many STLSQ outer iterations it took.
-
-  STLSQ appends one entry to its optimizer's ``history_`` per fit/threshold/
-  refit cycle (fit/threshold/refit until the surviving support stops
-  changing, or ``max_iter`` is reached -- see
-  ``.venv/.../pysindy/optimizers/stlsq.py:_reduce``). ``history_`` is absent
-  for non-STLSQ optimizers (e.g. SR3), in which case iteration count is
-  ``None``. PySINDy raises ``ConvergenceWarning`` exactly when the support
-  never stabilized within ``max_iter`` iterations; that warning is captured
-  here rather than re-derived, since "reached max_iter" and "the support
-  happened to stabilize on the very last allowed iteration" are otherwise
-  indistinguishable from the history length alone.
-
-  Returns:
-    ``(model, n_iterations, converged)``. ``n_iterations`` and ``converged``
-    are ``None`` when the optimizer exposes no ``history_``.
-  """
-  with warnings.catch_warnings(record=True) as caught:
-    warnings.simplefilter("always")
-    model = fit_sindy_model(trajectories, dt=dt, config=config)
-  history = getattr(getattr(model, "optimizer", None), "history_", None)
-  if history is None:
-    return model, None, None
-  converged = not any(issubclass(w.category, ConvergenceWarning) for w in caught)
-  return model, len(history), converged
 
 
 def load_grid_rows(grid_csv: Path, configuration_indices: list[int]) -> list[dict]:
@@ -392,7 +351,7 @@ def process_configuration(
   for variant in variants:
     metrics = metrics_by_variant[variant]
     n_completed = completed_by_variant[variant]
-    nonzero_terms, subthreshold_count = count_terms(models[variant], variant.threshold)
+    nonzero_terms, subthreshold_count = count_subthreshold_terms(models[variant], variant.threshold)
     summary = {
       "configuration_index": row["configuration_index"], "degree": degree, "lowpass_hz": lp,
       "n_delays": n_delays, "delay_samples": delay, "smooth_window_samples": smooth,
