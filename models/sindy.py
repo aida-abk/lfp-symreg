@@ -331,3 +331,63 @@ def equation_text(model) -> str:
 def count_terms(model) -> int:
   """Count nonzero coefficients in a fitted PySINDy model."""
   return int(np.count_nonzero(np.abs(model.coefficients()) > 1e-12))
+
+
+def count_subthreshold_terms(model, threshold: float) -> tuple[int, int]:
+  """Count nonzero and sub-threshold-surviving coefficients in a fitted model.
+
+  A "sub-threshold survivor" is a coefficient STLSQ kept (nonzero) whose final
+  reported magnitude is nonetheless below the threshold it fit at -- possible
+  because STLSQ selects support with the (possibly ridge) regression during
+  fitting but reports the last refit's coefficients, which can differ. See
+  ``scripts/pysindy/normalization_validation/probe_alpha0_subthreshold.py``
+  for the original discovery.
+
+  Args:
+    model: Fitted PySINDy model.
+    threshold: The STLSQ threshold the model was fit at.
+
+  Returns:
+    ``(nonzero_terms, subthreshold_count)``.
+  """
+  coefs = np.abs(np.asarray(model.coefficients(), dtype=float))
+  nonzero_terms = int(np.sum(coefs > 1e-9))
+  subthreshold_count = int(np.sum((coefs > 1e-9) & (coefs < threshold)))
+  return nonzero_terms, subthreshold_count
+
+
+def fit_with_iteration_count(
+  trajectories: list[np.ndarray], dt: float, config: SINDyConfig
+):
+  """Fit a SINDy model and report how many STLSQ outer iterations it took.
+
+  STLSQ appends one entry to its optimizer's ``history_`` per fit/threshold/
+  refit cycle (fit/threshold/refit until the surviving support stops
+  changing, or ``max_iter`` is reached -- see pysindy's
+  ``optimizers/stlsq.py:_reduce``). ``history_`` is absent for non-STLSQ
+  optimizers (e.g. SR3), in which case iteration count is ``None``. PySINDy
+  raises ``ConvergenceWarning`` exactly when the support never stabilized
+  within ``max_iter`` iterations; that warning is captured here rather than
+  re-derived, since "reached max_iter" and "the support happened to stabilize
+  on the very last allowed iteration" are otherwise indistinguishable from
+  the history length alone.
+
+  Returns:
+    ``(model, n_iterations, converged)``. ``n_iterations`` and ``converged``
+    are ``None`` when the optimizer exposes no ``history_``.
+  """
+  import warnings
+
+  from sklearn.exceptions import ConvergenceWarning
+
+  with warnings.catch_warnings(record=True) as caught:
+    warnings.simplefilter("always")
+    model = fit_sindy_model(trajectories, dt=dt, config=config)
+  history = getattr(getattr(model, "optimizer", None), "history_", None)
+  if history is None:
+    return model, None, None
+  converged = not any(issubclass(w.category, ConvergenceWarning) for w in caught)
+  return model, len(history), converged
+
+
+  
