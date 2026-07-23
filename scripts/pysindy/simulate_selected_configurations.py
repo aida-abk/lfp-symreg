@@ -45,7 +45,11 @@ from load_data.preprocessing import (
   compute_global_zscore_stats,
 )
 from models.sindy import SINDyConfig, delay_embed_trajectories, equation_text, fit_sindy_model
-from models.validation import SimulationConfig, evaluate_simulation, simulate_model_detailed
+from models.validation import (
+  SimulationConfig,
+  evaluate_simulation,
+  simulate_model_detailed_hard_timeout,
+)
 
 csv.field_size_limit(10 * 1024 * 1024)
 
@@ -305,8 +309,14 @@ def process_configuration(
   figure_format: str,
   normalize_columns: bool,
   signal_units: str,
+  full_trial_horizon: bool,
 ) -> tuple[list[dict], list[dict]]:
   """Fit every variant for one configuration, simulate selected trials, and plot.
+
+  Args:
+    full_trial_horizon: When True, simulate each trial for its own full
+      embedded length (trials vary slightly, ~14.09-14.20s here) instead of
+      the fixed ``horizon_s``.
 
   Returns:
     ``(trial_rows, summary_rows)`` for this one configuration.
@@ -346,11 +356,13 @@ def process_configuration(
     measured = embedded_test_by_trial[trial_id]
     if measured.shape[0] < 2:
       continue
+    trial_horizon_s = (measured.shape[0] - 1) * dt if full_trial_horizon else horizon_s
     x0 = measured[0]
     trial_sims = []
     for variant in variants:
-      sim = simulate_model_detailed(models[variant], initial_state=x0, dt=dt,
-                                     horizon_s=horizon_s, wall_timeout_s=trial_timeout_s)
+      sim = simulate_model_detailed_hard_timeout(models[variant], initial_state=x0, dt=dt,
+                                                  horizon_s=trial_horizon_s,
+                                                  wall_timeout_s=trial_timeout_s)
       metric = (
         empty_metrics() if sim.trajectory is None
         else evaluate_simulation(measured, sim.trajectory, fs=fs_processed, config=sim_config)
@@ -359,7 +371,8 @@ def process_configuration(
         "configuration_index": row["configuration_index"], "degree": degree, "lowpass_hz": lp,
         "n_delays": n_delays, "delay_samples": delay, "smooth_window_samples": smooth,
         "alpha": variant.alpha, "threshold": variant.threshold, "max_iter": variant.max_iter,
-        "trial_id": trial_id, "completed": sim.completed, "failure_reason": sim.failure_reason,
+        "trial_id": trial_id, "requested_horizon_s": trial_horizon_s,
+        "completed": sim.completed, "failure_reason": sim.failure_reason,
         "reached_horizon_s": sim.reached_horizon_s,
         **{key: metric[key] for key in METRIC_KEYS},
       })
@@ -447,7 +460,17 @@ def parse_args() -> argparse.Namespace:
     help="Cap the number of trials simulated/plotted (applied after --trial-ids).",
   )
   parser.add_argument("--trial-timeout-s", type=float, default=60.0)
-  parser.add_argument("--horizon-s", type=float, default=2.0)
+  parser.add_argument(
+    "--horizon-s", type=float, default=2.0,
+    help="Fixed simulation horizon in seconds. Ignored when --full-trial-horizon is set.",
+  )
+  parser.add_argument(
+    "--full-trial-horizon", action="store_true",
+    help="Simulate each trial for its own full embedded length instead of "
+         "--horizon-s. Trials vary slightly (~14.09-14.20s here); each trial "
+         "gets its own actual duration. Substantially more per-trial compute "
+         "than the default 2s window.",
+  )
   parser.add_argument(
     "--output-dir", type=Path, default=None,
     help="Default: <grid-csv's parent>/configuration_probes/",
@@ -501,9 +524,10 @@ def main() -> None:
   output_dir = args.output_dir or (args.grid_csv.parent / "configuration_probes")
 
   rows = load_grid_rows(args.grid_csv, configuration_indices)
+  horizon_desc = "each trial's full length" if args.full_trial_horizon else f"{args.horizon_s:g}s"
   print(f"Simulating {len(rows)} configuration(s) from "
         f"{display_path(args.grid_csv)} "
-        f"(horizon={args.horizon_s:g}s, trial timeout={args.trial_timeout_s:g}s) ...")
+        f"(horizon={horizon_desc}, trial timeout={args.trial_timeout_s:g}s) ...")
 
   meta = json.loads(metadata_json.read_text())
   train_ids = meta["split"]["train_trial_ids"]
@@ -562,7 +586,7 @@ def main() -> None:
     trial_rows, summary_rows = process_configuration(
       row, variants, train_z, test_z, test_ids, selected_trial_ids,
       dt, fs_processed, args.horizon_s, args.trial_timeout_s, output_dir, args.figure_format,
-      normalize_columns, signal_units,
+      normalize_columns, signal_units, args.full_trial_horizon,
     )
     all_trial_rows.extend(trial_rows)
     all_summary_rows.extend(summary_rows)

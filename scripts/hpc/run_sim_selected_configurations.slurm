@@ -72,6 +72,7 @@ NORMALIZE_COLUMNS="${NORMALIZE_COLUMNS:-}"
 OUTPUT_DIR="${OUTPUT_DIR:-}"
 TRIAL_TIMEOUT_S="${TRIAL_TIMEOUT_S:-60}"
 HORIZON_S="${HORIZON_S:-2.0}"
+FULL_TRIAL_HORIZON="${FULL_TRIAL_HORIZON:-}"
 
 export OMP_NUM_THREADS=1
 export MKL_NUM_THREADS=1
@@ -101,6 +102,9 @@ if [[ -n "$NORMALIZE_COLUMNS" ]]; then
 fi
 if [[ -n "$OUTPUT_DIR" ]]; then
   EXTRA_ARGS+=(--output-dir "$OUTPUT_DIR")
+fi
+if [[ "$FULL_TRIAL_HORIZON" == "true" ]]; then
+  EXTRA_ARGS+=(--full-trial-horizon)
 fi
 
 "$PYTHON_BIN" scripts/pysindy/simulate_selected_configurations.py \

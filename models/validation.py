@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import multiprocessing
 import signal as operating_system_signal
 from dataclasses import dataclass
 
@@ -182,6 +183,91 @@ def simulate_model_detailed(
     completed=True,
     failure_reason="",
     rhs_evaluations=rhs_evaluations,
+  )
+
+
+def _simulate_worker(queue, model, initial_state, dt, horizon_s) -> None:
+  """Run one simulation in a child process and post its result back.
+
+  Module-level (not a closure) so it can be pickled for ``multiprocessing``'s
+  "spawn" start method, used on macOS; Linux's default "fork" would work with
+  a closure too, but this keeps both platforms on the same code path.
+  """
+  result = simulate_model_detailed(model, initial_state=initial_state, dt=dt, horizon_s=horizon_s)
+  queue.put(result)
+
+
+def simulate_model_detailed_hard_timeout(
+  model,
+  initial_state: np.ndarray,
+  dt: float,
+  horizon_s: float,
+  wall_timeout_s: float,
+) -> SimulationResult:
+  """Simulate a model with a wall-clock cap enforced by killing a subprocess.
+
+  ``simulate_model_detailed``'s own ``wall_timeout_s`` uses a ``SIGALRM``
+  delivered to the *same* process. That signal is only processed when Python
+  bytecode resumes, so if LSODA's underlying Fortran code takes many internal
+  steps without returning control to the Python callback (observed for a
+  near-divergent fit at a long horizon), the alarm can sit undelivered far
+  past its deadline -- measured one case reaching 1001s real time against a
+  120s cap. Running the simulation in a child process lets the parent enforce
+  the cap by terminating that process outright, which works regardless of
+  what the native integrator is doing.
+
+  Trade-off: unlike ``simulate_model_detailed``, a hard timeout here cannot
+  recover a partial trajectory (the process is killed, not given a chance to
+  return one). Every other failure mode (non-finite derivative, LinAlg
+  errors, ending before the horizon) is unaffected and still reports whatever
+  partial trajectory the child computed.
+
+  Args:
+    model: Fitted model whose ``predict`` method returns derivatives. Must be
+      picklable (verified for ``pysindy.SINDy`` and the ``Stored*Model``
+      wrappers in ``models/sindy.py``).
+    initial_state: Initial state vector in the model's signal units.
+    dt: Requested output interval in seconds.
+    horizon_s: Maximum integration duration in seconds.
+    wall_timeout_s: Hard wall-clock cap in seconds, enforced by process kill.
+
+  Returns:
+    The child's ``SimulationResult`` on success; on a hard timeout, a failed
+    result with an empty trajectory and ``rhs_evaluations=0`` (unknown, since
+    the child never reported back).
+  """
+  ctx = multiprocessing.get_context("spawn")
+  queue = ctx.Queue()
+  process = ctx.Process(
+    target=_simulate_worker, args=(queue, model, initial_state, dt, horizon_s)
+  )
+  process.start()
+  process.join(wall_timeout_s)
+
+  if process.is_alive():
+    process.terminate()
+    process.join(5)
+    if process.is_alive():
+      process.kill()
+      process.join()
+    return SimulationResult(
+      trajectory=None,
+      time=np.empty(0),
+      completed=False,
+      failure_reason=(
+        f"simulation exceeded {wall_timeout_s:g} wall-clock seconds (hard subprocess kill)"
+      ),
+      rhs_evaluations=0,
+    )
+
+  if not queue.empty():
+    return queue.get()
+  return SimulationResult(
+    trajectory=None,
+    time=np.empty(0),
+    completed=False,
+    failure_reason="simulation subprocess exited without reporting a result",
+    rhs_evaluations=0,
   )
 
 
