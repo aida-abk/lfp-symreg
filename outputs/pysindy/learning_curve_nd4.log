@@ -1,0 +1,145 @@
+Loading /Users/aida_abkenova/Downloads/CQSA/lfp-symreg/raw_data/trialdata_v03_buzz_20231106_pre-0.100_post0.100.mat ...
+training pool: 28 trials, held-out: 9 trials (fixed)
+
+=== case nd4 (deg=3, nd=4, delay=2, thr=20000) -- 31 fits ===
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/scipy/integrate/_ivp/lsoda.py:161: UserWarning: lsoda: Repeated convergence failures (perhaps bad Jacobian or tolerances).
+  solver._y, solver.t = integrator.run(
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/scipy/integrate/_ivp/lsoda.py:161: UserWarning: lsoda: Repeated convergence failures (perhaps bad Jacobian or tolerances).
+  solver._y, solver.t = integrator.run(
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/scipy/integrate/_ivp/lsoda.py:161: UserWarning: lsoda: Repeated convergence failures (perhaps bad Jacobian or tolerances).
+  solver._y, solver.t = integrator.run(
+  [  1/31] n_train=  4 rep=0 terms=  30 done=6/9 psd=+0.153 corr=-0.000 rmse=42.7
+  [  2/31] n_train=  4 rep=1 terms=  37 done=9/9 psd=+0.135 corr=+0.001 rmse=62.5
+  [  3/31] n_train=  4 rep=2 terms=  35 done=9/9 psd=+0.134 corr=+0.001 rmse=56.0
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [  4/31] n_train=  4 rep=3 terms=  39 done=8/9 psd=+0.119 corr=-0.004 rmse=46.6
+  [  5/31] n_train=  4 rep=4 terms=  28 done=9/9 psd=+0.129 corr=+0.018 rmse=46.2
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [  6/31] n_train=  8 rep=0 terms=  49 done=0/9 psd=+nan corr=+nan rmse=nan
+  [  7/31] n_train=  8 rep=1 terms=  39 done=9/9 psd=+0.128 corr=-0.036 rmse=46.3
+  [  8/31] n_train=  8 rep=2 terms=  51 done=9/9 psd=+0.193 corr=-0.017 rmse=51.4
+  [  9/31] n_train=  8 rep=3 terms=  44 done=9/9 psd=+0.122 corr=-0.021 rmse=67.9
+  [ 10/31] n_train=  8 rep=4 terms=  47 done=9/9 psd=+0.129 corr=-0.004 rmse=43.1
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 11/31] n_train= 12 rep=0 terms=  57 done=0/9 psd=+nan corr=+nan rmse=nan
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+  [ 12/31] n_train= 12 rep=1 terms=  52 done=7/9 psd=+0.121 corr=-0.028 rmse=45.1
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 13/31] n_train= 12 rep=2 terms=  56 done=3/9 psd=+0.148 corr=-0.053 rmse=59.5
+  [ 14/31] n_train= 12 rep=3 terms=  55 done=9/9 psd=+0.184 corr=+0.003 rmse=54.0
+  [ 15/31] n_train= 12 rep=4 terms=  57 done=9/9 psd=+0.103 corr=+0.003 rmse=48.0
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 16/31] n_train= 16 rep=0 terms=  62 done=8/9 psd=+0.117 corr=+0.003 rmse=47.4
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 17/31] n_train= 16 rep=1 terms=  60 done=8/9 psd=+0.118 corr=+0.015 rmse=44.2
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 18/31] n_train= 16 rep=2 terms=  63 done=6/9 psd=+0.119 corr=+0.023 rmse=64.8
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 19/31] n_train= 16 rep=3 terms=  60 done=2/9 psd=+0.144 corr=-0.027 rmse=60.8
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 20/31] n_train= 16 rep=4 terms=  59 done=4/9 psd=+0.107 corr=-0.025 rmse=46.2
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 21/31] n_train= 20 rep=0 terms=  66 done=6/9 psd=+0.118 corr=+0.047 rmse=57.2
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 22/31] n_train= 20 rep=1 terms=  66 done=8/9 psd=+0.125 corr=-0.003 rmse=61.5
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 23/31] n_train= 20 rep=2 terms=  64 done=8/9 psd=+0.115 corr=+0.020 rmse=60.4
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 24/31] n_train= 20 rep=3 terms=  68 done=8/9 psd=+0.112 corr=-0.005 rmse=57.8
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 25/31] n_train= 20 rep=4 terms=  67 done=7/9 psd=+0.130 corr=+0.025 rmse=60.6
+  [ 26/31] n_train= 24 rep=0 terms=  70 done=9/9 psd=+0.128 corr=-0.005 rmse=57.7
+  [ 27/31] n_train= 24 rep=1 terms=  73 done=9/9 psd=+0.099 corr=-0.014 rmse=56.7
+  [ 28/31] n_train= 24 rep=2 terms=  72 done=9/9 psd=+0.133 corr=+0.023 rmse=57.2
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 29/31] n_train= 24 rep=3 terms=  72 done=8/9 psd=+0.119 corr=+0.004 rmse=58.9
