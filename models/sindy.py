@@ -186,6 +186,14 @@ class SINDyConfig:
     max_iter: Maximum STLSQ fit/threshold/refit cycles before giving up and
       returning the last iterate with a ConvergenceWarning. Ignored when
       optimizer="sr3".
+    unbias: Whether STLSQ appends an unregularized least-squares refit on the
+      support it selected, undoing the shrinkage that ridge ``alpha`` imposes
+      on the surviving coefficients. PySINDy's own default is ``True``; it is
+      kept here so existing results are unaffected. The refit runs after
+      thresholding and reads the support without modifying it (see pysindy
+      ``optimizers/base.py:_unbias``), so this never changes which terms
+      survive -- only their magnitudes. Ignored when optimizer="sr3", which
+      rejects unbiasing outright.
   """
 
   degree: int
@@ -198,6 +206,7 @@ class SINDyConfig:
   nu: float = 1.0
   verbose: bool = True
   max_iter: int = 20
+  unbias: bool = True
 
 
 def delay_embed_trace(trace: np.ndarray, n_delays: int, delay: int) -> np.ndarray:
@@ -306,6 +315,7 @@ def fit_sindy_model(trajectories: list[np.ndarray], dt: float, config: SINDyConf
       normalize_columns=config.normalize_columns,
       verbose=config.verbose,
       max_iter=config.max_iter,
+      unbias=config.unbias,
     )
 
   model = ps.SINDy(
