@@ -1,0 +1,21 @@
+Loading /Users/aida_abkenova/Downloads/CQSA/lfp-symreg/raw_data/trialdata_v03_buzz_20231106_pre-0.100_post0.100.mat ...
+train 28 trials, held-out 9 trials
+
+Hankel SVD on training trials only (n_delays=80, delay=1):
+  modes for 90.0% variance: 11
+  modes for 99.0% variance: 19
+  modes for 99.9% variance: 24
+wrote /Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/havok_baseline/hankel_spectrum.png
+  [  1/48] modes=  3 deg=1 thr=       0 terms=   12 done=9/9 psd=+0.757 corr=+0.008 rmse=42.3
+  [  2/48] modes=  3 deg=1 thr=     100 terms=   12 done=9/9 psd=+0.757 corr=+0.008 rmse=42.3
+  [  3/48] modes=  3 deg=1 thr=    1000 terms=    4 done=9/9 psd=+0.758 corr=+0.023 rmse=42.5
+  [  4/48] modes=  3 deg=1 thr=   10000 terms=    4 done=9/9 psd=+0.758 corr=+0.023 rmse=42.5
+  [  5/48] modes=  3 deg=2 thr=       0 terms=   30 done=9/9 psd=+0.764 corr=-0.062 rmse=42.6
+  [  6/48] modes=  3 deg=2 thr=     100 terms=   28 done=9/9 psd=+0.764 corr=-0.062 rmse=42.6
+  [  7/48] modes=  3 deg=2 thr=    1000 terms=   16 done=9/9 psd=+0.764 corr=-0.067 rmse=42.3
+  [  8/48] modes=  3 deg=2 thr=   10000 terms=    6 done=9/9 psd=+0.767 corr=-0.075 rmse=42.5
+  [  9/48] modes=  3 deg=3 thr=       0 terms=   60 done=9/9 psd=+0.759 corr=+0.011 rmse=43.2
+  [ 10/48] modes=  3 deg=3 thr=     100 terms=   59 done=9/9 psd=+0.758 corr=+0.011 rmse=43.2
+  [ 11/48] modes=  3 deg=3 thr=    1000 terms=   45 done=9/9 psd=+0.759 corr=+0.019 rmse=42.5
+  [ 12/48] modes=  3 deg=3 thr=   10000 terms=   15 done=9/9 psd=+0.758 corr=+0.016 rmse=42.2
+  [ 13/48] modes=  5 deg=1 thr=       0 terms=   30 done=9/9 psd=+0.628 corr=-0.072 rmse=47.0
