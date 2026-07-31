@@ -156,6 +156,8 @@ def evaluate_point(
   data: TrialData,
   test_ids: list[int],
   dt: float,
+  max_horizon_s: float = MAX_HORIZON_S,
+  sim_timeout_s: float = SIM_WALL_TIMEOUT_S,
 ) -> dict:
   """Fit one training subset and score it on the fixed held-out trials.
 
@@ -165,6 +167,11 @@ def evaluate_point(
     data: Loaded trial data.
     test_ids: Held-out trial identifiers. Identical for every point.
     dt: Processed sample interval in seconds.
+    max_horizon_s: Cap on integration duration per held-out trial, in seconds.
+    sim_timeout_s: Wall-clock cap per simulation, in seconds. Simulations that
+      exceed it are recorded as incomplete. Total runtime scales with the
+      product of these two caps and the number of fits, which is what makes a
+      Slurm walltime overrun the dominant failure mode for this script.
 
   Returns:
     A result row combining the curve point, the fitted term count, and the
@@ -196,10 +203,10 @@ def evaluate_point(
   metrics_list = []
   completed_trials: list[int] = []
   for trial_index, measured in enumerate(emb_test):
-    horizon = min((len(measured) - 1) * dt, MAX_HORIZON_S)
+    horizon = min((len(measured) - 1) * dt, max_horizon_s)
     sim = simulate_model_detailed(
       model, initial_state=measured[0], dt=dt, horizon_s=horizon,
-      wall_timeout_s=SIM_WALL_TIMEOUT_S,
+      wall_timeout_s=sim_timeout_s,
     )
     if sim.completed and sim.trajectory is not None:
       completed_trials.append(trial_index)
@@ -350,6 +357,14 @@ def main() -> None:
   parser.add_argument("--replicates", type=int, default=DEFAULT_REPLICATES)
   parser.add_argument("--seed", type=int, default=0)
   parser.add_argument("--out-dir", type=Path, default=OUTPUT_DIR)
+  parser.add_argument(
+    "--max-horizon", type=float, default=MAX_HORIZON_S,
+    help="Cap on integration duration per held-out trial, in seconds.",
+  )
+  parser.add_argument(
+    "--sim-timeout", type=float, default=SIM_WALL_TIMEOUT_S,
+    help="Wall-clock cap per simulation, in seconds.",
+  )
   args = parser.parse_args()
 
   n_train_list = tuple(int(n) for n in args.n_train_list.split(","))
@@ -380,7 +395,10 @@ def main() -> None:
       f"delay={case.delay}, thr={case.threshold:g}) -- {len(points)} fits ==="
     )
     for index, point in enumerate(points, start=1):
-      row = evaluate_point(point, case, data, test_ids, dt)
+      row = evaluate_point(
+        point, case, data, test_ids, dt,
+        max_horizon_s=args.max_horizon, sim_timeout_s=args.sim_timeout,
+      )
       rows.append(row)
       print(
         f"  [{index:>3}/{len(points)}] n_train={point.n_train:>3} "
