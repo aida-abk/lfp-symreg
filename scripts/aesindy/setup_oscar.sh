@@ -93,8 +93,11 @@ if grep -rl pickle5 "${REPO_DIR}/aesindy/" >/dev/null 2>&1; then
   grep -rl pickle5 "${REPO_DIR}/aesindy/" | xargs sed -i 's/pickle5/pickle/g'
 fi
 
-echo "=== pinning numpy below 2, with a compatible pysindy ==="
-# Three constraints have to hold at once:
+echo "=== pinning numpy, pandas and pysindy to versions this code predates ==="
+# pandas < 2 is required because aesindy/training.py:152 calls
+# DataFrame.append, which pandas removed in 2.0.
+#
+# Three further constraints have to hold at once:
 #   TensorFlow 2.15 and ml_dtypes are compiled against the NumPy 1.x C ABI,
 #     so NumPy 2 breaks them with `_ARRAY_API not found`.
 #   PySINDy 2.1 requires numpy>=2, so it cannot be used here.
@@ -103,7 +106,7 @@ echo "=== pinning numpy below 2, with a compatible pysindy ==="
 # PySINDy 1.7.5 is the last 1.x release, contemporaneous with this repository,
 # and satisfies all three. Installed together so pip resolves them jointly
 # rather than letting one pull the other out of range.
-"${ENV_DIR}/bin/pip" install "pysindy==1.7.5" "numpy<2"
+"${ENV_DIR}/bin/pip" install "pysindy==1.7.5" "numpy<2" "pandas<2"
 
 echo "=== creating the missing aesindy/config.py ==="
 printf "ROOTPATH='%s'\n" "${REPO_DIR}" > "${REPO_DIR}/aesindy/config.py"
