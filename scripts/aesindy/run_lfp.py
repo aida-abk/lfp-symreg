@@ -484,6 +484,11 @@ def main() -> None:
          "distribution shift when training is dominated by sequence trials.",
   )
   parser.add_argument(
+    "--seed", type=int, default=0,
+    help="Seed for the sequence holdout draw. The fixation holdout is the "
+         "fixed archived set and does not depend on this.",
+  )
+  parser.add_argument(
     "--use-sindycall", action="store_true",
     help="Enable the reference's periodic STLSQ refit of the latent "
          "coefficients. Off in the reference defaults, which leaves the "
