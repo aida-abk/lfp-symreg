@@ -173,6 +173,27 @@ def build_reference_params(args) -> dict:
   params["loss_weight_layer_l2"] = 0.0
   params["loss_weight_layer_l1"] = 0.0
 
+  # Sparsification. Two independent mechanisms exist in the reference, and
+  # both are effectively off in its published defaults:
+  #
+  #   coefficient_threshold / threshold_frequency drive RfeUpdateCallback,
+  #     which masks coefficients below the threshold. The default threshold is
+  #     1e-6, small enough that nothing is ever masked.
+  #   use_sindycall / sindy_threshold drive SindyCall, which periodically
+  #     refits the latent coefficients with pysindy's STLSQ. The default is
+  #     False, so that refit never happens.
+  #
+  # Left at their defaults the latent ODE stays fully dense -- 1092 live
+  # coefficients at latent_dim=12 -- and a dense quadratic system with
+  # coefficients of order 10 diverges in finite time, which is what the
+  # latent_dim 6 and 12 runs showed. These flags make that testable rather
+  # than assumed.
+  params["use_sindycall"] = args.use_sindycall
+  params["sindy_threshold"] = args.sindy_threshold
+  params["sindycall_freq"] = args.sindycall_freq
+  params["coefficient_threshold"] = args.coefficient_threshold
+  params["threshold_frequency"] = args.threshold_frequency
+
   # Their split is validation only here; the real holdout is by trial.
   params["train_ratio"] = 0.9
   return params
@@ -385,6 +406,29 @@ def main() -> None:
   parser.add_argument(
     "--no-scale", action="store_true",
     help="Disable the global amplitude rescaling applied before training.",
+  )
+  parser.add_argument(
+    "--use-sindycall", action="store_true",
+    help="Enable the reference's periodic STLSQ refit of the latent "
+         "coefficients. Off in the reference defaults, which leaves the "
+         "latent ODE fully dense.",
+  )
+  parser.add_argument(
+    "--sindy-threshold", type=float, default=0.4,
+    help="STLSQ threshold used by the refit. The reference default is 0.4.",
+  )
+  parser.add_argument(
+    "--sindycall-freq", type=int, default=1,
+    help="Epoch interval between STLSQ refits.",
+  )
+  parser.add_argument(
+    "--coefficient-threshold", type=float, default=1e-6,
+    help="Magnitude below which the RFE callback masks a coefficient. The "
+         "reference default of 1e-6 never masks anything.",
+  )
+  parser.add_argument(
+    "--threshold-frequency", type=int, default=100,
+    help="Epoch interval between RFE masking passes.",
   )
   parser.add_argument("--max-lead", type=float, default=1.0)
   parser.add_argument("--origin-stride", type=float, default=0.5)
