@@ -297,7 +297,7 @@ def simulate_latent(
 def forecast_held_out(
   model, coefficients: np.ndarray, exponents: list,
   test_traces: list[np.ndarray], input_dim: int, dt: float,
-  max_lead_s: float, origin_stride_s: float,
+  max_lead_s: float, origin_stride_s: float, signal_scale: float = 1.0,
 ) -> tuple[np.ndarray, np.ndarray]:
   """Forecast from many origins in each held-out trial.
 
@@ -339,8 +339,11 @@ def forecast_held_out(
         ).numpy(),
         dtype=float,
       )
-      predicted = decoded[:, 0]
-      truth = embedded[origin : origin + n_leads, 0]
+      # Undo the global scaling so both series are back in microvolts, which
+      # is what every PySINDy result in this project reports. Correlation is
+      # scale-invariant, so this only affects RMSE-style readings.
+      predicted = decoded[:, 0] * signal_scale
+      truth = embedded[origin : origin + n_leads, 0] * signal_scale
       if len(truth) < n_leads or not np.all(np.isfinite(predicted)):
         continue
       predicted_rows.append(predicted)
@@ -379,6 +382,10 @@ def main() -> None:
   parser.add_argument("--patience", type=int, default=10)
   parser.add_argument("--batch-size", type=int, default=256)
   parser.add_argument("--learning-rate", type=float, default=1e-3)
+  parser.add_argument(
+    "--no-scale", action="store_true",
+    help="Disable the global amplitude rescaling applied before training.",
+  )
   parser.add_argument("--max-lead", type=float, default=1.0)
   parser.add_argument("--origin-stride", type=float, default=0.5)
   parser.add_argument("--out-dir", type=Path, default=OUTPUT_DIR)
@@ -413,6 +420,30 @@ def main() -> None:
   )
   print(f"train {len(train_traces)} trials, held-out {len(test_traces)} trials "
         f"(held-out never enters TrainModel), dt={dt*1000:.0f} ms")
+
+  # One global amplitude scale, computed on training trials only.
+  #
+  # The reference's loss weights (rec 0.3, sindy_z 0.001, sindy_x 0.001) were
+  # tuned on waterwheel data of order 1. LFP is in microvolts with derivatives
+  # of order 1e3, so the smoke run showed sindy_z at 3.6e9 against a
+  # reconstruction loss of 1.5e3 -- six orders of magnitude apart, meaning the
+  # network optimises the derivative terms and effectively ignores
+  # reconstruction. Dividing by a single constant restores the balance the
+  # weights assume.
+  #
+  # A single global constant is used rather than per-trial z-scoring so that
+  # relative amplitude across trials is preserved, and it is inverted before
+  # any metric is computed. Correlation is scale-invariant regardless; this
+  # matters for the loss balance, not the reported skill.
+  signal_scale = 1.0
+  if not args.no_scale:
+    signal_scale = float(np.std(np.concatenate(train_traces)))
+    if signal_scale <= 0:
+      signal_scale = 1.0
+    train_traces = [t / signal_scale for t in train_traces]
+    test_traces = [t / signal_scale for t in test_traces]
+    print(f"global amplitude scale from training trials: "
+          f"{signal_scale:.3f} uV (inverted before scoring)")
 
   params = build_reference_params(args)
   params["dt"] = dt
@@ -451,7 +482,7 @@ def main() -> None:
   print("\nforecasting held-out trials ...", flush=True)
   predicted, measured = forecast_held_out(
     model, coefficients, exponents, test_traces, args.input_dim, dt,
-    args.max_lead, args.origin_stride,
+    args.max_lead, args.origin_stride, signal_scale=signal_scale,
   )
   print(f"{predicted.shape[0]} usable forecasts")
   if predicted.shape[0] == 0:
