@@ -1,0 +1,30 @@
+Loading /Users/aida_abkenova/Downloads/CQSA/lfp-symreg/raw_data/trialdata_v03_buzz_20231106_pre-0.100_post0.100.mat ...
+
+embedding window: 80 samples = 320 ms at 250 Hz
+  modes for 90.0% variance: 11
+  modes for 99.0% variance: 19
+  modes for 99.9% variance: 24
+
+wrote /Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/havok_mode_probe/hankel_modes.png
+
+Reconstruction ceiling on the 9 held-out trials (projection only, no dynamics):
+  modes   variance   correlation       psd      rmse
+      1     38.5%        0.5174     0.871     31.65
+      2     50.6%        0.6711     0.909     28.05
+      3     57.4%        0.6812     0.918     27.71
+      5     69.4%        0.7211     0.934     26.46
+      8     83.3%        0.7730     0.957     25.11
+     12     93.4%        0.9060     0.986     15.93
+     16     97.9%        0.9606     0.993     10.14
+     20     99.5%        0.9905     0.999      5.10
+     24     99.9%        0.9987     1.000      1.83
+     32    100.0%        1.0000     1.000      0.12
+     48    100.0%        1.0000     1.000      0.00
+     80    100.0%        1.0000     1.000      0.00
+
+wrote /Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/havok_mode_probe/reconstruction_ceiling.csv
+wrote /Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/havok_mode_probe/reconstruction_ceiling.png
+
+Interpretation: a fitted model scored in these coordinates cannot
+exceed the ceiling for its mode count. Compare against the fitted
+results in outputs/pysindy/havok_baseline/havok_baseline.csv.

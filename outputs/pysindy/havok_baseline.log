@@ -19,3 +19,82 @@ wrote /Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/havok_basel
   [ 11/48] modes=  3 deg=3 thr=    1000 terms=   45 done=9/9 psd=+0.759 corr=+0.019 rmse=42.5
   [ 12/48] modes=  3 deg=3 thr=   10000 terms=   15 done=9/9 psd=+0.758 corr=+0.016 rmse=42.2
   [ 13/48] modes=  5 deg=1 thr=       0 terms=   30 done=9/9 psd=+0.628 corr=-0.072 rmse=47.0
+  [ 14/48] modes=  5 deg=1 thr=     100 terms=   28 done=9/9 psd=+0.627 corr=-0.072 rmse=47.0
+  [ 15/48] modes=  5 deg=1 thr=    1000 terms=   16 done=9/9 psd=+0.622 corr=-0.073 rmse=47.2
+  [ 16/48] modes=  5 deg=1 thr=   10000 terms=   12 done=9/9 psd=+0.622 corr=-0.073 rmse=47.2
+  [ 17/48] modes=  5 deg=2 thr=       0 terms=  105 done=9/9 psd=+0.648 corr=-0.028 rmse=46.4
+  [ 18/48] modes=  5 deg=2 thr=     100 terms=  101 done=9/9 psd=+0.648 corr=-0.028 rmse=46.4
+  [ 19/48] modes=  5 deg=2 thr=    1000 terms=   78 done=9/9 psd=+0.652 corr=-0.032 rmse=45.8
+  [ 20/48] modes=  5 deg=2 thr=   10000 terms=   16 done=9/9 psd=+0.623 corr=-0.054 rmse=47.4
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 21/48] modes=  5 deg=3 thr=       0 terms=  280 done=8/9 psd=+0.678 corr=-0.003 rmse=42.7
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 22/48] modes=  5 deg=3 thr=     100 terms=  274 done=8/9 psd=+0.678 corr=-0.004 rmse=42.7
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 23/48] modes=  5 deg=3 thr=    1000 terms=  226 done=8/9 psd=+0.678 corr=-0.007 rmse=42.5
+  [ 24/48] modes=  5 deg=3 thr=   10000 terms=   49 done=9/9 psd=+0.637 corr=-0.035 rmse=46.1
+  [ 25/48] modes=  8 deg=1 thr=       0 terms=   72 done=9/9 psd=+0.762 corr=-0.048 rmse=41.6
+  [ 26/48] modes=  8 deg=1 thr=     100 terms=   68 done=9/9 psd=+0.762 corr=-0.048 rmse=41.6
+  [ 27/48] modes=  8 deg=1 thr=    1000 terms=   49 done=9/9 psd=+0.785 corr=-0.050 rmse=42.2
+  [ 28/48] modes=  8 deg=1 thr=   10000 terms=   32 done=9/9 psd=+0.783 corr=-0.052 rmse=42.4
+  [ 29/48] modes=  8 deg=2 thr=       0 terms=  360 done=9/9 psd=+0.798 corr=-0.088 rmse=41.2
+  [ 30/48] modes=  8 deg=2 thr=     100 terms=  344 done=9/9 psd=+0.798 corr=-0.087 rmse=41.2
+  [ 31/48] modes=  8 deg=2 thr=    1000 terms=  275 done=9/9 psd=+0.792 corr=-0.094 rmse=41.4
+  [ 32/48] modes=  8 deg=2 thr=   10000 terms=   47 done=9/9 psd=+0.818 corr=-0.056 rmse=42.0
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 33/48] modes=  8 deg=3 thr=       0 terms= 1320 done=8/9 psd=+0.727 corr=-0.018 rmse=41.4
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 34/48] modes=  8 deg=3 thr=     100 terms= 1281 done=8/9 psd=+0.730 corr=-0.008 rmse=41.3
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/numpy/_core/fromnumeric.py:83: RuntimeWarning: invalid value encountered in reduce
+  return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+  [ 35/48] modes=  8 deg=3 thr=    1000 terms= 1030 done=8/9 psd=+0.730 corr=-0.000 rmse=41.5
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  [ 36/48] modes=  8 deg=3 thr=   10000 terms=  181 done=7/9 psd=+0.750 corr=+0.122 rmse=42.5
+  [ 37/48] modes= 12 deg=1 thr=       0 terms=  156 done=9/9 psd=+0.639 corr=+0.068 rmse=47.8
+  [ 38/48] modes= 12 deg=1 thr=     100 terms=  142 done=9/9 psd=+0.638 corr=+0.068 rmse=47.9
+  [ 39/48] modes= 12 deg=1 thr=    1000 terms=  101 done=9/9 psd=+0.631 corr=+0.069 rmse=48.9
+  [ 40/48] modes= 12 deg=1 thr=   10000 terms=   72 done=9/9 psd=+0.634 corr=+0.066 rmse=48.9
+  [ 41/48] modes= 12 deg=2 thr=       0 terms= 1092 done=9/9 psd=+0.624 corr=+0.036 rmse=48.1
+  [ 42/48] modes= 12 deg=2 thr=     100 terms= 1055 done=9/9 psd=+0.621 corr=+0.037 rmse=48.2
+  [ 43/48] modes= 12 deg=2 thr=    1000 terms=  792 done=9/9 psd=+0.635 corr=+0.038 rmse=49.7
+  [ 44/48] modes= 12 deg=2 thr=   10000 terms=  158 done=9/9 psd=+0.620 corr=+0.014 rmse=49.5
+  [ 45/48] modes= 12 deg=3 thr=       0 terms= 5460 done=5/9 psd=+0.816 corr=+0.051 rmse=44.5
+  [ 46/48] modes= 12 deg=3 thr=     100 terms= 5268 done=5/9 psd=+0.816 corr=+0.057 rmse=44.7
+  [ 47/48] modes= 12 deg=3 thr=    1000 terms= 3669 done=6/9 psd=+0.841 corr=+0.037 rmse=44.6
+  [ 48/48] modes= 12 deg=3 thr=   10000 terms=  460 done=7/9 psd=+0.723 corr=+0.006 rmse=45.1
+
+wrote /Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/havok_baseline/havok_baseline.csv
+
+48/48 configurations produced a usable simulation.
+
+best |x0_correlation| found:
+  modes=8 degree=3 threshold=10000 terms=181
+  x0_correlation = +0.1221   psd = +0.750   rmse = 42.5
+
+across all 48 configurations: mean -0.0106, sd 0.0509, max |corr| 0.1221
+
+delay-coordinate reference (learning curve, pooled over 31 fits):
+  nd2  x0_correlation = +0.007 +/- 0.016
+  nd4  x0_correlation = -0.000 +/- 0.022

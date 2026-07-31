@@ -1,0 +1,44 @@
+Loading /Users/aida_abkenova/Downloads/CQSA/lfp-symreg/raw_data/trialdata_v03_buzz_20231106_pre-0.100_post0.100.mat ...
+train 28, held-out 9, dt=4 ms, max lead 2 s
+
+fitting methods ...
+           delay nd4: delay coordinates, n_delays=4, delay=2, degree=3
+     havok r=3 deg=1: Hankel-SVD, n_delays=80, modes=3, degree=1, threshold=1000
+    havok r=12 deg=1: Hankel-SVD, n_delays=80, modes=12, degree=1, threshold=1000
+
+delay nd4: 112 usable forecasts
+  lead     20 ms: skill +0.639
+  lead     50 ms: skill -0.468
+  lead    100 ms: skill -0.433
+  lead    200 ms: skill +0.093
+  lead    500 ms: skill -0.127
+  lead   1000 ms: skill -0.088
+  lead   2000 ms: skill +0.032
+
+havok r=3 deg=1: 108 usable forecasts
+  lead     20 ms: skill +0.424
+  lead     50 ms: skill +0.433
+  lead    100 ms: skill +0.342
+  lead    200 ms: skill +0.254
+  lead    500 ms: skill -0.107
+  lead   1000 ms: skill -0.201
+  lead   2000 ms: skill -0.032
+
+havok r=12 deg=1: 108 usable forecasts
+  lead     20 ms: skill +0.403
+  lead     50 ms: skill +0.334
+  lead    100 ms: skill +0.389
+  lead    200 ms: skill +0.284
+  lead    500 ms: skill +0.010
+  lead   1000 ms: skill -0.205
+  lead   2000 ms: skill -0.072
+
+wrote /Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/forecast_skill/forecast_skill.csv
+wrote /Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/pysindy/forecast_skill/forecast_skill.png
+
+===== skill vs lead time =====
+              method      20ms      50ms     100ms     200ms     500ms    1000ms    2000ms
+           delay nd4    +0.639    -0.468    -0.433    +0.093    -0.127    -0.088    +0.032
+         persistence    +0.688    +0.183    +0.470    +0.139    -0.087    -0.093    -0.075
+     havok r=3 deg=1    +0.424    +0.433    +0.342    +0.254    -0.107    -0.201    -0.032
+    havok r=12 deg=1    +0.403    +0.334    +0.389    +0.284    +0.010    -0.205    -0.072

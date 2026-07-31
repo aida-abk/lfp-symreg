@@ -13,3 +13,4 @@ slurm/*.err
 __pycache__/
 .ipynb_checkpoints/
 .venv/
+.matplotlib-cache/

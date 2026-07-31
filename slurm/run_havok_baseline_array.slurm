@@ -3,8 +3,8 @@
 #SBATCH --partition=batch
 #SBATCH --nodes=1
 #SBATCH --array=0-3
-#SBATCH --time=12:00:00
-#SBATCH --mem=32G
+#SBATCH --time=6:00:00
+#SBATCH --mem=8G
 #SBATCH --cpus-per-task=1
 #SBATCH --export=ALL
 #SBATCH --mail-user=aida_abkenova@brown.edu
