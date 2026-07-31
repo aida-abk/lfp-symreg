@@ -53,10 +53,6 @@ from scipy.signal import savgol_filter
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(_PROJECT_ROOT) not in sys.path:
   sys.path.insert(0, str(_PROJECT_ROOT))
-# The PySINDy scripts live here and supply the shared metric functions.
-_PYSINDY_DIR = _PROJECT_ROOT / "scripts" / "pysindy"
-if str(_PYSINDY_DIR) not in sys.path:
-  sys.path.insert(0, str(_PYSINDY_DIR))
 
 import matplotlib
 
@@ -73,8 +69,12 @@ from models.polynomial_library import (  # noqa: E402
 )
 from models.sindy import delay_embed_trace  # noqa: E402
 
-from forecast_skill import persistence_by_lead, skill_by_lead  # noqa: E402
-from unbias_comparison import CHANNEL, DOWNSAMPLE, load_split  # noqa: E402
+from load_data.archived_split import (  # noqa: E402
+  CHANNEL,
+  DOWNSAMPLE,
+  load_archived_split,
+)
+from models.forecast_metrics import persistence_by_lead, skill_by_lead  # noqa: E402
 
 LOWPASS_HZ = 35.0
 SG_WINDOW = 21
@@ -370,7 +370,7 @@ def main() -> None:
   from aesindy.solvers import RealData  # type: ignore
   from aesindy.training import TrainModel  # type: ignore
 
-  train_ids, test_ids = load_split()
+  train_ids, test_ids = load_archived_split()
   print(f"Loading {MAT_FILE} ...", flush=True)
   data = TrialData.load(MAT_FILE)
   dt = DOWNSAMPLE / data.fs
