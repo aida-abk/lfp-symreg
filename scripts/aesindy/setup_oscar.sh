@@ -93,17 +93,17 @@ if grep -rl pickle5 "${REPO_DIR}/aesindy/" >/dev/null 2>&1; then
   grep -rl pickle5 "${REPO_DIR}/aesindy/" | xargs sed -i 's/pickle5/pickle/g'
 fi
 
-echo "=== pinning numpy below 2 ==="
-# TensorFlow 2.15 and ml_dtypes are compiled against the NumPy 1.x C ABI.
-# With NumPy 2 installed the extension fails with `_ARRAY_API not found`.
-"${ENV_DIR}/bin/pip" install "numpy<2"
-
-echo "=== removing pysindy from this environment ==="
-# PySINDy 2.1 requires numpy>=2, which cannot coexist with TensorFlow 2.15.
-# Nothing on this path needs it: scripts/aesindy/run_lfp.py reads the trial
-# split from load_data/archived_split.py and the metrics from
-# models/forecast_metrics.py, both of which depend on numpy alone.
-"${ENV_DIR}/bin/pip" uninstall -y pysindy >/dev/null 2>&1 || true
+echo "=== pinning numpy below 2, with a compatible pysindy ==="
+# Three constraints have to hold at once:
+#   TensorFlow 2.15 and ml_dtypes are compiled against the NumPy 1.x C ABI,
+#     so NumPy 2 breaks them with `_ARRAY_API not found`.
+#   PySINDy 2.1 requires numpy>=2, so it cannot be used here.
+#   aesindy/net_config.py imports pysindy at module scope, so pysindy must
+#     nonetheless be importable -- it is used by the SindyCall callback.
+# PySINDy 1.7.5 is the last 1.x release, contemporaneous with this repository,
+# and satisfies all three. Installed together so pip resolves them jointly
+# rather than letting one pull the other out of range.
+"${ENV_DIR}/bin/pip" install "pysindy==1.7.5" "numpy<2"
 
 echo "=== creating the missing aesindy/config.py ==="
 printf "ROOTPATH='%s'\n" "${REPO_DIR}" > "${REPO_DIR}/aesindy/config.py"
