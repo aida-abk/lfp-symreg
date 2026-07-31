@@ -67,7 +67,7 @@ fi
 echo "=== repairing requirements.txt ==="
 # Keep a copy of what shipped, so the edit is auditable.
 cp "${REPO_DIR}/requirements.txt" "${REPO_DIR}/requirements.txt.orig"
-grep -v -E '^(pickle5|tensorflow_macos|tensorflow)$' \
+grep -v -i -E '^(pickle5|tensorflow[-_]macos|tensorflow)$' \
   "${REPO_DIR}/requirements.txt.orig" > "${REPO_DIR}/requirements.txt"
 
 echo "=== installing ==="
@@ -75,7 +75,14 @@ echo "=== installing ==="
 "${ENV_DIR}/bin/pip" install -r "${REPO_DIR}/requirements.txt"
 # Needed by this project's data layer, which the runner imports.
 "${ENV_DIR}/bin/pip" install h5py hdf5storage
-"${ENV_DIR}/bin/pip" install -e "${REPO_DIR}"
+
+# --no-deps is required, not merely tidy. setup.py hardcodes its own
+# install_requires list containing `pickle5` and `tensorflow-macos`, and does
+# not list plain `tensorflow` at all, so the package as published can never
+# resolve its dependencies on Linux. Patching requirements.txt does not help
+# because setup.py does not read it. Every real dependency is installed above,
+# so dependency resolution is skipped here deliberately.
+"${ENV_DIR}/bin/pip" install -e "${REPO_DIR}" --no-deps
 
 echo "=== creating the missing aesindy/config.py ==="
 printf "ROOTPATH='%s'\n" "${REPO_DIR}" > "${REPO_DIR}/aesindy/config.py"
