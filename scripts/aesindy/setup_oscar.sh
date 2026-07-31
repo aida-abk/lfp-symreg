@@ -29,7 +29,10 @@ set -euo pipefail
 
 ENV_DIR="${ENV_DIR:-$HOME/aesindy_env}"
 REPO_DIR="${REPO_DIR:-$HOME/deep-delay-autoencoder}"
-PYTHON_MODULE="${PYTHON_MODULE:-python/3.11.0s}"
+# TensorFlow 2.15 supports Python 3.9-3.11 only, so 3.11 is the newest usable
+# interpreter. Oscar's default python module is 3.13, which TF 2.15 has no
+# wheels for -- hence the explicit version here rather than the default.
+PYTHON_MODULE="${PYTHON_MODULE:-python/3.11.11-5e66}"
 
 echo "=== loading Python module ${PYTHON_MODULE} ==="
 module load "${PYTHON_MODULE}" || {
@@ -37,6 +40,20 @@ module load "${PYTHON_MODULE}" || {
   echo "PYTHON_MODULE to a 3.11 build, then rerun." >&2
   exit 1
 }
+
+# An active conda environment prepends itself to PATH and will shadow the
+# module's interpreter, silently building the venv on the wrong Python. Check
+# rather than trust, because the failure would otherwise surface much later as
+# a missing TensorFlow wheel.
+PY_VERSION="$(python -c 'import sys; print("%d.%d" % sys.version_info[:2])')"
+if [ "${PY_VERSION}" != "3.11" ]; then
+  echo "ERROR: 'python' resolves to ${PY_VERSION} ($(command -v python)), not 3.11." >&2
+  echo "A conda environment is probably shadowing the module. Run:" >&2
+  echo "  conda deactivate" >&2
+  echo "then rerun this script. TensorFlow 2.15 has no wheels for ${PY_VERSION}." >&2
+  exit 1
+fi
+echo "using $(command -v python) (${PY_VERSION})"
 
 echo "=== creating ${ENV_DIR} ==="
 python -m venv "${ENV_DIR}"
