@@ -72,7 +72,19 @@ if ! "$PYTHON_BIN" -c "import tensorflow, aesindy.training, aesindy.config" 2>/d
   exit 1
 fi
 
-"$PYTHON_BIN" -c "import tensorflow as tf; print('tensorflow', tf.__version__, '| keras', tf.keras.__version__)"
+# Report versions, but never let a diagnostic abort the run. `set -e` is on,
+# and `tf.keras.__version__` does not exist in TF 2.15 -- the lazy loader
+# raises AttributeError -- which is enough to kill the job before any work
+# starts. Keras is imported directly, and the whole line is made non-fatal.
+"$PYTHON_BIN" -c "
+import tensorflow as tf
+print('tensorflow', tf.__version__)
+try:
+    import keras
+    print('keras', keras.__version__)
+except Exception as exc:
+    print('keras version unavailable:', exc)
+" || echo "version report failed; continuing"
 
 SMOKE_FLAG=""
 if [ "$SMOKE" != "0" ]; then
