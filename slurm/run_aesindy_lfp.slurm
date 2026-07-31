@@ -57,6 +57,16 @@ SMOKE="${SMOKE:-0}"
 # Sparsification, off by default to match the reference. Set USE_SINDYCALL=1
 # to enable the periodic STLSQ refit of the latent coefficients, and lower
 # COEFFICIENT_THRESHOLD from 1e-6 to make the RFE callback actually mask.
+# Training data. "fixation" is the archived 28-trial set; adding
+# "non_fixation" pools in 960 valid sequence trials (~1.9 s each), taking the
+# training set to 988 trials and roughly 5x the Hankel rows. The 9-trial
+# fixation holdout is unchanged either way, so scores stay comparable; a
+# separate sample of sequence trials is also withheld and scored, because
+# training dominated by sequence trials would otherwise hide a distribution
+# shift behind a fixation-only score.
+TRIAL_TYPES="${TRIAL_TYPES:-fixation}"
+SEQUENCE_HOLDOUT="${SEQUENCE_HOLDOUT:-20}"
+
 USE_SINDYCALL="${USE_SINDYCALL:-0}"
 SINDY_THRESHOLD="${SINDY_THRESHOLD:-0.4}"
 SINDYCALL_FREQ="${SINDYCALL_FREQ:-1}"
@@ -114,6 +124,8 @@ fi
   --max-epochs "$MAX_EPOCHS" \
   --max-lead "$MAX_LEAD" \
   --origin-stride "$ORIGIN_STRIDE" \
+  --trial-types "$TRIAL_TYPES" \
+  --sequence-holdout "$SEQUENCE_HOLDOUT" \
   --sindy-threshold "$SINDY_THRESHOLD" \
   --sindycall-freq "$SINDYCALL_FREQ" \
   --coefficient-threshold "$COEFFICIENT_THRESHOLD" \
