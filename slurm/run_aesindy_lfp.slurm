@@ -54,6 +54,15 @@ MAX_LEAD="${MAX_LEAD:-1.0}"
 ORIGIN_STRIDE="${ORIGIN_STRIDE:-0.5}"
 SMOKE="${SMOKE:-0}"
 
+# Sparsification, off by default to match the reference. Set USE_SINDYCALL=1
+# to enable the periodic STLSQ refit of the latent coefficients, and lower
+# COEFFICIENT_THRESHOLD from 1e-6 to make the RFE callback actually mask.
+USE_SINDYCALL="${USE_SINDYCALL:-0}"
+SINDY_THRESHOLD="${SINDY_THRESHOLD:-0.4}"
+SINDYCALL_FREQ="${SINDYCALL_FREQ:-1}"
+COEFFICIENT_THRESHOLD="${COEFFICIENT_THRESHOLD:-1e-6}"
+THRESHOLD_FREQUENCY="${THRESHOLD_FREQUENCY:-100}"
+
 mkdir -p "$OUT_DIR"
 
 # TensorFlow writes a lot of INFO noise that buries real errors in the log.
@@ -92,6 +101,12 @@ if [ "$SMOKE" != "0" ]; then
   echo "=== SMOKE RUN: 2 epochs, coarse forecast grid ==="
 fi
 
+SINDYCALL_FLAG=""
+if [ "$USE_SINDYCALL" != "0" ]; then
+  SINDYCALL_FLAG="--use-sindycall"
+  echo "=== STLSQ refit ENABLED (threshold ${SINDY_THRESHOLD}) ==="
+fi
+
 "$PYTHON_BIN" -u scripts/aesindy/run_lfp.py \
   --input-dim "$INPUT_DIM" \
   --latent-dim "$LATENT_DIM" \
@@ -99,5 +114,9 @@ fi
   --max-epochs "$MAX_EPOCHS" \
   --max-lead "$MAX_LEAD" \
   --origin-stride "$ORIGIN_STRIDE" \
+  --sindy-threshold "$SINDY_THRESHOLD" \
+  --sindycall-freq "$SINDYCALL_FREQ" \
+  --coefficient-threshold "$COEFFICIENT_THRESHOLD" \
+  --threshold-frequency "$THRESHOLD_FREQUENCY" \
   --out-dir "$OUT_DIR" \
-  $SMOKE_FLAG
+  $SMOKE_FLAG $SINDYCALL_FLAG
