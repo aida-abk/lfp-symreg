@@ -74,6 +74,8 @@ from load_data.archived_split import (  # noqa: E402
   DOWNSAMPLE,
   load_archived_split,
 )
+from load_data.convert import load_bhv_trial_table  # noqa: E402
+from load_data.trial_selection import select_valid_trials  # noqa: E402
 from models.forecast_metrics import persistence_by_lead, skill_by_lead  # noqa: E402
 
 LOWPASS_HZ = 35.0
@@ -197,6 +199,66 @@ def build_reference_params(args) -> dict:
   # Their split is validation only here; the real holdout is by trial.
   params["train_ratio"] = 0.9
   return params
+
+
+def build_trial_sets(
+  trial_types: list[str], sequence_holdout: int, seed: int
+) -> tuple[list[int], dict[str, list[int]]]:
+  """Choose training trials and per-type held-out trials.
+
+  The fixation holdout is always the archived 9-trial set, unchanged, so that
+  forecast skill stays directly comparable to every PySINDy, HAVOK and
+  single-type autoencoder result in this project. Only the *training* set
+  grows when more trial types are requested.
+
+  When ``non_fixation`` is included, a separate random sample of sequence
+  trials is also withheld. Training on predominantly sequence trials while
+  testing only on fixation would leave a distribution shift invisible;
+  scoring both reveals it.
+
+  Args:
+    trial_types: Validity-filtered types to train on, e.g.
+      ``["fixation", "non_fixation"]``.
+    sequence_holdout: Sequence trials to withhold for testing. Ignored when
+      ``non_fixation`` is not requested.
+    seed: Seed for the sequence holdout draw.
+
+  Returns:
+    ``(train_ids, test_sets)`` where ``test_sets`` maps a label to trial ids.
+
+  Raises:
+    ValueError: If no valid training trials remain.
+  """
+  table = load_bhv_trial_table()
+  archived_train, fixation_test = load_archived_split()
+
+  test_sets: dict[str, list[int]] = {"fixation": list(fixation_test)}
+  withheld = set(fixation_test)
+  train_ids: list[int] = []
+
+  for trial_type in trial_types:
+    valid = select_valid_trials(table, trial_type)
+    if trial_type == "non_fixation" and sequence_holdout > 0:
+      available = [i for i in valid if i not in withheld]
+      rng = np.random.default_rng(seed)
+      chosen = rng.choice(
+        len(available), size=min(sequence_holdout, len(available)), replace=False
+      )
+      sequence_test = sorted(available[i] for i in chosen)
+      test_sets["sequence"] = sequence_test
+      withheld.update(sequence_test)
+    train_ids.extend(valid)
+
+  train_ids = sorted({i for i in train_ids if i not in withheld})
+  if not train_ids:
+    raise ValueError(
+      f"No training trials remain for trial_types={trial_types}."
+    )
+  # Recorded for transparency: with only fixation requested this must
+  # reproduce the archived 28-trial training set exactly.
+  if trial_types == ["fixation"] and train_ids != sorted(archived_train):
+    print("  note: training set differs from the archived 28-trial split")
+  return train_ids, test_sets
 
 
 def build_data_dict(traces: list[np.ndarray], dt: float) -> dict:
@@ -375,7 +437,8 @@ def forecast_held_out(
   return np.vstack(predicted_rows), np.vstack(measured_rows)
 
 
-def plot_results(leads, skill, persistence, output_dir: Path) -> Path:
+def plot_results(leads, skill, persistence, output_dir: Path,
+                 label: str = "fixation") -> Path:
   """Plot forecast skill against lead time with the persistence reference."""
   fig, ax = plt.subplots(figsize=(7, 4.2))
   ax.plot(leads, skill, label="aesindy (reference impl.)", lw=1.6)
@@ -383,11 +446,12 @@ def plot_results(leads, skill, persistence, output_dir: Path) -> Path:
   ax.axhline(0, color="gray", lw=0.6)
   ax.set_xlabel("lead time (s)")
   ax.set_ylabel("correlation with measured signal")
-  ax.set_title("Deep delay autoencoder on LFP, held-out trials", fontsize=11)
+  ax.set_title(f"Deep delay autoencoder on LFP, held-out {label} trials",
+               fontsize=11)
   ax.legend(fontsize=8)
   ax.grid(alpha=0.3)
   fig.tight_layout()
-  path = output_dir / "aesindy_forecast_skill.png"
+  path = output_dir / f"aesindy_forecast_skill_{label}.png"
   fig.savefig(path, dpi=150)
   plt.close(fig)
   return path
@@ -406,6 +470,18 @@ def main() -> None:
   parser.add_argument(
     "--no-scale", action="store_true",
     help="Disable the global amplitude rescaling applied before training.",
+  )
+  parser.add_argument(
+    "--trial-types", default="fixation",
+    help="Comma-separated validity-filtered trial types to train on. "
+         "'fixation' (37 valid, ~14.2 s each) or "
+         "'fixation,non_fixation' (adds 980 valid sequence trials, ~1.9 s "
+         "each). The fixation holdout is unchanged either way.",
+  )
+  parser.add_argument(
+    "--sequence-holdout", type=int, default=20,
+    help="Sequence trials withheld for a second held-out score, revealing "
+         "distribution shift when training is dominated by sequence trials.",
   )
   parser.add_argument(
     "--use-sindycall", action="store_true",
@@ -443,13 +519,34 @@ def main() -> None:
     args.patience = 2
     args.origin_stride = 4.0
 
+  if args.use_sindycall:
+    raise SystemExit(
+      "--use-sindycall cannot work with real data.\n"
+      "\n"
+      "aesindy/training.py:get_callbacks guards its SindyCall branch behind\n"
+      "params['use_sindycall'], and that branch has three defects: it calls\n"
+      "`self.data` from a module-level function where `self` is undefined, it\n"
+      "then calls `.run_sim(...)`, which exists only on SynthData and not on\n"
+      "RealData, and it references an undefined `data_test`. The authors mark\n"
+      "the block `# Change and NOT TESTED`.\n"
+      "\n"
+      "It is therefore a synthetic-data-only path that has never executed.\n"
+      "Use the RFE callback instead, which is always registered and does work;\n"
+      "it simply never masks anything at the default 1e-6 threshold:\n"
+      "\n"
+      "  --coefficient-threshold 0.5 --threshold-frequency 25\n"
+    )
+
   disable_breakpoints()
   args.out_dir.mkdir(parents=True, exist_ok=True)
 
   from aesindy.solvers import RealData  # type: ignore
   from aesindy.training import TrainModel  # type: ignore
 
-  train_ids, test_ids = load_archived_split()
+  trial_types = [t.strip() for t in args.trial_types.split(",") if t.strip()]
+  train_ids, test_id_sets = build_trial_sets(
+    trial_types, args.sequence_holdout, args.seed
+  )
   print(f"Loading {MAT_FILE} ...", flush=True)
   data = TrialData.load(MAT_FILE)
   dt = DOWNSAMPLE / data.fs
@@ -458,10 +555,17 @@ def main() -> None:
     data, channel=CHANNEL, trials=train_ids, downsample=DOWNSAMPLE,
     lowpass_hz=LOWPASS_HZ, normalize="none",
   )
-  test_traces = channel_traces(
-    data, channel=CHANNEL, trials=test_ids, downsample=DOWNSAMPLE,
-    lowpass_hz=LOWPASS_HZ, normalize="none",
-  )
+  test_trace_sets = {
+    label: channel_traces(
+      data, channel=CHANNEL, trials=ids, downsample=DOWNSAMPLE,
+      lowpass_hz=LOWPASS_HZ, normalize="none",
+    )
+    for label, ids in test_id_sets.items()
+  }
+  test_traces = test_trace_sets["fixation"]
+  print(f"trial types: {trial_types}")
+  for label, ids in test_id_sets.items():
+    print(f"  held-out {label}: {len(ids)} trials")
   print(f"train {len(train_traces)} trials, held-out {len(test_traces)} trials "
         f"(held-out never enters TrainModel), dt={dt*1000:.0f} ms")
 
@@ -485,7 +589,11 @@ def main() -> None:
     if signal_scale <= 0:
       signal_scale = 1.0
     train_traces = [t / signal_scale for t in train_traces]
-    test_traces = [t / signal_scale for t in test_traces]
+    test_trace_sets = {
+      label: [t / signal_scale for t in traces]
+      for label, traces in test_trace_sets.items()
+    }
+    test_traces = test_trace_sets["fixation"]
     print(f"global amplitude scale from training trials: "
           f"{signal_scale:.3f} uV (inverted before scoring)")
 
@@ -523,49 +631,67 @@ def main() -> None:
     "\n".join(",".join(f"{v:.8g}" for v in row) for row in coefficients) + "\n"
   )
 
-  print("\nforecasting held-out trials ...", flush=True)
-  predicted, measured = forecast_held_out(
-    model, coefficients, exponents, test_traces, args.input_dim, dt,
-    args.max_lead, args.origin_stride, signal_scale=signal_scale,
-  )
-  print(f"{predicted.shape[0]} usable forecasts")
-  if predicted.shape[0] == 0:
-    print("No forecast completed; the latent ODE did not integrate.")
-    return
-
-  skill = skill_by_lead(predicted, measured)
-  persistence = persistence_by_lead(measured)
-  leads = np.arange(skill.size) * dt
-
-  rows = [
-    {"lead_s": float(lead), "aesindy_skill": float(a),
-     "persistence_skill": float(b), "n_forecasts": int(predicted.shape[0])}
-    for lead, a, b in zip(leads, skill, persistence)
-  ]
-  path = args.out_dir / "aesindy_forecast_skill.csv"
-  with open(path, "w", newline="") as handle:
-    writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
-    writer.writeheader()
-    writer.writerows(rows)
   (args.out_dir / "aesindy_config.json").write_text(
     json.dumps({**vars(args), "out_dir": str(args.out_dir),
-                "active_coefficients": active}, indent=2, default=str) + "\n"
+                "active_coefficients": active,
+                "train_trials": len(train_ids),
+                "held_out": {k: len(v) for k, v in test_id_sets.items()}},
+               indent=2, default=str) + "\n"
   )
 
-  print("\n===== forecast skill vs lead time =====")
-  print(f"{'lead':>10} {'aesindy':>10} {'persistence':>13}")
-  for probe in (0.02, 0.05, 0.1, 0.2, 0.5, 1.0):
-    if probe > leads[-1] + 1e-9:
+  # Each held-out group is scored separately. When training is dominated by
+  # sequence trials, fixation skill alone cannot distinguish "the model is
+  # bad" from "the model learned sequence dynamics and fixation is out of
+  # distribution".
+  summary: dict[str, tuple] = {}
+  for label, traces in test_trace_sets.items():
+    print(f"\nforecasting held-out {label} trials ...", flush=True)
+    predicted, measured = forecast_held_out(
+      model, coefficients, exponents, traces, args.input_dim, dt,
+      args.max_lead, args.origin_stride, signal_scale=signal_scale,
+    )
+    print(f"  {predicted.shape[0]} usable forecasts")
+    if predicted.shape[0] == 0:
+      print("  No forecast completed; the latent ODE did not integrate.")
       continue
-    index = int(round(probe / dt))
-    print(f"{probe*1000:>8.0f}ms {skill[index]:>+10.3f} "
-          f"{persistence[index]:>+13.3f}")
-  print("\nPySINDy reference at the same leads (110 forecasts):")
-  print("  delay nd4  : 20ms +0.639, 50ms -0.468, 100ms -0.433, 200ms +0.093")
-  print("  havok r=12 : 20ms +0.403, 50ms +0.334, 100ms +0.389, 200ms +0.284")
+    skill = skill_by_lead(predicted, measured)
+    persistence = persistence_by_lead(measured)
+    leads = np.arange(skill.size) * dt
+    summary[label] = (leads, skill, persistence, predicted.shape[0])
 
-  print(f"\nwrote {path}")
-  print(f"wrote {plot_results(leads, skill, persistence, args.out_dir)}")
+    rows = [
+      {"held_out": label, "lead_s": float(lead), "aesindy_skill": float(a),
+       "persistence_skill": float(b), "n_forecasts": int(predicted.shape[0])}
+      for lead, a, b in zip(leads, skill, persistence)
+    ]
+    path = args.out_dir / f"aesindy_forecast_skill_{label}.csv"
+    with open(path, "w", newline="") as handle:
+      writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+      writer.writeheader()
+      writer.writerows(rows)
+    print(f"  wrote {path}")
+    print(f"  wrote {plot_results(leads, skill, persistence, args.out_dir, label)}")
+
+  if not summary:
+    print("\nNo held-out group produced a usable forecast.")
+    return
+
+  print("\n===== forecast skill vs lead time =====")
+  probes = [p for p in (0.02, 0.05, 0.1, 0.2, 0.5, 1.0)
+            if p <= args.max_lead + 1e-9]
+  header = f"{'held-out':>10} {'n':>6}" + "".join(f"{p*1000:>10.0f}ms" for p in probes)
+  print(header)
+  for label, (leads, skill, persistence, n) in summary.items():
+    for name, series in (("aesindy", skill), ("persistence", persistence)):
+      row = f"{label + '/' + name:>10} {n:>6}"
+      for probe in probes:
+        row += f"{series[int(round(probe / dt))]:>+12.3f}"
+      print(row)
+
+  print("\nPySINDy reference at the same leads (110 forecasts, fixation):")
+  print("  delay nd4  : 20ms +0.639, 50ms -0.468, 100ms -0.433, 200ms +0.093")
+  print("  havok r=3  : 20ms +0.424, 50ms +0.433, 100ms +0.342, 200ms +0.254")
+  print("  havok r=12 : 20ms +0.403, 50ms +0.334, 100ms +0.389, 200ms +0.284")
 
 
 if __name__ == "__main__":
