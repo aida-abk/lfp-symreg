@@ -65,7 +65,12 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 from load_data.convert import MAT_FILE, TrialData  # noqa: E402
 from load_data.preprocessing import channel_traces  # noqa: E402
-from models.ae_sindy import polynomial_exponents, polynomial_library_numpy  # noqa: E402
+# Imported from the framework-free module, not from models.ae_sindy, which
+# requires torch. This environment has TensorFlow instead.
+from models.polynomial_library import (  # noqa: E402
+  polynomial_exponents,
+  polynomial_library_numpy,
+)
 from models.sindy import delay_embed_trace  # noqa: E402
 
 from forecast_skill import persistence_by_lead, skill_by_lead  # noqa: E402

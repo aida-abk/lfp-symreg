@@ -34,9 +34,17 @@ implementation does.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from itertools import combinations_with_replacement
 
 import numpy as np
+
+# Re-exported for callers that already import them from here. The definitions
+# live in a framework-free module so that the TensorFlow runner can use the
+# same polynomial ordering without importing torch.
+from models.polynomial_library import (  # noqa: F401
+  feature_names,
+  polynomial_exponents,
+  polynomial_library_numpy,
+)
 
 try:
   import torch
@@ -46,76 +54,6 @@ except ImportError as exc:  # pragma: no cover - environment dependent
     "PyTorch is required for the deep delay autoencoder. Install it with "
     "`pip install torch`, or run the PySINDy-only scripts instead."
   ) from exc
-
-
-def polynomial_exponents(latent_dim: int, poly_order: int) -> list[tuple[int, ...]]:
-  """Enumerate polynomial library exponents, constant term first.
-
-  Args:
-    latent_dim: Number of latent coordinates. Unitless count.
-    poly_order: Maximum total degree. Unitless.
-
-  Returns:
-    Exponent tuples ordered by increasing total degree, each of length
-    ``latent_dim``. The first entry is the all-zero constant term.
-  """
-  exponents = [tuple([0] * latent_dim)]
-  for degree in range(1, poly_order + 1):
-    for combination in combinations_with_replacement(range(latent_dim), degree):
-      exponent = [0] * latent_dim
-      for index in combination:
-        exponent[index] += 1
-      exponents.append(tuple(exponent))
-  return exponents
-
-
-def feature_names(exponents: list[tuple[int, ...]]) -> list[str]:
-  """Return readable names for polynomial library features.
-
-  Args:
-    exponents: Exponent tuples from :func:`polynomial_exponents`.
-
-  Returns:
-    Names such as ``1``, ``z0``, ``z0 z1``, ``z0^2``.
-  """
-  names = []
-  for exponent in exponents:
-    if not any(exponent):
-      names.append("1")
-      continue
-    parts = []
-    for index, power in enumerate(exponent):
-      if power == 1:
-        parts.append(f"z{index}")
-      elif power > 1:
-        parts.append(f"z{index}^{power}")
-    names.append(" ".join(parts))
-  return names
-
-
-def polynomial_library_numpy(
-  states: np.ndarray, exponents: list[tuple[int, ...]]
-) -> np.ndarray:
-  """Evaluate the polynomial library on numpy states.
-
-  Used after training, when the latent ODE is integrated with SciPy.
-
-  Args:
-    states: Latent states with shape ``(samples, latent_dim)``.
-    exponents: Exponent tuples from :func:`polynomial_exponents`.
-
-  Returns:
-    Feature matrix with shape ``(samples, n_features)``.
-  """
-  values = np.atleast_2d(np.asarray(states, dtype=float))
-  columns = []
-  for exponent in exponents:
-    column = np.ones(values.shape[0], dtype=float)
-    for index, power in enumerate(exponent):
-      if power:
-        column = column * values[:, index] ** power
-    columns.append(column)
-  return np.stack(columns, axis=1)
 
 
 @dataclass
