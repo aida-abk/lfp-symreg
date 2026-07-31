@@ -115,7 +115,8 @@ from aesindy.training import TrainModel
 from aesindy.solvers import RealData
 from aesindy.config import ROOTPATH
 print("tensorflow", tf.__version__)
-print("keras", tf.keras.__version__)
+import keras
+print("keras", keras.__version__)
 print("ROOTPATH", ROOTPATH)
 print("imports OK")
 PY

@@ -93,6 +93,36 @@ def disable_breakpoints() -> None:
   pdb.set_trace = lambda *args, **kwargs: None
 
 
+def load_default_params() -> dict:
+  """Load the reference repository's default parameter dict.
+
+  ``testcases`` is a plain directory in the reference repository, not an
+  installed package: it has no ``__init__.py``, and the repository's own
+  scripts are run from inside it so they can ``from default_params import
+  params`` directly. Installing the project with ``pip install -e .`` exposes
+  only the ``aesindy`` package, so the directory is put on the path explicitly
+  here, located through the ``ROOTPATH`` that setup writes into
+  ``aesindy/config.py``.
+
+  Returns:
+    A copy of the reference defaults.
+  """
+  from aesindy.config import ROOTPATH  # type: ignore
+
+  testcases_dir = Path(ROOTPATH) / "testcases"
+  if not (testcases_dir / "default_params.py").exists():
+    raise FileNotFoundError(
+      f"Expected {testcases_dir / 'default_params.py'}. ROOTPATH in "
+      f"aesindy/config.py points at {ROOTPATH!r}; it must be the checkout of "
+      f"deep-delay-autoencoder."
+    )
+  if str(testcases_dir) not in sys.path:
+    sys.path.insert(0, str(testcases_dir))
+  from default_params import params  # type: ignore
+
+  return dict(params)
+
+
 def build_reference_params(args) -> dict:
   """Assemble the reference implementation's parameter dict.
 
@@ -106,9 +136,7 @@ def build_reference_params(args) -> dict:
   Returns:
     The parameter dict expected by ``TrainModel``.
   """
-  from testcases.default_params import params  # type: ignore
-
-  params = dict(params)
+  params = load_default_params()
   params["model"] = "lfp"
   params["case"] = f"fixation_ch{CHANNEL}"
   params["system_coefficients"] = None
