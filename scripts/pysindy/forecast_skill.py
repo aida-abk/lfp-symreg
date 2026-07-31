@@ -60,6 +60,10 @@ from load_data.convert import MAT_FILE, TrialData  # noqa: E402
 from load_data.preprocessing import channel_traces  # noqa: E402
 from models.havok import fit_hankel_basis  # noqa: E402
 from models.sindy import delay_embed_trace, delay_embed_trajectories  # noqa: E402
+from models.forecast_metrics import (  # noqa: E402
+  persistence_by_lead,
+  skill_by_lead,
+)
 from models.validation import simulate_model_detailed  # noqa: E402
 
 from unbias_comparison import (  # noqa: E402
@@ -234,49 +238,6 @@ def collect_forecasts(
   if not predicted_rows:
     return np.empty((0, n_leads)), np.empty((0, n_leads))
   return np.vstack(predicted_rows), np.vstack(measured_rows)
-
-
-def skill_by_lead(predicted: np.ndarray, measured: np.ndarray) -> np.ndarray:
-  """Correlate prediction against truth separately at each lead time.
-
-  Args:
-    predicted: Predictions with shape ``(n_forecasts, n_leads)``.
-    measured: Matching measurements with the same shape.
-
-  Returns:
-    Correlation at each lead time, with ``nan`` where it is undefined.
-  """
-  n_leads = predicted.shape[1]
-  skill = np.full(n_leads, np.nan)
-  for lead in range(n_leads):
-    a, b = predicted[:, lead], measured[:, lead]
-    if a.size < 3 or np.std(a) < 1e-12 or np.std(b) < 1e-12:
-      continue
-    skill[lead] = float(np.corrcoef(a, b)[0, 1])
-  return skill
-
-
-def persistence_by_lead(measured: np.ndarray) -> np.ndarray:
-  """Correlate the measured signal at each lead against its own origin value.
-
-  This is the signal's autocorrelation evaluated on the same forecast origins,
-  and it is the reference for how far ahead the signal stays self-predictable.
-
-  Args:
-    measured: Measurements with shape ``(n_forecasts, n_leads)``.
-
-  Returns:
-    Persistence correlation at each lead time.
-  """
-  origin_values = measured[:, 0]
-  n_leads = measured.shape[1]
-  skill = np.full(n_leads, np.nan)
-  for lead in range(n_leads):
-    b = measured[:, lead]
-    if np.std(origin_values) < 1e-12 or np.std(b) < 1e-12:
-      continue
-    skill[lead] = float(np.corrcoef(origin_values, b)[0, 1])
-  return skill
 
 
 def plot_skill(rows: list[dict], output_dir: Path) -> Path:
