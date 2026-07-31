@@ -84,6 +84,27 @@ echo "=== installing ==="
 # so dependency resolution is skipped here deliberately.
 "${ENV_DIR}/bin/pip" install -e "${REPO_DIR}" --no-deps
 
+echo "=== replacing pickle5 with the standard library pickle ==="
+# aesindy/training.py line 7 is `import pickle5 as pickle`. pickle5 was a
+# backport of pickle protocol 5 for Python < 3.8; on 3.11 the stdlib pickle
+# provides it natively, and the backport no longer builds. Removing it from
+# the dependency lists is not enough because the import is in the source.
+if grep -rl pickle5 "${REPO_DIR}/aesindy/" >/dev/null 2>&1; then
+  grep -rl pickle5 "${REPO_DIR}/aesindy/" | xargs sed -i 's/pickle5/pickle/g'
+fi
+
+echo "=== pinning numpy below 2 ==="
+# TensorFlow 2.15 and ml_dtypes are compiled against the NumPy 1.x C ABI.
+# With NumPy 2 installed the extension fails with `_ARRAY_API not found`.
+"${ENV_DIR}/bin/pip" install "numpy<2"
+
+echo "=== removing pysindy from this environment ==="
+# PySINDy 2.1 requires numpy>=2, which cannot coexist with TensorFlow 2.15.
+# Nothing on this path needs it: scripts/aesindy/run_lfp.py reads the trial
+# split from load_data/archived_split.py and the metrics from
+# models/forecast_metrics.py, both of which depend on numpy alone.
+"${ENV_DIR}/bin/pip" uninstall -y pysindy >/dev/null 2>&1 || true
+
 echo "=== creating the missing aesindy/config.py ==="
 printf "ROOTPATH='%s'\n" "${REPO_DIR}" > "${REPO_DIR}/aesindy/config.py"
 
