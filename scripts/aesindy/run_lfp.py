@@ -147,7 +147,11 @@ def build_reference_params(args) -> dict:
   params["input_dim"] = args.input_dim
   params["latent_dim"] = args.latent_dim
   params["poly_order"] = args.poly_order
-  params["include_sine"] = False
+  # A trigonometric library is better matched to a band-limited oscillatory
+  # signal than a polynomial one: the Hankel-SVD modes of this data are
+  # sinusoids in quadrature pairs. Unlike raising poly_order, adding sin/cos
+  # does not introduce terms that diverge in finite time.
+  params["include_sine"] = args.include_sine
   params["exact_features"] = False
   params["fix_coefs"] = False
   params["svd_dim"] = None
@@ -444,6 +448,70 @@ def forecast_held_out(
   return np.vstack(predicted_rows), np.vstack(measured_rows)
 
 
+def plot_forecast_traces(
+  predicted: np.ndarray, measured: np.ndarray, dt: float,
+  output_dir: Path, label: str, n_panels: int = 6,
+) -> Path:
+  """Plot individual forecasts against the measurements they predict.
+
+  The skill curve reports one correlation per lead time, which is the right
+  summary but hides what the model is actually producing. These panels show
+  single forecasts in microvolts, which is what a reader recognises: whether
+  the prediction tracks the signal, flattens out, or drifts out of phase.
+
+  Panels are drawn evenly across the collected forecasts rather than from the
+  start, so they span different trials and different points within them.
+
+  Args:
+    predicted: Predictions with shape ``(n_forecasts, n_leads)`` in microvolts.
+    measured: Matching measurements with the same shape.
+    dt: Processed sample interval in seconds.
+    output_dir: Directory to write the figure into.
+    label: Held-out group name, used in the title and filename.
+    n_panels: Number of individual forecasts to draw.
+
+  Returns:
+    Path of the written figure.
+  """
+  n_panels = min(n_panels, predicted.shape[0])
+  picks = np.linspace(0, predicted.shape[0] - 1, n_panels).astype(int)
+  time_ms = np.arange(predicted.shape[1]) * dt * 1000.0
+
+  n_cols = 2
+  n_rows = int(np.ceil(n_panels / n_cols))
+  fig, axes = plt.subplots(n_rows, n_cols, figsize=(6.2 * n_cols, 2.4 * n_rows),
+                           squeeze=False, sharex=True)
+  for index in range(n_rows * n_cols):
+    ax = axes[index // n_cols][index % n_cols]
+    if index >= n_panels:
+      ax.axis("off")
+      continue
+    row = picks[index]
+    ax.plot(time_ms, measured[row], color="tab:blue", lw=1.1, label="measured")
+    ax.plot(time_ms, predicted[row], color="tab:orange", lw=1.1, ls="--",
+            label="AE-SINDy forecast")
+    # The signal's own predictability limit, established from persistence.
+    ax.axvline(350, color="gray", ls=":", lw=1.0)
+    ax.set_title(f"forecast {row}", fontsize=8)
+    ax.tick_params(labelsize=7)
+    if index % n_cols == 0:
+      ax.set_ylabel("x0 (uV)", fontsize=8)
+    if index // n_cols == n_rows - 1:
+      ax.set_xlabel("lead time (ms)", fontsize=8)
+    if index == 0:
+      ax.legend(fontsize=7)
+  fig.suptitle(
+    f"Individual forecasts, held-out {label} trials "
+    f"(dotted line: ~350 ms predictability limit)",
+    fontsize=11,
+  )
+  fig.tight_layout()
+  path = output_dir / f"aesindy_forecast_traces_{label}.png"
+  fig.savefig(path, dpi=150)
+  plt.close(fig)
+  return path
+
+
 def plot_results(leads, skill, persistence, output_dir: Path,
                  label: str = "fixation") -> Path:
   """Plot forecast skill against lead time with the persistence reference."""
@@ -494,6 +562,12 @@ def main() -> None:
     "--seed", type=int, default=0,
     help="Seed for the sequence holdout draw. The fixation holdout is the "
          "fixed archived set and does not depend on this.",
+  )
+  parser.add_argument(
+    "--include-sine", action="store_true",
+    help="Add sin/cos terms to the latent library. Better matched to an "
+         "oscillatory signal than higher polynomial degree, and unlike "
+         "quadratic terms these cannot diverge in finite time.",
   )
   parser.add_argument("--loss-weight-rec", type=float, default=0.3)
   parser.add_argument("--loss-weight-sindy-z", type=float, default=0.001)
@@ -711,6 +785,12 @@ def main() -> None:
       writer.writerows(rows)
     print(f"  wrote {path}")
     print(f"  wrote {plot_results(leads, skill, persistence, args.out_dir, label)}")
+    print(f"  wrote {plot_forecast_traces(predicted, measured, dt, args.out_dir, label)}")
+    # The raw forecasts are kept so figures can be redrawn, and compared
+    # against other methods, without repeating an hour of training.
+    trace_path = args.out_dir / f"aesindy_forecast_traces_{label}.npz"
+    np.savez_compressed(trace_path, predicted=predicted, measured=measured, dt=dt)
+    print(f"  wrote {trace_path}")
 
   if not summary:
     print("\nNo held-out group produced a usable forecast.")

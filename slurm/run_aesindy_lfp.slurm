@@ -73,6 +73,8 @@ SEQUENCE_HOLDOUT="${SEQUENCE_HOLDOUT:-20}"
 # that keeps every reference loss but takes smaller steps.
 LEARNING_RATE="${LEARNING_RATE:-1e-3}"
 LOSS_WEIGHT_INTEGRAL="${LOSS_WEIGHT_INTEGRAL:-0.1}"
+# INCLUDE_SINE=1 adds sin/cos to the latent library.
+INCLUDE_SINE="${INCLUDE_SINE:-0}"
 
 USE_SINDYCALL="${USE_SINDYCALL:-0}"
 SINDY_THRESHOLD="${SINDY_THRESHOLD:-0.4}"
@@ -118,6 +120,12 @@ if [ "$SMOKE" != "0" ]; then
   echo "=== SMOKE RUN: 2 epochs, coarse forecast grid ==="
 fi
 
+SINE_FLAG=""
+if [ "$INCLUDE_SINE" != "0" ]; then
+  SINE_FLAG="--include-sine"
+  echo "=== sin/cos library terms ENABLED ==="
+fi
+
 SINDYCALL_FLAG=""
 if [ "$USE_SINDYCALL" != "0" ]; then
   SINDYCALL_FLAG="--use-sindycall"
@@ -140,4 +148,4 @@ fi
   --coefficient-threshold "$COEFFICIENT_THRESHOLD" \
   --threshold-frequency "$THRESHOLD_FREQUENCY" \
   --out-dir "$OUT_DIR" \
-  $SMOKE_FLAG $SINDYCALL_FLAG
+  $SMOKE_FLAG $SINDYCALL_FLAG $SINE_FLAG
