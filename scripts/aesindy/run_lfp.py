@@ -165,13 +165,20 @@ def build_reference_params(args) -> dict:
   params["batch_size"] = args.batch_size
   params["learning_rate"] = args.learning_rate
 
-  # Loss weights exactly as in lorenzww_basic.py.
-  params["loss_weight_rec"] = 0.3
-  params["loss_weight_sindy_z"] = 0.001
-  params["loss_weight_sindy_x"] = 0.001
+  # Loss weights default to lorenzww_basic.py exactly. The integral weight is
+  # exposed because it is the fragile term: it integrates the latent ODE with
+  # RK4 during training, and with randomly initialised coefficients of order
+  # 10 a quadratic system diverges in finite time. The reference clamps it at
+  # +/-500 for this reason. Increasing the number of optimizer steps per epoch
+  # -- as pooling in sequence trials does, from 342 batches to 1665 -- raises
+  # the chance of hitting that blowup, and a single NaN propagates into the
+  # weights permanently.
+  params["loss_weight_rec"] = args.loss_weight_rec
+  params["loss_weight_sindy_z"] = args.loss_weight_sindy_z
+  params["loss_weight_sindy_x"] = args.loss_weight_sindy_x
   params["loss_weight_sindy_regularization"] = 1e-5
-  params["loss_weight_integral"] = 0.1
-  params["loss_weight_x0"] = 0.01
+  params["loss_weight_integral"] = args.loss_weight_integral
+  params["loss_weight_x0"] = args.loss_weight_x0
   params["loss_weight_layer_l2"] = 0.0
   params["loss_weight_layer_l1"] = 0.0
 
@@ -488,6 +495,16 @@ def main() -> None:
     help="Seed for the sequence holdout draw. The fixation holdout is the "
          "fixed archived set and does not depend on this.",
   )
+  parser.add_argument("--loss-weight-rec", type=float, default=0.3)
+  parser.add_argument("--loss-weight-sindy-z", type=float, default=0.001)
+  parser.add_argument("--loss-weight-sindy-x", type=float, default=0.001)
+  parser.add_argument(
+    "--loss-weight-integral", type=float, default=0.1,
+    help="Weight on the RK4 integral loss. The reference uses 0.1 for real "
+         "data. Set to 0 to disable it; it is the term that diverges to NaN "
+         "when the latent ODE blows up during training.",
+  )
+  parser.add_argument("--loss-weight-x0", type=float, default=0.01)
   parser.add_argument(
     "--use-sindycall", action="store_true",
     help="Enable the reference's periodic STLSQ refit of the latent "
@@ -629,6 +646,24 @@ def main() -> None:
   exponents = verify_library_ordering(model, args.latent_dim, args.poly_order)
   coefficients = latent_coefficients(model)
   active = int(np.count_nonzero(np.abs(coefficients) > 1e-12))
+
+  if not np.all(np.isfinite(coefficients)):
+    print(
+      "\nTRAINING DIVERGED: the latent coefficients contain NaN or Inf.\n"
+      "\n"
+      "Once a NaN reaches the weights it propagates permanently, so every\n"
+      "subsequent epoch and every forecast is lost. The usual source is the\n"
+      "RK4 integral loss: it integrates the latent ODE during training, and\n"
+      "a quadratic system with randomly initialised coefficients of order 10\n"
+      "diverges in finite time. More optimizer steps per epoch means more\n"
+      "chances to hit it.\n"
+      "\n"
+      "Try either of these, which separate the two candidate causes:\n"
+      "  --loss-weight-integral 0     disable the fragile term outright\n"
+      "  --learning-rate 1e-4         keep every reference loss, step smaller\n",
+      flush=True,
+    )
+    return
   print(f"library ordering verified against the reference; "
         f"{active} active coefficients")
 
