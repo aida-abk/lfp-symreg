@@ -38,6 +38,15 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(_PROJECT_ROOT) not in sys.path:
   sys.path.insert(0, str(_PROJECT_ROOT))
 
+# unbias_comparison.py supplies the archived case definitions, the trial split
+# and the shared constants. It lives in scripts/pysindy/internals_probes/,
+# which is not this script's own directory, so `from unbias_comparison import`
+# cannot rely on it being a sibling on sys.path[0]. The location is resolved
+# explicitly instead, which keeps these scripts runnable from anywhere.
+_INTERNALS_DIR = _PROJECT_ROOT / "scripts" / "pysindy" / "internals_probes"
+if str(_INTERNALS_DIR) not in sys.path:
+  sys.path.insert(0, str(_INTERNALS_DIR))
+
 import matplotlib
 
 matplotlib.use("Agg")

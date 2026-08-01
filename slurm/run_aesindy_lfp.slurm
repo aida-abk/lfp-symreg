@@ -67,6 +67,13 @@ SMOKE="${SMOKE:-0}"
 TRIAL_TYPES="${TRIAL_TYPES:-fixation}"
 SEQUENCE_HOLDOUT="${SEQUENCE_HOLDOUT:-20}"
 
+# Loss weights and step size. Defaults reproduce lorenzww_basic.py exactly.
+# LOSS_WEIGHT_INTEGRAL=0 disables the RK4 term that diverges to NaN when the
+# latent ODE blows up mid-training; LEARNING_RATE=1e-4 is the alternative
+# that keeps every reference loss but takes smaller steps.
+LEARNING_RATE="${LEARNING_RATE:-1e-3}"
+LOSS_WEIGHT_INTEGRAL="${LOSS_WEIGHT_INTEGRAL:-0.1}"
+
 USE_SINDYCALL="${USE_SINDYCALL:-0}"
 SINDY_THRESHOLD="${SINDY_THRESHOLD:-0.4}"
 SINDYCALL_FREQ="${SINDYCALL_FREQ:-1}"
@@ -124,6 +131,8 @@ fi
   --max-epochs "$MAX_EPOCHS" \
   --max-lead "$MAX_LEAD" \
   --origin-stride "$ORIGIN_STRIDE" \
+  --learning-rate "$LEARNING_RATE" \
+  --loss-weight-integral "$LOSS_WEIGHT_INTEGRAL" \
   --trial-types "$TRIAL_TYPES" \
   --sequence-holdout "$SEQUENCE_HOLDOUT" \
   --sindy-threshold "$SINDY_THRESHOLD" \
