@@ -1,0 +1,10 @@
+Loading /Users/aida_abkenova/Downloads/CQSA/lfp-symreg/raw_data/trialdata_v03_buzz_20231106_pre-0.100_post0.100.mat ...
+fitting baselines ...
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
