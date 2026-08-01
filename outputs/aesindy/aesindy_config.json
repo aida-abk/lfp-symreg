@@ -1,0 +1,15 @@
+{
+  "input_dim": 80,
+  "latent_dim": 3,
+  "poly_order": 2,
+  "max_epochs": 300,
+  "patience": 10,
+  "batch_size": 256,
+  "learning_rate": 0.001,
+  "no_scale": false,
+  "max_lead": 1.0,
+  "origin_stride": 0.5,
+  "out_dir": "outputs/aesindy",
+  "smoke": false,
+  "active_coefficients": 30
+}

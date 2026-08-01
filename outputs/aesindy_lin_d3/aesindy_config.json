@@ -1,0 +1,32 @@
+{
+  "input_dim": 80,
+  "latent_dim": 3,
+  "poly_order": 1,
+  "max_epochs": 300,
+  "patience": 10,
+  "batch_size": 256,
+  "learning_rate": 0.001,
+  "no_scale": false,
+  "trial_types": "fixation",
+  "sequence_holdout": 20,
+  "seed": 0,
+  "loss_weight_rec": 0.3,
+  "loss_weight_sindy_z": 0.001,
+  "loss_weight_sindy_x": 0.001,
+  "loss_weight_integral": 0.1,
+  "loss_weight_x0": 0.01,
+  "use_sindycall": false,
+  "sindy_threshold": 0.4,
+  "sindycall_freq": 1,
+  "coefficient_threshold": 1e-06,
+  "threshold_frequency": 100,
+  "max_lead": 1.0,
+  "origin_stride": 0.5,
+  "out_dir": "outputs/aesindy_lin_d3",
+  "smoke": false,
+  "active_coefficients": 12,
+  "train_trials": 28,
+  "held_out": {
+    "fixation": 9
+  }
+}
