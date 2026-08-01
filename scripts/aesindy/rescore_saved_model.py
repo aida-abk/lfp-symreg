@@ -259,12 +259,132 @@ def plot_diagnosis(
   return path
 
 
+def long_simulation(
+  encoder, decoder, coefficients: np.ndarray, exponents: list,
+  trace: np.ndarray, input_dim: int, dt: float, signal_scale: float,
+  horizons_s: tuple[float, ...],
+) -> dict[float, np.ndarray | None]:
+  """Free-run one long simulation from a single initial condition.
+
+  This is the protocol behind the project's existing PySINDy trajectory
+  figures: embed the start of a held-out trial, hand that one state to the
+  model, and integrate forward without ever showing it another measurement.
+  Aggregating many one-second forecasts hides what this exposes -- whether the
+  model sustains a realistic amplitude over the length of a trial, or explodes
+  or collapses.
+
+  Args:
+    encoder: Restored encoder network.
+    decoder: Restored decoder network.
+    coefficients: Latent coefficient matrix.
+    exponents: Polynomial library exponents.
+    trace: One held-out trace, already divided by ``signal_scale``.
+    input_dim: Hankel embedding dimension.
+    dt: Processed sample interval in seconds.
+    signal_scale: Amplitude scale to restore microvolts.
+    horizons_s: Simulation durations to attempt, in seconds.
+
+  Returns:
+    A mapping from horizon to the simulated signal in microvolts, or ``None``
+    where the integration failed or left the finite range.
+  """
+  import tensorflow as tf
+  from scipy.integrate import solve_ivp
+
+  embedded = delay_embed_trace(trace, n_delays=input_dim, delay=1)
+  z0 = np.asarray(
+    encoder(tf.convert_to_tensor(embedded[:1], dtype=tf.float32)), dtype=float
+  )[0]
+
+  def rhs(_t, z):
+    return (polynomial_library_numpy(z[None, :], exponents) @ coefficients)[0]
+
+  results: dict[float, np.ndarray | None] = {}
+  for horizon in horizons_s:
+    n_steps = min(int(round(horizon / dt)) + 1, len(embedded))
+    times = np.arange(n_steps) * dt
+    try:
+      sol = solve_ivp(rhs, (0.0, times[-1]), z0, t_eval=times, method="LSODA",
+                      rtol=1e-6, atol=1e-8)
+    except Exception:
+      results[horizon] = None
+      continue
+    if not sol.success or sol.y.shape[1] != n_steps or not np.all(np.isfinite(sol.y)):
+      results[horizon] = None
+      continue
+    decoded = np.asarray(
+      decoder(tf.convert_to_tensor(sol.y.T, dtype=tf.float32)), dtype=float
+    )
+    results[horizon] = decoded[:, 0] * signal_scale
+  return results
+
+
+def plot_long_simulation(
+  simulations: dict[float, np.ndarray | None], measured: np.ndarray,
+  dt: float, run_dir: Path, name: str,
+) -> Path:
+  """Plot free-running simulations against the measured trace on absolute time.
+
+  Args:
+    simulations: Horizon to simulated signal, as returned by
+      :func:`long_simulation`.
+    measured: The measured signal in microvolts.
+    dt: Processed sample interval in seconds.
+    run_dir: Directory to write into.
+    name: Run label for the title.
+
+  Returns:
+    Path of the written figure.
+  """
+  horizons = sorted(simulations)
+  fig, axes = plt.subplots(len(horizons), 1, figsize=(11, 2.8 * len(horizons)),
+                           squeeze=False)
+  for row, horizon in enumerate(horizons):
+    ax = axes[row][0]
+    simulated = simulations[horizon]
+    n = min(int(round(horizon / dt)) + 1, measured.size)
+    time_s = np.arange(n) * dt
+    ax.plot(time_s, measured[:n], color="tab:blue", lw=0.9, label="measured")
+    if simulated is None:
+      ax.text(0.5, 0.5, "integration failed or went non-finite",
+              transform=ax.transAxes, ha="center", color="tab:red", fontsize=10)
+    else:
+      m = min(len(simulated), n)
+      ax.plot(time_s[:m], simulated[:m], color="tab:orange", lw=0.9, ls="--",
+              label="simulated")
+      ratio = float(np.std(simulated[:m])) / max(float(np.std(measured[:m])), 1e-12)
+      ax.text(0.99, 0.04, f"amplitude ratio {ratio:.3g}", transform=ax.transAxes,
+              ha="right", fontsize=8,
+              color="tab:red" if (ratio > 3 or ratio < 0.3) else "black")
+    span = float(np.max(np.abs(measured[:n]))) * 1.8
+    ax.set_ylim(-span, span)
+    ax.set_ylabel("x0 (uV)", fontsize=9)
+    ax.set_title(f"free run, {horizon:g} s horizon "
+                 f"(y-axis fixed to the measured range)", fontsize=9)
+    ax.grid(alpha=0.3)
+    if row == 0:
+      ax.legend(fontsize=8, loc="upper left")
+  axes[-1][0].set_xlabel("time from embedded initial state (s)")
+  fig.suptitle(f"{name}: free-running simulation from one initial condition",
+               fontsize=12)
+  fig.tight_layout()
+  path = run_dir / "long_simulation.png"
+  fig.savefig(path, dpi=150)
+  plt.close(fig)
+  return path
+
+
 def main() -> None:
   """Re-score one saved run and report shape alongside amplitude."""
   parser = argparse.ArgumentParser(description=__doc__)
   parser.add_argument("--run-dir", type=Path, required=True)
   parser.add_argument("--max-lead", type=float, default=1.0)
   parser.add_argument("--origin-stride", type=float, default=0.5)
+  parser.add_argument(
+    "--long-horizons", default="1,2,14",
+    help="Comma-separated free-run durations in seconds, matching the "
+         "PySINDy trajectory figures.",
+  )
   args = parser.parse_args()
 
   encoder, decoder, coefficients, config = load_saved_parts(args.run_dir)
@@ -320,6 +440,26 @@ def main() -> None:
   print("\namplitude ratio far from 1.0 means the forecast is the wrong size,")
   print("which correlation cannot see. Judge the traces, not the correlation.")
   print(f"\nwrote {plot_diagnosis(predicted, measured, skill, persistence, amplitude_ratio, growth_factor, dt, args.run_dir, args.run_dir.name)}")
+
+  # The long free run is the comparison the project's PySINDy trajectory
+  # figures use, and the one a one-second window cannot make.
+  horizons = tuple(float(h) for h in args.long_horizons.split(","))
+  print(f"\nfree-running from one initial condition at {horizons} s ...", flush=True)
+  simulations = long_simulation(
+    encoder, decoder, coefficients, exponents, scaled_test[0], input_dim, dt,
+    signal_scale, horizons,
+  )
+  reference = delay_embed_trace(scaled_test[0], n_delays=input_dim,
+                               delay=1)[:, 0] * signal_scale
+  for horizon, simulated in sorted(simulations.items()):
+    if simulated is None:
+      print(f"  {horizon:>5g} s: integration failed / non-finite")
+    else:
+      n = min(len(simulated), reference.size)
+      ratio = float(np.std(simulated[:n])) / max(float(np.std(reference[:n])), 1e-12)
+      print(f"  {horizon:>5g} s: amplitude ratio {ratio:>10.4g}  "
+            f"peak {np.max(np.abs(simulated)):.4g} uV")
+  print(f"wrote {plot_long_simulation(simulations, reference, dt, args.run_dir, args.run_dir.name)}")
 
 
 if __name__ == "__main__":
