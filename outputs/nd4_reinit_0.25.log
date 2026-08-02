@@ -1,0 +1,26 @@
+Loading /Users/aida_abkenova/Downloads/CQSA/lfp-symreg/raw_data/trialdata_v03_buzz_20231106_pre-0.100_post0.100.mat ...
+case nd4: n_delays=4, delay=2, degree=3, threshold=20000
+  trial 0: reinit every 0.25s -> r=-0.002 (3500/3500 samples integrated)
+  trial 1: reinit every 0.25s -> r=+0.016 (3438/3500 samples integrated)
+  trial 2: reinit every 0.25s -> r=-0.026 (3500/3500 samples integrated)
+  trial 3: reinit every 0.25s -> r=+0.064 (3500/3500 samples integrated)
+  trial 4: reinit every 0.25s -> r=+0.043 (3500/3500 samples integrated)
+  trial 5: reinit every 0.25s -> r=+0.003 (3500/3500 samples integrated)
+/Users/aida_abkenova/Downloads/CQSA/lfp-symreg/.venv/lib/python3.14/site-packages/pysindy/utils/_axes.py:389: RuntimeWarning: overflow encountered in reduce
+  results = super().__array_ufunc__(ufunc, method, *args, **kwargs)
+  trial 6: free run failed to integrate
+  trial 6: reinit every 0.25s -> r=-0.030 (3438/3500 samples integrated)
+  trial 7: reinit every 0.25s -> r=+0.063 (3376/3500 samples integrated)
+  trial 8: reinit every 0.25s -> r=-0.007 (3500/3500 samples integrated)
+
+     time   corr median   amp median
+     50ms        +0.267         1.26
+    110ms        +0.237         1.17
+    150ms        -0.302         1.11
+    210ms        -0.183         1.22
+
+tracking (corr > 0.2) ends at 90 ms
+
+wrote /Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/nd4_horizon/fine_first_second_nd4.png
+wrote /Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/nd4_horizon/free_run_per_trial_nd4.png
+wrote /Users/aida_abkenova/Downloads/CQSA/lfp-symreg/outputs/nd4_horizon/reinit_0.25s_per_trial_nd4.png
