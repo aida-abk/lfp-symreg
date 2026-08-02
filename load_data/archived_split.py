@@ -4,12 +4,12 @@ Every model comparison in this project is scored on one fixed split, recorded
 in the metadata written alongside an earlier raw-grid sweep. Reusing it is
 what makes results from different methods directly comparable.
 
-``scripts/pysindy/unbias_comparison.py`` also exposes a ``load_split``, but
-importing it pulls in PySINDy at module scope. The TensorFlow environment for
-the reference deep delay autoencoder pins ``numpy<2`` (TensorFlow 2.15 is
-compiled against the NumPy 1.x ABI) while PySINDy 2.1 requires ``numpy>=2``,
-so the two cannot coexist. This module provides the same split with no
-dependency beyond the standard library.
+``scripts/pysindy/internals_probes/unbias_comparison.py`` also exposes a
+``load_split``, but importing it pulls in PySINDy at module scope. The
+TensorFlow environment for the reference deep delay autoencoder pins
+``numpy<2`` (TensorFlow 2.15 is compiled against the NumPy 1.x ABI) while
+PySINDy 2.1 requires ``numpy>=2``, so the two cannot coexist. This module
+provides the same split with no dependency beyond the standard library.
 """
 from __future__ import annotations
 

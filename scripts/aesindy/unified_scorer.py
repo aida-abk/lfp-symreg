@@ -284,7 +284,26 @@ def main() -> None:
     amplitude = amplitude_ratio(predicted, measured)
     if persistence is None:
       persistence = persistence_by_lead(measured)
-    free_runs[label] = long_free_run(method, test_traces[0], dt, LONG_HORIZONS_S)
+    # Every held-out trial, so the endurance number is a median rather than
+    # one initial condition that might be unrepresentative.
+    per_trial = [long_free_run(method, trace, dt, LONG_HORIZONS_S)
+                 for trace in test_traces]
+    free_runs[label] = per_trial[0]
+    for horizon in LONG_HORIZONS_S:
+      ratios = []
+      for trial_index, runs in enumerate(per_trial):
+        simulated = runs.get(horizon)
+        if simulated is None:
+          continue
+        reference = test_traces[trial_index]
+        n = min(len(simulated), reference.size)
+        ratios.append(float(np.std(simulated[:n]))
+                      / max(float(np.std(reference[:n])), 1e-12))
+      row_key = f"free_{horizon:g}s_amp_median"
+      globals().setdefault("_endurance", {}).setdefault(label, {})[horizon] = (
+        float(np.median(ratios)) if ratios else float("nan"),
+        len(ratios), len(per_trial),
+      )
     row = {"method": label, "n": predicted.shape[0]}
     for probe in PROBES_S:
       i = int(round(probe / dt))
@@ -331,14 +350,24 @@ def main() -> None:
   for row in rows:
     corr = row.get("corr_50ms", float("nan"))
     amp = row.get("amp_50ms", float("nan"))
+    # Amplitude has to stay plausible at every lead, not merely at 50 ms.
+    # Checking one lead reported a model whose amplitude reaches 20x by 200 ms
+    # and 1e8 by a second as "plausible", which is the exact failure this
+    # column exists to catch.
+    amps = [(probe, row.get(f"amp_{int(probe*1000)}ms", float("nan")))
+            for probe in PROBES_S]
+    finite = [(probe, a) for probe, a in amps if np.isfinite(a)]
+    broken = [(probe, a) for probe, a in finite if not 0.3 < a < 3.0]
     if not np.isfinite(corr):
       verdict = "no forecast"
-    elif not (0.3 < amp < 3.0):
-      verdict = "wrong amplitude" + (" (explodes)" if amp >= 3 else " (collapses)")
+    elif broken:
+      probe, a = broken[0]
+      verdict = (f"wrong amplitude by {int(probe*1000)}ms "
+                 f"({'explodes' if a >= 3 else 'collapses'}, {a:.3g}x)")
     elif corr <= 0:
       verdict = "wrong shape"
     else:
-      verdict = "shape and amplitude both plausible"
+      verdict = "plausible to 350ms"
     print(f"{row['method']:18} {row.get('n',0):>5} {corr:>+10.3f} {amp:>10.3g} "
           f"{row.get('corr_200ms', float('nan')):>+11.3f} "
           f"{row.get('amp_200ms', float('nan')):>10.3g}  {verdict}")
@@ -347,6 +376,18 @@ def main() -> None:
     j = int(round(0.20 / dt))
     print(f"{'persistence':18} {'-':>5} {persistence[i]:>+10.3f} {1.0:>10.3g} "
           f"{persistence[j]:>+11.3f} {1.0:>10.3g}  reference")
+
+  endurance = globals().get("_endurance", {})
+  if endurance:
+    print("\n===== endurance: free-run amplitude ratio, median over held-out trials =====")
+    print(f"{'method':18}" + "".join(f"{h:>12g}s" for h in LONG_HORIZONS_S)
+          + "   (1.0 = correct, completed/total)")
+    for label, per_horizon in endurance.items():
+      line = f"{label:18}"
+      for horizon in LONG_HORIZONS_S:
+        median, done, total = per_horizon.get(horizon, (float("nan"), 0, 0))
+        line += f"{median:>10.3g}[{done}/{total}]"
+      print(line)
 
   print(f"\nwrote {path}")
   print(f"wrote {plot_summary(rows, args.out_dir)}")
