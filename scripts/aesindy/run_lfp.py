@@ -1,4 +1,4 @@
-"""Run the reference deep delay autoencoder on LFP, scored like the baselines.
+"""Run the reference deep delay autoencoder on LFP, for visual inspection.
 
 This drives the *authors'* implementation -- josephbakarji/deep-delay-autoencoder,
 package ``aesindy`` -- rather than a reimplementation, so results can be
@@ -11,20 +11,32 @@ trajectories, one entry per recording, and Hankel-embeds each separately
 before stacking. Trials map onto that directly, so the data layout needs no
 adaptation.
 
+Training uses every validity-filtered trial on the channel -- both fixation
+and sequence trials -- with a random holdout of each type withheld and
+simulated afterwards. Earlier runs reused an archived 28/9 fixation split so
+that forecast-skill numbers stayed comparable across methods; that constraint
+is gone now that skill is not computed, and the autoencoder has far more
+parameters to feed than the SINDy baselines did.
+
 Departures from the reference, all deliberate:
 
-* Only the 28 training trials are handed to ``TrainModel``. The reference
-  splits with ``train_test_split(..., shuffle=False)`` *after* stacking the
-  Hankel rows, which puts rows from the same recording on both sides of the
-  split. Here that internal split is validation only, and the 9 archived
-  held-out trials are scored separately by this script -- they never enter
-  training.
+* Only training trials are handed to ``TrainModel``. The reference splits with
+  ``train_test_split(..., shuffle=False)`` *after* stacking the Hankel rows,
+  which puts rows from the same recording on both sides of the split. Here
+  that internal split is validation only, and the held-out trials are
+  simulated separately by this script -- they never enter training.
 * ``pdb.set_trace`` is neutralised before ``fit()``. The reference's
   ``save_results`` contains a breakpoint, and ``lorenzww_basic.py`` has
   another before ``trainer.fit()``. Under Slurm either one hangs the job or
   kills it on a closed stdin.
-* Scoring uses this project's forecast-skill metric against persistence, so
-  the numbers sit in the same table as the PySINDy and HAVOK results.
+
+No agreement metric is produced. Correlation against the measurement is
+scale-invariant, and every configuration run so far has failed in a way it
+cannot see: a latent operator with a positive eigenvalue tracks the signal's
+shape while its amplitude grows by orders of magnitude, and scores well doing
+it. The outputs are the trajectory figures -- whole-trial free runs and short
+forecasts, both in microvolts -- plus a count of how many integrations
+succeeded, which for quadratic latent models is itself the headline result.
 
 Run a two-epoch plumbing check first -- it exercises every stage in a few
 minutes and is worth doing before committing a full run:
@@ -39,7 +51,6 @@ Then the real run:
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import pdb
 import sys
@@ -69,14 +80,9 @@ from models.polynomial_library import (  # noqa: E402
 )
 from models.sindy import delay_embed_trace  # noqa: E402
 
-from load_data.archived_split import (  # noqa: E402
-  CHANNEL,
-  DOWNSAMPLE,
-  load_archived_split,
-)
+from load_data.archived_split import CHANNEL, DOWNSAMPLE  # noqa: E402
 from load_data.convert import load_bhv_trial_table  # noqa: E402
 from load_data.trial_selection import select_valid_trials  # noqa: E402
-from models.forecast_metrics import persistence_by_lead, skill_by_lead  # noqa: E402
 
 LOWPASS_HZ = 35.0
 SG_WINDOW = 21
@@ -213,26 +219,30 @@ def build_reference_params(args) -> dict:
 
 
 def build_trial_sets(
-  trial_types: list[str], sequence_holdout: int, seed: int
+  trial_types: list[str], fixation_holdout: int, sequence_holdout: int,
+  seed: int,
 ) -> tuple[list[int], dict[str, list[int]]]:
   """Choose training trials and per-type held-out trials.
 
-  The fixation holdout is always the archived 9-trial set, unchanged, so that
-  forecast skill stays directly comparable to every PySINDy, HAVOK and
-  single-type autoencoder result in this project. Only the *training* set
-  grows when more trial types are requested.
+  Every validity-filtered trial of each requested type is used, and the
+  holdout of each type is drawn at random from it. This replaces the archived
+  28/9 fixation split that earlier runs reused: that split existed to keep
+  forecast-skill numbers comparable across methods, and skill scoring is no
+  longer computed here. Training on everything available matters more, since
+  the autoencoder has far more parameters than the SINDy baselines it is being
+  compared against.
 
-  When ``non_fixation`` is included, a separate random sample of sequence
-  trials is also withheld. Training on predominantly sequence trials while
-  testing only on fixation would leave a distribution shift invisible;
-  scoring both reveals it.
+  Both types are held out separately when both are trained on. Training
+  dominated by the ~980 short sequence trials while inspecting only fixation
+  forecasts would leave a distribution shift invisible.
 
   Args:
     trial_types: Validity-filtered types to train on, e.g.
       ``["fixation", "non_fixation"]``.
+    fixation_holdout: Fixation trials to withhold for testing.
     sequence_holdout: Sequence trials to withhold for testing. Ignored when
       ``non_fixation`` is not requested.
-    seed: Seed for the sequence holdout draw.
+    seed: Seed for both holdout draws.
 
   Returns:
     ``(train_ids, test_sets)`` where ``test_sets`` maps a label to trial ids.
@@ -241,23 +251,28 @@ def build_trial_sets(
     ValueError: If no valid training trials remain.
   """
   table = load_bhv_trial_table()
-  archived_train, fixation_test = load_archived_split()
+  rng = np.random.default_rng(seed)
+  holdout_sizes = {"fixation": fixation_holdout, "non_fixation": sequence_holdout}
+  labels = {"fixation": "fixation", "non_fixation": "sequence"}
 
-  test_sets: dict[str, list[int]] = {"fixation": list(fixation_test)}
-  withheld = set(fixation_test)
+  test_sets: dict[str, list[int]] = {}
+  withheld: set[int] = set()
   train_ids: list[int] = []
 
   for trial_type in trial_types:
     valid = select_valid_trials(table, trial_type)
-    if trial_type == "non_fixation" and sequence_holdout > 0:
+    size = holdout_sizes[trial_type]
+    if size > 0:
       available = [i for i in valid if i not in withheld]
-      rng = np.random.default_rng(seed)
-      chosen = rng.choice(
-        len(available), size=min(sequence_holdout, len(available)), replace=False
-      )
-      sequence_test = sorted(available[i] for i in chosen)
-      test_sets["sequence"] = sequence_test
-      withheld.update(sequence_test)
+      if size >= len(available):
+        raise ValueError(
+          f"Holdout of {size} {trial_type} trials leaves nothing to train on: "
+          f"only {len(available)} valid trials of that type exist."
+        )
+      chosen = rng.choice(len(available), size=size, replace=False)
+      held = sorted(available[i] for i in chosen)
+      test_sets[labels[trial_type]] = held
+      withheld.update(held)
     train_ids.extend(valid)
 
   train_ids = sorted({i for i in train_ids if i not in withheld})
@@ -265,10 +280,6 @@ def build_trial_sets(
     raise ValueError(
       f"No training trials remain for trial_types={trial_types}."
     )
-  # Recorded for transparency: with only fixation requested this must
-  # reproduce the archived 28-trial training set exactly.
-  if trial_types == ["fixation"] and train_ids != sorted(archived_train):
-    print("  note: training set differs from the archived 28-trial split")
   return train_ids, test_sets
 
 
@@ -392,7 +403,7 @@ def forecast_held_out(
   model, coefficients: np.ndarray, exponents: list,
   test_traces: list[np.ndarray], input_dim: int, dt: float,
   max_lead_s: float, origin_stride_s: float, signal_scale: float = 1.0,
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, int]:
   """Forecast from many origins in each held-out trial.
 
   Args:
@@ -404,16 +415,23 @@ def forecast_held_out(
     dt: Processed sample interval in seconds.
     max_lead_s: Longest lead time, in seconds.
     origin_stride_s: Spacing between forecast origins within a trial.
+    signal_scale: Divisor applied to the traces before training, reapplied
+      here so both series come back out in microvolts.
 
   Returns:
-    ``(predicted, measured)`` with shape ``(n_forecasts, n_leads)``, in signal
-    units.
+    ``(predicted, measured, n_failed)``. The arrays have shape
+    ``(n_forecasts, n_leads)`` and are in signal units; ``n_failed`` counts
+    origins where the latent ODE did not integrate to a finite trajectory.
+    That count is reported rather than discarded: a configuration that mostly
+    fails to integrate is a result, and silently dropping the failures would
+    make it look like a configuration that simply produced fewer forecasts.
   """
   import tensorflow as tf
 
   n_leads = int(round(max_lead_s / dt)) + 1
   stride = max(int(round(origin_stride_s / dt)), 1)
   predicted_rows, measured_rows = [], []
+  n_failed = 0
 
   for trace in test_traces:
     embedded = delay_embed_trace(trace, n_delays=input_dim, delay=1)
@@ -426,6 +444,7 @@ def forecast_held_out(
       trajectory = simulate_latent(coefficients, exponents, latent[origin],
                                    dt, n_leads)
       if trajectory is None:
+        n_failed += 1
         continue
       decoded = np.asarray(
         model.decoder(
@@ -439,13 +458,14 @@ def forecast_held_out(
       predicted = decoded[:, 0] * signal_scale
       truth = embedded[origin : origin + n_leads, 0] * signal_scale
       if len(truth) < n_leads or not np.all(np.isfinite(predicted)):
+        n_failed += 1
         continue
       predicted_rows.append(predicted)
       measured_rows.append(truth)
 
   if not predicted_rows:
-    return np.empty((0, n_leads)), np.empty((0, n_leads))
-  return np.vstack(predicted_rows), np.vstack(measured_rows)
+    return np.empty((0, n_leads)), np.empty((0, n_leads)), n_failed
+  return np.vstack(predicted_rows), np.vstack(measured_rows), n_failed
 
 
 def plot_forecast_traces(
@@ -454,10 +474,10 @@ def plot_forecast_traces(
 ) -> Path:
   """Plot individual forecasts against the measurements they predict.
 
-  The skill curve reports one correlation per lead time, which is the right
-  summary but hides what the model is actually producing. These panels show
-  single forecasts in microvolts, which is what a reader recognises: whether
-  the prediction tracks the signal, flattens out, or drifts out of phase.
+  These panels show single forecasts in microvolts, which is what a reader
+  recognises: whether the prediction tracks the signal, flattens out, or
+  drifts out of phase. They are the short-horizon companion to
+  :func:`plot_free_runs`, which shows the same model over a whole trial.
 
   Panels are drawn evenly across the collected forecasts rather than from the
   start, so they span different trials and different points within them.
@@ -512,21 +532,164 @@ def plot_forecast_traces(
   return path
 
 
-def plot_results(leads, skill, persistence, output_dir: Path,
-                 label: str = "fixation") -> Path:
-  """Plot forecast skill against lead time with the persistence reference."""
-  fig, ax = plt.subplots(figsize=(7, 4.2))
-  ax.plot(leads, skill, label="aesindy (reference impl.)", lw=1.6)
-  ax.plot(leads, persistence, label="persistence", color="black", ls="--", lw=2.0)
-  ax.axhline(0, color="gray", lw=0.6)
-  ax.set_xlabel("lead time (s)")
-  ax.set_ylabel("correlation with measured signal")
-  ax.set_title(f"Deep delay autoencoder on LFP, held-out {label} trials",
-               fontsize=11)
-  ax.legend(fontsize=8)
-  ax.grid(alpha=0.3)
+def free_run_held_out(
+  model, coefficients: np.ndarray, exponents: list,
+  test_traces: list[np.ndarray], input_dim: int, dt: float,
+  signal_scale: float = 1.0,
+) -> list[tuple[np.ndarray, np.ndarray | None]]:
+  """Integrate the latent ODE across each whole held-out trial.
+
+  This is the hard test the short forecasts do not apply: one initial
+  condition, taken from the first embedded state of the trial, and then no
+  further contact with the measurement. Whether the trajectory tracks, settles
+  onto its own limit cycle, collapses, or diverges is what the figure shows.
+
+  Args:
+    model: Trained ``Sindy_Autoencoder``.
+    coefficients: Masked latent coefficients.
+    exponents: Verified library ordering.
+    test_traces: Held-out preprocessed traces.
+    input_dim: Hankel embedding dimension.
+    dt: Processed sample interval in seconds.
+    signal_scale: Divisor applied before training, reapplied here.
+
+  Returns:
+    One ``(measured, simulated)`` pair per trial, in microvolts. ``simulated``
+    is ``None`` where the integration failed or went non-finite.
+  """
+  import tensorflow as tf
+
+  series = []
+  for trace in test_traces:
+    embedded = delay_embed_trace(trace, n_delays=input_dim, delay=1)
+    measured = embedded[:, 0] * signal_scale
+    latent0 = np.asarray(
+      model.encoder(
+        tf.convert_to_tensor(embedded[:1], dtype=tf.float32)
+      ).numpy(),
+      dtype=float,
+    )[0]
+    trajectory = simulate_latent(coefficients, exponents, latent0, dt,
+                                 len(embedded))
+    if trajectory is None:
+      series.append((measured, None))
+      continue
+    decoded = np.asarray(
+      model.decoder(tf.convert_to_tensor(trajectory, dtype=tf.float32)).numpy(),
+      dtype=float,
+    )
+    simulated = decoded[:, 0] * signal_scale
+    series.append((measured, simulated if np.all(np.isfinite(simulated)) else None))
+  return series
+
+
+def _draw_free_run_panel(
+  ax, measured: np.ndarray, simulated: np.ndarray | None, dt: float,
+  title: str, show_legend: bool,
+) -> None:
+  """Draw one measured-versus-free-run trace pair onto an axis.
+
+  The simulated trace goes on a twin axis whenever its range exceeds the
+  measurement's by more than a factor of ten. A latent operator with a
+  positive eigenvalue can grow by several orders of magnitude, and on a shared
+  axis that flattens the measurement into a horizontal line, hiding both
+  traces at once.
+
+  Args:
+    ax: Axis to draw on.
+    measured: Measured trace in microvolts.
+    simulated: Free-running simulation in microvolts, or ``None`` if it failed.
+    dt: Processed sample interval in seconds.
+    title: Panel title.
+    show_legend: Whether to draw the legend on this panel.
+  """
+  time_s = np.arange(measured.size) * dt
+  ax.plot(time_s, measured, color="tab:blue", lw=0.8, label="measured")
+  ax.tick_params(labelsize=7)
+  ax.set_ylabel("x0 (uV)", fontsize=7)
+  if simulated is None:
+    ax.set_title(f"{title}: did not integrate", fontsize=8, color="tab:red")
+    return
+
+  measured_span = float(np.ptp(measured))
+  simulated_span = float(np.ptp(simulated))
+  exploded = simulated_span > 10.0 * max(measured_span, 1e-12)
+  target = ax.twinx() if exploded else ax
+  target.plot(time_s, simulated, color="tab:orange", lw=0.8, ls="--",
+              label="free run")
+  if exploded:
+    target.tick_params(labelsize=6, colors="tab:orange")
+    target.set_ylabel("free run (uV)", fontsize=6, color="tab:orange")
+  ax.set_title(
+    f"{title}: sim/meas amplitude "
+    f"{simulated_span / max(measured_span, 1e-12):.3g}"
+    + ("  [separate axis]" if exploded else ""),
+    fontsize=8,
+  )
+  if show_legend:
+    ax.legend(fontsize=7, loc="upper left")
+
+
+def plot_free_runs(
+  series: list[tuple[np.ndarray, np.ndarray | None]], dt: float,
+  output_dir: Path, label: str, zoom_s: float = 2.0, max_trials: int = 12,
+) -> Path:
+  """Draw measured-versus-free-run panels, one row per held-out trial.
+
+  Each row is the same trial twice: the whole trial on the left, and its first
+  ``zoom_s`` seconds on the right. The zoom is what makes the figure readable
+  -- a 14 s fixation trial of a ~10 Hz signal is 140 cycles, which at any
+  printable width is a solid band of ink where tracking and phase drift look
+  identical. Trials shorter than ``1.5 * zoom_s`` are already legible whole, so
+  their zoom panel is dropped rather than duplicating the left one.
+
+  Args:
+    series: ``(measured, simulated)`` pairs from :func:`free_run_held_out`.
+    dt: Processed sample interval in seconds.
+    output_dir: Directory to write the figure into.
+    label: Held-out group name, used in the title and filename.
+    zoom_s: Duration of the zoomed panel, in seconds.
+    max_trials: Cap on rows drawn, so a 20-trial sequence holdout stays a
+      readable figure. Trials are sampled evenly across the holdout.
+
+  Returns:
+    Path of the written figure.
+  """
+  if len(series) > max_trials:
+    picks = np.linspace(0, len(series) - 1, max_trials).astype(int)
+  else:
+    picks = np.arange(len(series))
+
+  n_zoom = int(round(zoom_s / dt))
+  n_rows = len(picks)
+  fig, axes = plt.subplots(n_rows, 2, figsize=(15.0, 2.1 * n_rows),
+                           squeeze=False)
+  for row, index in enumerate(picks):
+    measured, simulated = series[index]
+    _draw_free_run_panel(axes[row][0], measured, simulated, dt,
+                         f"trial {index}, full", show_legend=(row == 0))
+
+    zoom_ax = axes[row][1]
+    if measured.size <= 1.5 * n_zoom:
+      zoom_ax.axis("off")
+    else:
+      _draw_free_run_panel(
+        zoom_ax, measured[:n_zoom],
+        None if simulated is None else simulated[:n_zoom],
+        dt, f"trial {index}, first {zoom_s:g} s", show_legend=False,
+      )
+    if row == n_rows - 1:
+      for ax in axes[row]:
+        ax.set_xlabel("time (s)", fontsize=8)
+
+  omitted = (f" ({len(series) - len(picks)} further trials omitted)"
+             if len(series) > len(picks) else "")
+  fig.suptitle(
+    f"Free run from one initial condition, held-out {label} trials{omitted}",
+    fontsize=11,
+  )
   fig.tight_layout()
-  path = output_dir / f"aesindy_forecast_skill_{label}.png"
+  path = output_dir / f"aesindy_free_run_{label}.png"
   fig.savefig(path, dpi=150)
   plt.close(fig)
   return path
@@ -547,11 +710,16 @@ def main() -> None:
     help="Disable the global amplitude rescaling applied before training.",
   )
   parser.add_argument(
-    "--trial-types", default="fixation",
+    "--trial-types", default="fixation,non_fixation",
     help="Comma-separated validity-filtered trial types to train on. "
          "'fixation' (37 valid, ~14.2 s each) or "
          "'fixation,non_fixation' (adds 980 valid sequence trials, ~1.9 s "
-         "each). The fixation holdout is unchanged either way.",
+         "each). Each requested type gets its own random holdout.",
+  )
+  parser.add_argument(
+    "--fixation-holdout", type=int, default=9,
+    help="Fixation trials withheld for testing, drawn at random from the "
+         "valid fixation trials.",
   )
   parser.add_argument(
     "--sequence-holdout", type=int, default=20,
@@ -641,7 +809,7 @@ def main() -> None:
 
   trial_types = [t.strip() for t in args.trial_types.split(",") if t.strip()]
   train_ids, test_id_sets = build_trial_sets(
-    trial_types, args.sequence_holdout, args.seed
+    trial_types, args.fixation_holdout, args.sequence_holdout, args.seed
   )
   print(f"Loading {MAT_FILE} ...", flush=True)
   data = TrialData.load(MAT_FILE)
@@ -658,11 +826,11 @@ def main() -> None:
     )
     for label, ids in test_id_sets.items()
   }
-  test_traces = test_trace_sets["fixation"]
   print(f"trial types: {trial_types}")
   for label, ids in test_id_sets.items():
     print(f"  held-out {label}: {len(ids)} trials")
-  print(f"train {len(train_traces)} trials, held-out {len(test_traces)} trials "
+  n_held_out = sum(len(ids) for ids in test_id_sets.values())
+  print(f"train {len(train_traces)} trials, held-out {n_held_out} trials "
         f"(held-out never enters TrainModel), dt={dt*1000:.0f} ms")
 
   # One global amplitude scale, computed on training trials only.
@@ -677,8 +845,7 @@ def main() -> None:
   #
   # A single global constant is used rather than per-trial z-scoring so that
   # relative amplitude across trials is preserved, and it is inverted before
-  # any metric is computed. Correlation is scale-invariant regardless; this
-  # matters for the loss balance, not the reported skill.
+  # anything is plotted, so every figure is in microvolts.
   signal_scale = 1.0
   if not args.no_scale:
     signal_scale = float(np.std(np.concatenate(train_traces)))
@@ -689,9 +856,8 @@ def main() -> None:
       label: [t / signal_scale for t in traces]
       for label, traces in test_trace_sets.items()
     }
-    test_traces = test_trace_sets["fixation"]
     print(f"global amplitude scale from training trials: "
-          f"{signal_scale:.3f} uV (inverted before scoring)")
+          f"{signal_scale:.3f} uV (inverted before plotting)")
 
   params = build_reference_params(args)
   params["dt"] = dt
@@ -753,65 +919,65 @@ def main() -> None:
                indent=2, default=str) + "\n"
   )
 
-  # Each held-out group is scored separately. When training is dominated by
-  # sequence trials, fixation skill alone cannot distinguish "the model is
-  # bad" from "the model learned sequence dynamics and fixation is out of
-  # distribution".
-  summary: dict[str, tuple] = {}
+  # Each held-out group is simulated separately. When training is dominated by
+  # the ~980 short sequence trials, looking only at fixation cannot
+  # distinguish "the model is bad" from "the model learned sequence dynamics
+  # and fixation is out of distribution".
+  #
+  # No agreement metric is computed here by design. Correlation is
+  # scale-invariant and cannot separate a forecast that tracks the signal from
+  # one that tracks its shape while exploding, which is the failure mode these
+  # runs keep producing. The figures are the output; reading them is the
+  # measurement.
+  integration_report: dict[str, str] = {}
   for label, traces in test_trace_sets.items():
-    print(f"\nforecasting held-out {label} trials ...", flush=True)
-    predicted, measured = forecast_held_out(
+    print(f"\nsimulating held-out {label} trials ...", flush=True)
+
+    predicted, measured, n_failed = forecast_held_out(
       model, coefficients, exponents, traces, args.input_dim, dt,
       args.max_lead, args.origin_stride, signal_scale=signal_scale,
     )
-    print(f"  {predicted.shape[0]} usable forecasts")
-    if predicted.shape[0] == 0:
-      print("  No forecast completed; the latent ODE did not integrate.")
-      continue
-    skill = skill_by_lead(predicted, measured)
-    persistence = persistence_by_lead(measured)
-    leads = np.arange(skill.size) * dt
-    summary[label] = (leads, skill, persistence, predicted.shape[0])
+    n_attempted = predicted.shape[0] + n_failed
+    integration_report[label] = (
+      f"{predicted.shape[0]}/{n_attempted} short forecasts integrated"
+    )
+    print(f"  short forecasts: {predicted.shape[0]} of {n_attempted} integrated"
+          + (f", {n_failed} failed" if n_failed else ""))
 
-    rows = [
-      {"held_out": label, "lead_s": float(lead), "aesindy_skill": float(a),
-       "persistence_skill": float(b), "n_forecasts": int(predicted.shape[0])}
-      for lead, a, b in zip(leads, skill, persistence)
-    ]
-    path = args.out_dir / f"aesindy_forecast_skill_{label}.csv"
-    with open(path, "w", newline="") as handle:
-      writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
-      writer.writeheader()
-      writer.writerows(rows)
-    print(f"  wrote {path}")
-    print(f"  wrote {plot_results(leads, skill, persistence, args.out_dir, label)}")
-    print(f"  wrote {plot_forecast_traces(predicted, measured, dt, args.out_dir, label)}")
-    # The raw forecasts are kept so figures can be redrawn, and compared
-    # against other methods, without repeating an hour of training.
-    trace_path = args.out_dir / f"aesindy_forecast_traces_{label}.npz"
-    np.savez_compressed(trace_path, predicted=predicted, measured=measured, dt=dt)
-    print(f"  wrote {trace_path}")
+    if predicted.shape[0]:
+      print(f"  wrote {plot_forecast_traces(predicted, measured, dt, args.out_dir, label)}")
+      # The raw forecasts are kept so figures can be redrawn, and compared
+      # against other methods, without repeating an hour of training.
+      trace_path = args.out_dir / f"aesindy_forecast_traces_{label}.npz"
+      np.savez_compressed(trace_path, predicted=predicted, measured=measured, dt=dt)
+      print(f"  wrote {trace_path}")
+    else:
+      print("  no short forecast integrated; skipping the forecast figure")
 
-  if not summary:
-    print("\nNo held-out group produced a usable forecast.")
-    return
+    free_series = free_run_held_out(
+      model, coefficients, exponents, traces, args.input_dim, dt,
+      signal_scale=signal_scale,
+    )
+    n_free = sum(1 for _, simulated in free_series if simulated is not None)
+    integration_report[label] += f", {n_free}/{len(free_series)} free runs integrated"
+    print(f"  free runs: {n_free} of {len(free_series)} integrated")
+    print(f"  wrote {plot_free_runs(free_series, dt, args.out_dir, label)}")
 
-  print("\n===== forecast skill vs lead time =====")
-  probes = [p for p in (0.02, 0.05, 0.1, 0.2, 0.5, 1.0)
-            if p <= args.max_lead + 1e-9]
-  header = f"{'held-out':>10} {'n':>6}" + "".join(f"{p*1000:>10.0f}ms" for p in probes)
-  print(header)
-  for label, (leads, skill, persistence, n) in summary.items():
-    for name, series in (("aesindy", skill), ("persistence", persistence)):
-      row = f"{label + '/' + name:>10} {n:>6}"
-      for probe in probes:
-        row += f"{series[int(round(probe / dt))]:>+12.3f}"
-      print(row)
+    free_path = args.out_dir / f"aesindy_free_run_{label}.npz"
+    np.savez_compressed(
+      free_path, dt=dt,
+      **{f"measured_{i}": m for i, (m, _) in enumerate(free_series)},
+      **{f"simulated_{i}": s for i, (_, s) in enumerate(free_series)
+         if s is not None},
+    )
+    print(f"  wrote {free_path}")
 
-  print("\nPySINDy reference at the same leads (110 forecasts, fixation):")
-  print("  delay nd4  : 20ms +0.639, 50ms -0.468, 100ms -0.433, 200ms +0.093")
-  print("  havok r=3  : 20ms +0.424, 50ms +0.433, 100ms +0.342, 200ms +0.254")
-  print("  havok r=12 : 20ms +0.403, 50ms +0.334, 100ms +0.389, 200ms +0.284")
+  print("\n===== integration summary =====")
+  for label, report in integration_report.items():
+    print(f"  {label}: {report}")
+  print("\nFigures are in "
+        f"{args.out_dir}; inspect aesindy_free_run_*.png for whole-trial "
+        "behaviour and aesindy_forecast_traces_*.png for short forecasts.")
 
 
 if __name__ == "__main__":
