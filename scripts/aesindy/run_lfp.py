@@ -4,7 +4,7 @@ This drives the *authors'* implementation -- josephbakarji/deep-delay-autoencode
 package ``aesindy`` -- rather than a reimplementation, so results can be
 reported as "the method from the paper, applied to our data". It follows
 ``testcases/lorenzww_basic.py``, the repository's only experimental-data
-example, substituting LFP trials for waterwheel recordings.
+example.
 
 Their ``RealData.build_solution`` accepts a dict holding lists of
 trajectories, one entry per recording, and Hankel-embeds each separately
@@ -29,14 +29,6 @@ Departures from the reference, all deliberate:
   ``save_results`` contains a breakpoint, and ``lorenzww_basic.py`` has
   another before ``trainer.fit()``. Under Slurm either one hangs the job or
   kills it on a closed stdin.
-
-No agreement metric is produced. Correlation against the measurement is
-scale-invariant, and every configuration run so far has failed in a way it
-cannot see: a latent operator with a positive eigenvalue tracks the signal's
-shape while its amplitude grows by orders of magnitude, and scores well doing
-it. The outputs are the trajectory figures -- whole-trial free runs and short
-forecasts, both in microvolts -- plus a count of how many integrations
-succeeded, which for quadratic latent models is itself the headline result.
 
 Run a two-epoch plumbing check first -- it exercises every stage in a few
 minutes and is worth doing before committing a full run:
@@ -728,8 +720,9 @@ def main() -> None:
   )
   parser.add_argument(
     "--seed", type=int, default=0,
-    help="Seed for the sequence holdout draw. The fixation holdout is the "
-         "fixed archived set and does not depend on this.",
+    help="Seed for both holdout draws. Fixation is drawn first, so a given "
+         "seed yields the same fixation holdout whether or not sequence "
+         "trials are also requested.",
   )
   parser.add_argument(
     "--include-sine", action="store_true",
