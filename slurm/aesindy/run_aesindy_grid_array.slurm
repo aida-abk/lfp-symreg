@@ -30,11 +30,11 @@
 #
 # Smoke-test the whole array shape first (2 epochs each, a few minutes):
 #   SMOKE=1 PYTHON_BIN=$HOME/aesindy_env/bin/python \
-#     sbatch slurm/run_aesindy_grid_array.slurm
+#     sbatch slurm/aesindy/run_aesindy_grid_array.slurm
 #
 # Then the real sweep:
 #   PYTHON_BIN=$HOME/aesindy_env/bin/python \
-#     sbatch slurm/run_aesindy_grid_array.slurm
+#     sbatch slurm/aesindy/run_aesindy_grid_array.slurm
 #
 # Resource notes, relative to the single-run job:
 #   --time=8:00:00 and --mem=24G, both raised. Training now pools ~1000 trials

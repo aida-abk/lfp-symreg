@@ -46,11 +46,11 @@
 #
 # Smoke-test the array shape first:
 #   SMOKE=1 PYTHON_BIN=$HOME/aesindy_env/bin/python \
-#     sbatch slurm/run_aesindy_threshold_array.slurm
+#     sbatch slurm/aesindy/run_aesindy_threshold_array.slurm
 #
 # Then the real sweep:
 #   PYTHON_BIN=$HOME/aesindy_env/bin/python \
-#     sbatch slurm/run_aesindy_threshold_array.slurm
+#     sbatch slurm/aesindy/run_aesindy_threshold_array.slurm
 #
 # Resource notes: --time=12:00:00 because training time proved unpredictable
 #   from config alone -- latent_dim=4 trained in 2117 s in one submission and

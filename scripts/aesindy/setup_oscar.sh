@@ -23,7 +23,7 @@
 # Usage:
 #   bash scripts/aesindy/setup_oscar.sh
 #   # then, from the project root:
-#   PYTHON_BIN=$HOME/aesindy_env/bin/python sbatch slurm/run_aesindy_lfp.slurm
+#   PYTHON_BIN=$HOME/aesindy_env/bin/python sbatch slurm/aesindy/run_aesindy_lfp.slurm
 
 set -euo pipefail
 
@@ -126,4 +126,4 @@ PY
 
 echo
 echo "Done. Submit with:"
-echo "  PYTHON_BIN=${ENV_DIR}/bin/python sbatch slurm/run_aesindy_lfp.slurm"
+echo "  PYTHON_BIN=${ENV_DIR}/bin/python sbatch slurm/aesindy/run_aesindy_lfp.slurm"

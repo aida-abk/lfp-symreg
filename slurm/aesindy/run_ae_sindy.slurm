@@ -70,7 +70,7 @@ if ! "$PYTHON_BIN" -c "import torch" 2>/dev/null; then
   echo "  python -m venv \$HOME/ae_env" >&2
   echo "  \$HOME/ae_env/bin/pip install torch numpy scipy matplotlib h5py \\" >&2
   echo "    hdf5storage scikit-learn pysindy" >&2
-  echo "  PYTHON_BIN=\$HOME/ae_env/bin/python sbatch slurm/run_ae_sindy.slurm" >&2
+  echo "  PYTHON_BIN=\$HOME/ae_env/bin/python sbatch slurm/aesindy/run_ae_sindy.slurm" >&2
   exit 1
 fi
 

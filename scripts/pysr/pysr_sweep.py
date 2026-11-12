@@ -9,7 +9,7 @@ Grid (36 configurations total):
 Each task fits PySR on training trials, simulates all held-out trials,
 and saves a metrics CSV, equation text, and a 2×2 simulation plot.
 
-Run on Oscar via scripts/hpc/run_pysr_array.slurm.
+Run on Oscar via a Slurm array job (see slurm/ for templates).
 Run locally:
     .venv/bin/python scripts/pysr/pysr_sweep.py --configuration-index 1
 """

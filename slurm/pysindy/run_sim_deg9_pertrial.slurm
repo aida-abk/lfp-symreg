@@ -23,7 +23,7 @@
 #   GRID_CSV=outputs/pysindy/raw_grid_deg9_t1000/raw_grid_merged.csv \
 #   METADATA_JSON=outputs/pysindy/raw_grid_deg9_t1000/parts/part_lp35_degree9_metadata.json \
 #   SIMULATION_OUTPUT_DIR=outputs/pysindy/raw_grid_deg9_t1000/simulations_pertrial \
-#   sbatch scripts/hpc/run_sim_deg9_pertrial.slurm
+#   sbatch slurm/pysindy/run_sim_deg9_pertrial.slurm
 
 set -euo pipefail
 

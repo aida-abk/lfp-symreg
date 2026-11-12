@@ -16,10 +16,10 @@
 # n_delays capped at 6: deg9 n_delays=8 requires ~700GB (24310 features).
 #
 # Usage (run for all four thresholds):
-#   STLSQ_THRESHOLD=1000  OUTPUT_DIR=outputs/pysindy/raw_grid_deg9_t1000  sbatch scripts/hpc/run_raw_grid_deg9_array.slurm
-#   STLSQ_THRESHOLD=10000 OUTPUT_DIR=outputs/pysindy/raw_grid_deg9_t10000 sbatch scripts/hpc/run_raw_grid_deg9_array.slurm
-#   STLSQ_THRESHOLD=20000 OUTPUT_DIR=outputs/pysindy/raw_grid_deg9_t20000 sbatch scripts/hpc/run_raw_grid_deg9_array.slurm
-#   STLSQ_THRESHOLD=50000 OUTPUT_DIR=outputs/pysindy/raw_grid_deg9_t50000 sbatch scripts/hpc/run_raw_grid_deg9_array.slurm
+#   STLSQ_THRESHOLD=1000  OUTPUT_DIR=outputs/pysindy/raw_grid_deg9_t1000  sbatch slurm/pysindy/run_raw_grid_deg9_array.slurm
+#   STLSQ_THRESHOLD=10000 OUTPUT_DIR=outputs/pysindy/raw_grid_deg9_t10000 sbatch slurm/pysindy/run_raw_grid_deg9_array.slurm
+#   STLSQ_THRESHOLD=20000 OUTPUT_DIR=outputs/pysindy/raw_grid_deg9_t20000 sbatch slurm/pysindy/run_raw_grid_deg9_array.slurm
+#   STLSQ_THRESHOLD=50000 OUTPUT_DIR=outputs/pysindy/raw_grid_deg9_t50000 sbatch slurm/pysindy/run_raw_grid_deg9_array.slurm
 
 set -euo pipefail
 

@@ -25,7 +25,7 @@
 #     --expected 32
 #
 # Example submit:
-#   sbatch scripts/hpc/run_raw_grid_deg2357_thr10000_array.slurm
+#   sbatch slurm/pysindy/run_raw_grid_deg2357_thr10000_array.slurm
 
 set -euo pipefail
 

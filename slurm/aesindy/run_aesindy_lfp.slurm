@@ -19,7 +19,7 @@
 #
 # Then run the plumbing check before spending a full allocation:
 #   SMOKE=1 PYTHON_BIN=$HOME/aesindy_env/bin/python \
-#     sbatch slurm/run_aesindy_lfp.slurm
+#     sbatch slurm/aesindy/run_aesindy_lfp.slurm
 #
 # Resource notes:
 #   --cpus-per-task=4, and deliberately NO OMP_NUM_THREADS=1. This is a single
