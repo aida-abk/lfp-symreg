@@ -11,8 +11,7 @@ cortex, using sparse regression (SINDy) on delay-embedded single-channel
 signals, and then tests how well the fitted equations reproduce held-out data.
 
 Presented as a poster: [*Seeking dynamical models of cortical local field
-potentials via machine learning*](docs/poster.pdf) (Abkenova, Buyukyazgan,
-Conen, Ritt, Desrochers).
+potentials via machine learning*](docs/poster.pdf) 
 
 <img width="749" height="566" alt="image" src="https://github.com/user-attachments/assets/4ebd5a4d-9e4f-4f0d-83c4-7d10760241e8" />
 
