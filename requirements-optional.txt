@@ -1,0 +1,13 @@
+# Optional dependencies, needed only by specific scripts.
+# Versions are not pinned here because they were installed on the HPC cluster,
+# not in the local environment that produced requirements.txt.
+
+# scripts/pysr/, models/pysr.py
+pysr
+sympy
+
+# models/ae_sindy.py, scripts/aesindy/ae_sindy_lfp.py
+torch
+
+# The TensorFlow AE-SINDy reference implementation uses a separate
+# environment; see scripts/aesindy/setup_oscar.sh.

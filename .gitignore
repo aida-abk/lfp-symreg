@@ -1,16 +1,25 @@
-# folders
+# data: never committed (lab recordings are not public)
 raw_data/
+*.mat
+
+# generated results: kept local; curated figures live in results/figures/
+outputs/
+
+# local-only folders and notes
 archive/*
-docs/
 CLAUDE.md
+AGENTS.md
+.claude/
 
 # slurm logs
 slurm/*.out
 slurm/*.err
+slurm/**/*.out
+slurm/**/*.err
 
-
-# python/cache
+# python / OS
 __pycache__/
 .ipynb_checkpoints/
 .venv/
 .matplotlib-cache/
+.DS_Store
